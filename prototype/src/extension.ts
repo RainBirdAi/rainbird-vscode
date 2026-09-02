@@ -21,6 +21,7 @@ import { PlatformMapsProvider } from "./mapsTree";
 import { pushMap } from "./push";
 import { setAnthropicKey } from "./anthropic";
 import { registerLanguageFeatures } from "./languageFeatures";
+import { registerEditorFeatures } from "./editorFeatures";
 import { registerTests } from "./tests";
 import { NlPanel } from "./nlPanel";
 import { semanticDiff } from "./semanticDiff";
@@ -42,6 +43,7 @@ export function activate(context: vscode.ExtensionContext): void {
   updateStatus();
 
   registerLanguageFeatures(context);
+  registerEditorFeatures(context);
   registerTests(context);
 
   const assistant = new AssistantViewProvider(context);

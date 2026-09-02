@@ -23,9 +23,18 @@ jobs:
         run: npm ci
         working-directory: prototype
 
+      - name: Check tag matches package.json version
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ "v$PKG_VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $PKG_VERSION" >&2
+            exit 1
+          fi
+        working-directory: prototype
+
       - name: Package VSIX
         run: >
-          npx --yes @vscode/vsce package
+          npx --yes @vscode/vsce@3 package
           --baseContentUrl "https://github.com/${{ github.repository }}/blob/main/prototype"
           --baseImagesUrl "https://github.com/${{ github.repository }}/raw/main/prototype"
         working-directory: prototype

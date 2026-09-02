@@ -155,7 +155,7 @@ export function collectIssues(text: string): LintIssue[] {
   return issues;
 }
 
-type AddIssue = (tag: TagOccurrence, message: string, severity?: LintIssue["severity"]) => void;
+type AddIssue = (tag: TagOccurrence, message: string, severity?: LintIssue["severity"], fixes?: LintFix[]) => void;
 
 function checkReferences(tag: TagOccurrence, index: MapIndex, add: AddIssue): void {
   const isVariable = (v: string | undefined) => !!v && v.startsWith("%");
@@ -297,8 +297,10 @@ function eachRelinst(
  * instances for string concepts, literal parsing for typed concepts), and
  * single-use custom variables that can never connect.
  */
-function checkRelinsts(index: MapIndex, add: AddIssue): void {
+function checkRelinsts(text: string, index: MapIndex, add: AddIssue): void {
   const seenFacts = new Map<string, TagOccurrence>();
+  const instancesOf = (conceptName: string) =>
+    [...index.instances.entries()].filter(([, i]) => i.type === conceptName).map(([name]) => name);
 
   const checkEndpoint = (tag: TagOccurrence, role: "subject" | "object", value: string, conceptName: string) => {
     const concept = index.concepts.get(conceptName);
@@ -311,9 +313,18 @@ function checkRelinsts(index: MapIndex, add: AddIssue): void {
     }
     const instance = index.instances.get(value);
     if (!instance) {
-      add(tag, `"${value}" is not a declared instance of "${conceptName}" — the fact will attach to nothing until that instance exists`, "warning");
+      const fixes = [
+        ...(!/["'\\<>]/.test(value) ? [declareInstanceFix(index, value, conceptName)] : []),
+        ...didYouMean(tag, role, value, instancesOf(conceptName)),
+      ].filter((f): f is LintFix => !!f);
+      add(tag, `"${value}" is not a declared instance of "${conceptName}" — the fact will attach to nothing until that instance exists`, "warning", fixes);
     } else if (instance.type !== conceptName) {
-      add(tag, `"${value}" is an instance of "${instance.type}", but ${role} of this relationship must be a "${conceptName}"`, "warning");
+      add(
+        tag,
+        `"${value}" is an instance of "${instance.type}", but ${role} of this relationship must be a "${conceptName}"`,
+        "warning",
+        didYouMean(tag, role, value, instancesOf(conceptName))
+      );
     }
   };
 
@@ -328,7 +339,9 @@ function checkRelinsts(index: MapIndex, add: AddIssue): void {
       if (tag.attrs.subject && tag.attrs.object) {
         const key = `${tag.attrs.type}|${tag.attrs.subject}|${tag.attrs.object}`;
         if (seenFacts.has(key)) {
-          add(tag, `Duplicate fact: ${tag.attrs.subject} ${tag.attrs.type} ${tag.attrs.object} is already declared`, "warning");
+          add(tag, `Duplicate fact: ${tag.attrs.subject} ${tag.attrs.type} ${tag.attrs.object} is already declared`, "warning", [
+            removeElementFix(text, index, tag),
+          ]);
         } else {
           seenFacts.set(key, tag);
         }
@@ -431,6 +444,76 @@ function checkOrphanConcepts(index: MapIndex, add: AddIssue): void {
       add(tag, `Concept "${tag.attrs.name}" is not used by any relationship`, "info");
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Fix builders
+
+/** "Change to …" fixes for near-miss names: exact case-insensitive first, then edit distance ≤ 2. */
+function didYouMean(tag: TagOccurrence, attr: string, value: string, candidates: string[]): LintFix[] {
+  const range = attrValueRange(tag, attr);
+  if (!range) return [];
+  const lower = value.toLowerCase();
+  return candidates
+    .filter((c) => c !== value)
+    .map((c) => ({ c, d: c.toLowerCase() === lower ? 0 : levenshtein(c.toLowerCase(), lower) }))
+    .filter(({ d }) => d <= 2)
+    .sort((a, b) => a.d - b.d)
+    .slice(0, 3)
+    .map(({ c }) => ({ title: `Change to "${c}"`, edits: [{ start: range.start, end: range.end, newText: c }] }));
+}
+
+/** Insert a concinst declaration after the last instance (or concept, or the root open tag). */
+function declareInstanceFix(index: MapIndex, name: string, conceptName: string): LintFix | undefined {
+  const anchor =
+    [...index.tags].reverse().find((t) => !t.closing && t.name === "concinst") ??
+    [...index.tags].reverse().find((t) => !t.closing && t.name === "concept") ??
+    index.tags.find((t) => !t.closing && t.name === "rbl:kb");
+  if (!anchor) return undefined;
+  return {
+    title: `Declare <concinst name="${name}" type="${conceptName}"/>`,
+    edits: [{ start: anchor.end, end: anchor.end, newText: `\n\t<concinst name="${name}" type="${conceptName}"/>` }],
+  };
+}
+
+/** Delete an element's full lines (open tag through matching close for containers). */
+function removeElementFix(text: string, index: MapIndex, tag: TagOccurrence): LintFix {
+  let endOffset = tag.end;
+  if (!tag.selfClosing && !tag.closing) {
+    let depth = 0;
+    for (const t of index.tags.slice(index.tags.indexOf(tag) + 1)) {
+      if (t.name !== tag.name) continue;
+      if (t.closing) {
+        if (depth === 0) {
+          endOffset = t.end;
+          break;
+        }
+        depth--;
+      } else if (!t.selfClosing) {
+        depth++;
+      }
+    }
+  }
+  const lineStart = text.lastIndexOf("\n", tag.start - 1) + 1;
+  const lineEnd = text.indexOf("\n", endOffset);
+  return {
+    title: "Remove this declaration",
+    edits: [{ start: lineStart, end: lineEnd === -1 ? text.length : lineEnd + 1, newText: "" }],
+  };
+}
+
+function levenshtein(a: string, b: string): number {
+  if (Math.abs(a.length - b.length) > 2) return 3; // early out — we only care about d ≤ 2
+  const row = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = row[0]++;
+    for (let j = 1; j <= b.length; j++) {
+      const next = Math.min(row[j] + 1, row[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = row[j];
+      row[j] = next;
+    }
+  }
+  return row[b.length];
 }
 
 /**
