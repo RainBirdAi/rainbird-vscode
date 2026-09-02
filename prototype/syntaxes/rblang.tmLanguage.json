@@ -1,0 +1,344 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "RBLang",
+  "scopeName": "text.xml.rblang",
+  "patterns": [
+    { "include": "#prolog" },
+    { "include": "#comment" },
+    { "include": "#question-element" },
+    { "include": "#meta-element" },
+    { "include": "#cdata" },
+    { "include": "#known-tag" },
+    { "include": "#unknown-tag" }
+  ],
+  "repository": {
+    "prolog": {
+      "begin": "(<\\?)\\s*(xml)",
+      "end": "(\\?>)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.rblang" },
+        "2": { "name": "entity.name.tag.xml.rblang" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.rblang" }
+      },
+      "patterns": [{ "include": "#generic-attribute" }]
+    },
+    "comment": {
+      "begin": "<!--",
+      "end": "-->",
+      "name": "comment.block.rblang"
+    },
+    "cdata": {
+      "begin": "<!\\[CDATA\\[",
+      "end": "\\]\\]>",
+      "name": "string.unquoted.cdata.rblang",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.rblang" } },
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.rblang" } },
+      "patterns": [{ "include": "#interpolation" }]
+    },
+    "question-element": {
+      "comment": "firstForm / secondFormSubject / secondFormObject hold question text with %S/%O placeholders",
+      "begin": "(<)(firstForm|secondFormSubject|secondFormObject)(>)",
+      "end": "(</)(\\2)(>)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.rblang" },
+        "2": { "name": "entity.name.tag.question.rblang" },
+        "3": { "name": "punctuation.definition.tag.rblang" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.rblang" },
+        "2": { "name": "entity.name.tag.question.rblang" },
+        "3": { "name": "punctuation.definition.tag.rblang" }
+      },
+      "contentName": "string.unquoted.question.rblang",
+      "patterns": [{ "include": "#placeholder" }]
+    },
+    "meta-element": {
+      "begin": "(<)(meta)\\b",
+      "end": "(</)(meta)(>)|(/>)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.rblang" },
+        "2": { "name": "entity.name.tag.rblang" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.rblang" },
+        "2": { "name": "entity.name.tag.rblang" },
+        "3": { "name": "punctuation.definition.tag.rblang" },
+        "4": { "name": "punctuation.definition.tag.rblang" }
+      },
+      "patterns": [
+        { "include": "#type-attribute" },
+        { "include": "#generic-attribute" },
+        { "match": ">", "name": "punctuation.definition.tag.rblang" }
+      ]
+    },
+    "known-tag": {
+      "begin": "(</?)(rbl:kb|concept|concinst|rel|relinst|condition|datasource|action|input|headers|header|import|compound)\\b",
+      "end": "(/?>)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.rblang" },
+        "2": { "name": "entity.name.tag.rblang" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.rblang" }
+      },
+      "patterns": [
+        { "include": "#expression-attribute" },
+        { "include": "#alt-attribute" },
+        { "include": "#map-attribute" },
+        { "include": "#name-attribute" },
+        { "include": "#type-attribute" },
+        { "include": "#number-attribute" },
+        { "include": "#ref-attribute" },
+        { "include": "#enum-attribute" },
+        { "include": "#generic-attribute" }
+      ]
+    },
+    "unknown-tag": {
+      "begin": "(</?)([a-zA-Z_][\\w:.-]*)",
+      "end": "(/?>)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.rblang" },
+        "2": { "name": "invalid.unimplemented.tag.rblang" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.rblang" }
+      },
+      "patterns": [{ "include": "#generic-attribute" }]
+    },
+    "name-attribute": {
+      "comment": "Declared names (concepts, relationships, instances, rules) — the map's own vocabulary, scoped as declarations so they get their own colour",
+      "begin": "\\b(name)\\s*(=)\\s*(\")",
+      "end": "(\")",
+      "beginCaptures": {
+        "1": { "name": "entity.other.attribute-name.rblang" },
+        "2": { "name": "punctuation.separator.key-value.rblang" },
+        "3": { "name": "punctuation.definition.string.begin.rblang" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.string.end.rblang" }
+      },
+      "contentName": "entity.name.function.declaration.rblang"
+    },
+    "type-attribute": {
+      "comment": "type= is a primitive enum on <concept>/<meta> but a reference to a concept (<concinst>) or relationship (<relinst>) elsewhere",
+      "begin": "\\b(type)\\s*(=)\\s*(\")",
+      "end": "(\")",
+      "beginCaptures": {
+        "1": { "name": "entity.other.attribute-name.rblang" },
+        "2": { "name": "punctuation.separator.key-value.rblang" },
+        "3": { "name": "punctuation.definition.string.begin.rblang" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.string.end.rblang" }
+      },
+      "patterns": [
+        {
+          "match": "\\b(string|number|date|truth|md)\\b(?=\"|$)",
+          "name": "constant.language.primitive.rblang"
+        },
+        { "match": "[^\"]+", "name": "support.class.reference.rblang" }
+      ]
+    },
+    "ref-attribute": {
+      "comment": "References to declared concepts/relationships/instances, plus %VARIABLE bindings and literal objects",
+      "begin": "\\b(subject|object|rel|funct|group|km)\\s*(=)\\s*(\")",
+      "end": "(\")",
+      "beginCaptures": {
+        "1": { "name": "entity.other.attribute-name.rblang" },
+        "2": { "name": "punctuation.separator.key-value.rblang" },
+        "3": { "name": "punctuation.definition.string.begin.rblang" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.string.end.rblang" }
+      },
+      "patterns": [
+        { "include": "#placeholder" },
+        { "match": "%[A-Z][A-Z0-9_]*", "name": "variable.other.binding.rblang" },
+        { "match": "\\b(true|false)\\b(?=\")", "name": "constant.language.rblang" },
+        { "match": "-?\\d+(\\.\\d+)?(?=\")", "name": "constant.numeric.rblang" },
+        { "match": "[^\"]+", "name": "support.class.reference.rblang" }
+      ]
+    },
+    "number-attribute": {
+      "begin": "\\b(cf|weight|salience|minimum-rule-certainty|minimumRuleCertainty|versionNumber)\\s*(=)\\s*(\")",
+      "end": "(\")",
+      "beginCaptures": {
+        "1": { "name": "entity.other.attribute-name.rblang" },
+        "2": { "name": "punctuation.separator.key-value.rblang" },
+        "3": { "name": "punctuation.definition.string.begin.rblang" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.string.end.rblang" }
+      },
+      "patterns": [
+        { "match": "-?\\d+(\\.\\d+)?", "name": "constant.numeric.rblang" },
+        { "match": "[^\"]+", "name": "invalid.illegal.expected-number.rblang" }
+      ]
+    },
+    "expression-attribute": {
+      "comment": "The RBLang expression language embedded inside expression=\"...\" and the assignment target value=\"...\"",
+      "begin": "\\b(expression|value)\\s*(=)\\s*(\")",
+      "end": "(\")",
+      "beginCaptures": {
+        "1": { "name": "entity.other.attribute-name.expression.rblang" },
+        "2": { "name": "punctuation.separator.key-value.rblang" },
+        "3": { "name": "punctuation.definition.string.begin.rblang" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.string.end.rblang" }
+      },
+      "contentName": "meta.embedded.expression.rblang",
+      "patterns": [{ "include": "#expression" }]
+    },
+    "alt-attribute": {
+      "comment": "Evidence text with {{%VARIABLE}} and {{%VAR.relationship}} interpolation",
+      "begin": "\\b(alt)\\s*(=)\\s*(\")",
+      "end": "(\")",
+      "beginCaptures": {
+        "1": { "name": "entity.other.attribute-name.alt.rblang" },
+        "2": { "name": "punctuation.separator.key-value.rblang" },
+        "3": { "name": "punctuation.definition.string.begin.rblang" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.string.end.rblang" }
+      },
+      "contentName": "string.quoted.double.alt.rblang",
+      "patterns": [{ "include": "#interpolation" }]
+    },
+    "map-attribute": {
+      "comment": "Datasource action mapping: map=\"relationship name=/Response/Path\"",
+      "begin": "\\b(map)\\s*(=)\\s*(\")",
+      "end": "(\")",
+      "beginCaptures": {
+        "1": { "name": "entity.other.attribute-name.map.rblang" },
+        "2": { "name": "punctuation.separator.key-value.rblang" },
+        "3": { "name": "punctuation.definition.string.begin.rblang" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.string.end.rblang" }
+      },
+      "patterns": [
+        {
+          "match": "([^=\"]+)(=)([^\"]*)",
+          "captures": {
+            "1": { "name": "support.class.reference.rblang" },
+            "2": { "name": "punctuation.separator.key-value.rblang" },
+            "3": { "name": "string.other.path.rblang" }
+          }
+        }
+      ]
+    },
+    "enum-attribute": {
+      "comment": "Attributes with enumerated values get constant.language highlighting",
+      "begin": "\\b(behaviour|askable|allowCF|allowUnknown|plural|canAdd|scope|method)\\s*(=)\\s*(\")",
+      "end": "(\")",
+      "beginCaptures": {
+        "1": { "name": "entity.other.attribute-name.rblang" },
+        "2": { "name": "punctuation.separator.key-value.rblang" },
+        "3": { "name": "punctuation.definition.string.begin.rblang" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.string.end.rblang" }
+      },
+      "patterns": [
+        {
+          "match": "\\b(mutually-exclusive|mutex|mx|mandatory|optional|top-down-strict|top-down|all|none|secondFormSubject|secondFormObject|subject,object|object,subject|subject|object|true|false|context|GET|POST)\\b",
+          "name": "constant.language.enum.rblang"
+        },
+        { "match": "[^\"]+", "name": "invalid.illegal.enum-value.rblang" }
+      ]
+    },
+    "generic-attribute": {
+      "patterns": [
+        {
+          "match": "\\b(hostname|path|key|value|username|xmlns:rbl|version|encoding)\\b\\s*(=)",
+          "captures": {
+            "1": { "name": "entity.other.attribute-name.rblang" },
+            "2": { "name": "punctuation.separator.key-value.rblang" }
+          }
+        },
+        {
+          "match": "\\b([a-zA-Z_][\\w:.-]*)\\s*(=)",
+          "captures": {
+            "1": { "name": "invalid.unimplemented.attribute-name.rblang" },
+            "2": { "name": "punctuation.separator.key-value.rblang" }
+          }
+        },
+        {
+          "begin": "\"",
+          "end": "\"",
+          "name": "string.quoted.double.rblang",
+          "patterns": [
+            { "include": "#placeholder" },
+            { "match": "\\{\\{\\s*%[A-Z][A-Z0-9_]*\\s*\\}\\}", "name": "variable.other.interpolated.rblang" }
+          ]
+        }
+      ]
+    },
+    "expression": {
+      "patterns": [
+        {
+          "match": "\\b(abs|addDays|addMonths|addWeeks|addYears|atan2|ceil|cot|countRelationshipInstances|csc|dayOfMonth|dayOfWeek|dayOfYear|daysBetween|endsWith|factorial|floor|hoursBetween|includes|isAfterDate|isBeforeDate|isSameDate|isSubset|isWithinRange|joinObjects|max|maxObjects|min|minObjects|minutesBetween|mod|monthOfYear|monthsBetween|now|pow|regexCount|round|sec|secondsBetween|sqrt|startsWith|subtractDays|subtractMonths|subtractWeeks|subtractYears|sumObjects|tan|today|weeksBetween|year|yearsBetween)(?=\\s*\\()",
+          "name": "support.function.rblang-expression"
+        },
+        {
+          "match": "\\b(is\\s+greater\\s+than\\s+or\\s+equal\\s+to|is\\s+less\\s+than\\s+or\\s+equal\\s+to|is\\s+greater\\s+than|is\\s+less\\s+than|is\\s+not\\s+equal\\s+to|is\\s+equal\\s+to|does\\s+not\\s+equal|greater\\s+than|less\\s+than|equals|gte|lte|gt|lt)\\b",
+          "name": "keyword.control.comparison.word.rblang-expression"
+        },
+        {
+          "match": "(?i)\\b(and|or)\\b",
+          "name": "keyword.control.logical.rblang-expression"
+        },
+        {
+          "match": "!=|&gt;=|&lt;=|&gt;|&lt;|>=|<=|=|>|<",
+          "name": "keyword.operator.comparison.rblang-expression"
+        },
+        {
+          "match": "[+\\-*/]",
+          "name": "keyword.operator.arithmetic.rblang-expression"
+        },
+        { "include": "#placeholder" },
+        {
+          "match": "%[A-Z][A-Z0-9_]*",
+          "name": "variable.other.binding.rblang"
+        },
+        {
+          "begin": "'",
+          "end": "'",
+          "name": "string.quoted.single.rblang-expression"
+        },
+        {
+          "match": "\\b\\d+(\\.\\d+)?\\b",
+          "name": "constant.numeric.rblang-expression"
+        },
+        {
+          "match": "\\*",
+          "name": "constant.language.wildcard.rblang-expression"
+        },
+        {
+          "match": "[(),]",
+          "name": "punctuation.rblang-expression"
+        }
+      ]
+    },
+    "placeholder": {
+      "match": "%[SO]\\b",
+      "name": "variable.language.placeholder.rblang"
+    },
+    "interpolation": {
+      "patterns": [
+        {
+          "match": "(\\{\\{)\\s*(%[A-Z][A-Z0-9_]*|%[SO])(\\.[^}]+)?\\s*(\\}\\})",
+          "captures": {
+            "1": { "name": "punctuation.definition.interpolation.begin.rblang" },
+            "2": { "name": "variable.other.binding.rblang" },
+            "3": { "name": "support.class.reference.rblang" },
+            "4": { "name": "punctuation.definition.interpolation.end.rblang" }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "dora": {
+      "type": "http",
+      "url": "https://rake.rainbird.ai/mcp/graph/a66336188a52e716fb110e14b269af1f"
+    }
+  }
+}

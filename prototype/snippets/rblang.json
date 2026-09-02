@@ -1,0 +1,148 @@
+{
+  "Knowledge base skeleton": {
+    "prefix": "rb",
+    "body": [
+      "<?xml version=\"1.0\" encoding=\"utf-8\"?>",
+      "<rbl:kb xmlns:rbl=\"http://rbl.io/schema/RBLang\">",
+      "\t$0",
+      "</rbl:kb>"
+    ],
+    "description": "New RBLang knowledge map document"
+  },
+  "Concept": {
+    "prefix": "concept",
+    "body": ["<concept name=\"${1:Name}\" type=\"${2|string,number,date,truth|}\" />$0"],
+    "description": "Concept declaration (only string concepts can be relationship subjects)"
+  },
+  "Concept (mutually exclusive)": {
+    "prefix": "concept-mutex",
+    "body": ["<concept name=\"${1:Name}\" type=\"string\" behaviour=\"mutually-exclusive\" />$0"],
+    "description": "String concept whose two instances are mutually exclusive"
+  },
+  "Concept with datasource (GET)": {
+    "prefix": "concept-datasource",
+    "body": [
+      "<concept name=\"${1:Name}\" type=\"string\">",
+      "\t<datasource hostname=\"${2:https://example.com}\" path=\"${3:/api/lookup?key={{%S}}}\" name=\"${4:My Datasource}\">",
+      "\t\t<action map=\"${5:relationship name}=${6:/Response/Path}\" />",
+      "\t</datasource>",
+      "</concept>$0"
+    ],
+    "description": "Concept with a REST datasource invoked mid-inference"
+  },
+  "Concept with datasource (POST)": {
+    "prefix": "concept-datasource-post",
+    "body": [
+      "<concept name=\"${1:Name}\" type=\"string\">",
+      "\t<datasource hostname=\"${2:https://example.com}\" path=\"${3:/api/lookup}\" method=\"POST\" name=\"${4:My Datasource}\">",
+      "\t\t<action map=\"${5:relationship name}=${6:/Response/Path}\" />",
+      "\t\t<input rel=\"${7:relationship}\" subject=\"${8:%VAR}\" object=\"${9:%S}\" />",
+      "\t\t<headers>",
+      "\t\t\t<header key=\"${10:Content-Type}\" value=\"${11:application/json}\" />",
+      "\t\t</headers>",
+      "\t\t<![CDATA[${12:{\"key\": \"{{%S}}\"\\}}]]>",
+      "\t</datasource>",
+      "</concept>$0"
+    ],
+    "description": "Concept with a POST datasource with input bindings, headers and body"
+  },
+  "Concept instance": {
+    "prefix": "concinst",
+    "body": ["<concinst name=\"${1:Instance Name}\" type=\"${2:Concept}\" />$0"],
+    "description": "Concept instance (string concepts only)"
+  },
+  "Concept instance with markdown metadata": {
+    "prefix": "concinst-md",
+    "body": [
+      "<concinst name=\"${1:Instance Name}\" type=\"${2:Concept}\">",
+      "\t<meta type=\"md\"><![CDATA[${3:Description shown to users}]]></meta>",
+      "</concinst>$0"
+    ],
+    "description": "Concept instance with markdown metadata"
+  },
+  "Relationship": {
+    "prefix": "rel",
+    "body": [
+      "<rel name=\"${1:relates to}\" subject=\"${2:SubjectConcept}\" object=\"${3:ObjectConcept}\" plural=\"${4|false,true|}\" allowUnknown=\"${5|false,true|}\" askable=\"${6|all,none,secondFormObject,secondFormSubject|}\" />$0"
+    ],
+    "description": "Relationship declaration"
+  },
+  "Relationship with question wording": {
+    "prefix": "rel-questions",
+    "body": [
+      "<rel name=\"${1:relates to}\" subject=\"${2:SubjectConcept}\" object=\"${3:ObjectConcept}\" plural=\"${4|false,true|}\" askable=\"all\">",
+      "\t<firstForm>${5:Does %S $1 %O?}</firstForm>",
+      "\t<secondFormObject>${6:What does %S $1?}</secondFormObject>",
+      "\t<secondFormSubject>${7:What $1 %O?}</secondFormSubject>",
+      "</rel>$0"
+    ],
+    "description": "Relationship with custom question text (%S / %O placeholders)"
+  },
+  "Fact": {
+    "prefix": "fact",
+    "body": ["<relinst type=\"${1:relationship}\" subject=\"${2:Subject Instance}\" object=\"${3:Object Instance}\" cf=\"${4:100}\" />$0"],
+    "description": "Fact: a relationship instance with certainty"
+  },
+  "Rule": {
+    "prefix": "rule",
+    "body": [
+      "<relinst type=\"${1:relationship}\" cf=\"${2:100}\" name=\"${3:Rule name}\">",
+      "\t<condition rel=\"${4:relationship}\" subject=\"${5:%S}\" object=\"${6:%O}\" weight=\"${7:100}\" behaviour=\"${8|mandatory,optional|}\" />$9",
+      "</relinst>$0"
+    ],
+    "description": "Rule: a relationship instance with conditions"
+  },
+  "Rule (top-down)": {
+    "prefix": "rule-topdown",
+    "body": [
+      "<relinst type=\"${1:relationship}\" cf=\"${2:100}\" behaviour=\"${3|top-down,top-down-strict|}\">",
+      "\t<condition rel=\"${4:relationship}\" subject=\"%S\" object=\"${5:%VALUE}\" weight=\"100\" />$6",
+      "</relinst>$0"
+    ],
+    "description": "Rule with top-down condition ordering"
+  },
+  "Condition (relationship)": {
+    "prefix": "condition",
+    "body": ["<condition rel=\"${1:relationship}\" subject=\"${2:%S}\" object=\"${3:%O}\" weight=\"${4:100}\" behaviour=\"${5|mandatory,optional|}\" />$0"],
+    "description": "Relationship condition"
+  },
+  "Condition (expression test)": {
+    "prefix": "condition-expression",
+    "body": ["<condition expression=\"${1:%AGE is greater than or equal to 18}\" weight=\"${2:100}\" behaviour=\"${3|mandatory,optional|}\" />$0"],
+    "description": "Expression condition (comparison — no value attribute)"
+  },
+  "Condition (expression assignment)": {
+    "prefix": "condition-value",
+    "body": ["<condition expression=\"${1:%X * 2}\" value=\"${2:%O}\" weight=\"${3:100}\" behaviour=\"${4|mandatory,optional|}\" />$0"],
+    "description": "Expression assignment — value= is the only assignment mechanism"
+  },
+  "Condition (count relationship instances)": {
+    "prefix": "condition-count",
+    "body": ["<condition expression=\"countRelationshipInstances(${1:%S}, '${2:relationship}', ${3:*})\" value=\"${4:%COUNT}\" weight=\"${5:100}\" />$0"],
+    "description": "Count facts matching a (subject, relationship, object) pattern (* = wildcard)"
+  },
+  "Condition (sum objects)": {
+    "prefix": "condition-sum",
+    "body": ["<condition expression=\"sumObjects(${1:%S}, '${2:relationship}', ${3:*})\" value=\"${4:%TOTAL}\" weight=\"${5:100}\" />$0"],
+    "description": "Sum the numeric objects of matching facts"
+  },
+  "Condition (is subset)": {
+    "prefix": "condition-issubset",
+    "body": ["<condition expression=\"isSubset(${1:%O}, '${2:rel one}', ${3:*}, ${4:%S}, '${5:rel two}', ${6:*})\" weight=\"${7:100}\" />$0"],
+    "description": "Test whether one fact set is a subset of another"
+  },
+  "Import linked knowledge map": {
+    "prefix": "import",
+    "body": ["<import km=\"${1:knowledge-map-id}\" versionNumber=\"${2:1}\" />$0"],
+    "description": "Link another knowledge map (undocumented but Studio-supported)"
+  },
+  "Compound": {
+    "prefix": "compound",
+    "body": [
+      "<compound subject=\"${1:Subject}\" type=\"${2:relationship}\" object=\"${3:Object}\">",
+      "\t<relinst type=\"${4:relationship}\" object=\"${5:Object}\" cf=\"${6:100}\" />$7",
+      "</compound>$0"
+    ],
+    "description": "Compound (legacy engine feature — semantics undocumented; validator-tolerated)"
+  }
+}

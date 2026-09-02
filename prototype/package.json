@@ -1,0 +1,404 @@
+{
+  "name": "rainbird",
+  "displayName": "Rainbird",
+  "description": "RBLang language support, knowledge-map tooling, query running and evidence trees for the Rainbird decision-intelligence platform.",
+  "version": "0.0.1",
+  "publisher": "rainbird",
+  "license": "SEE LICENSE IN LICENSE",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/juliodt-ai/rainbird-vscode.git",
+    "directory": "prototype"
+  },
+  "bugs": {
+    "url": "https://github.com/juliodt-ai/rainbird-vscode/issues"
+  },
+  "homepage": "https://github.com/juliodt-ai/rainbird-vscode#readme",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "rainbird",
+    "rblang",
+    "knowledge map",
+    "knowledge graph",
+    "decision intelligence",
+    "reasoning"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:rblang",
+    "workspaceContains:**/*.rbl",
+    "workspaceContains:**/*.rbird"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "rblang",
+        "aliases": [
+          "RBLang",
+          "rblang"
+        ],
+        "extensions": [
+          ".rbl",
+          ".rblang"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./media/rblang-light.svg",
+          "dark": "./media/rblang-dark.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "rblang",
+        "scopeName": "text.xml.rblang",
+        "path": "./syntaxes/rblang.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "rblang",
+        "path": "./snippets/rblang.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "rainbird.connect",
+        "title": "Rainbird: Connect (set environment & API key)"
+      },
+      {
+        "command": "rainbird.runQuery",
+        "title": "Rainbird: Run Query (Quick Pick)…"
+      },
+      {
+        "command": "rainbird.openQueryPanel",
+        "title": "Rainbird: Run Query…",
+        "icon": "$(play)"
+      },
+      {
+        "command": "rainbird.openGraphView",
+        "title": "Rainbird: Show Graph View",
+        "icon": "$(type-hierarchy-sub)"
+      },
+      {
+        "command": "rainbird.pushMap",
+        "title": "Rainbird: Push Map to Platform (creates a new map)",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "rainbird.explainSelection",
+        "title": "Rainbird: Explain with AI"
+      },
+      {
+        "command": "rainbird.setAnthropicKey",
+        "title": "Rainbird: Set Anthropic API Key (AI assistant)",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "rainbird.assistantNewChat",
+        "title": "Rainbird: New Assistant Chat",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "rainbird.openNlPanel",
+        "title": "Rainbird: Ask in Natural Language (beta)…"
+      },
+      {
+        "command": "rainbird.semanticDiff",
+        "title": "Rainbird: Semantic Diff (vs git HEAD)…"
+      },
+      {
+        "command": "rainbird.mapsRefresh",
+        "title": "Rainbird: Refresh Maps",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "rainbird.mapsAdd",
+        "title": "Rainbird: Add Map by kmID…",
+        "icon": "$(add)"
+      },
+      {
+        "command": "rainbird.mapsOpen",
+        "title": "Open RBLang"
+      },
+      {
+        "command": "rainbird.mapsQuery",
+        "title": "Run Query",
+        "icon": "$(play)"
+      },
+      {
+        "command": "rainbird.mapsCopyKmId",
+        "title": "Copy kmID"
+      },
+      {
+        "command": "rainbird.mapsRemove",
+        "title": "Remove from list"
+      },
+      {
+        "command": "rainbird.mapsOpenFile",
+        "title": "Open source file"
+      },
+      {
+        "command": "rainbird.showEvidence",
+        "title": "Rainbird: Show Evidence Tree for Fact…"
+      },
+      {
+        "command": "rainbird.setEvidenceKey",
+        "title": "Rainbird: Set Evidence Key (x-evidence-key)"
+      },
+      {
+        "command": "rainbird.extractRbird",
+        "title": "Rainbird: Extract RBLang from .rbird export"
+      },
+      {
+        "command": "rainbird.addMcpServer",
+        "title": "Rainbird: Add Served Graph as MCP Server…"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "rainbird",
+          "title": "Rainbird",
+          "icon": "media/rainbird-activity.svg"
+        }
+      ]
+    },
+    "views": {
+      "rainbird": [
+        {
+          "id": "rainbird.mapExplorer",
+          "name": "Map Explorer",
+          "icon": "media/rainbird-activity.svg"
+        },
+        {
+          "id": "rainbird.platformMaps",
+          "name": "Maps",
+          "icon": "media/rainbird-activity.svg"
+        },
+        {
+          "id": "rainbird.assistant",
+          "type": "webview",
+          "name": "AI Assistant",
+          "icon": "media/rainbird-activity.svg"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "rainbird.mapExplorer",
+        "contents": "Open an RBLang (.rbl) file to explore its concepts, relationships and rules.\n[Open example](command:rainbird.openExample)"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "rainbird.mapsOpen",
+          "when": "false"
+        },
+        {
+          "command": "rainbird.mapsQuery",
+          "when": "false"
+        },
+        {
+          "command": "rainbird.mapsCopyKmId",
+          "when": "false"
+        },
+        {
+          "command": "rainbird.mapsRemove",
+          "when": "false"
+        },
+        {
+          "command": "rainbird.mapsOpenFile",
+          "when": "false"
+        }
+      ],
+      "editor/title/run": [
+        {
+          "command": "rainbird.openQueryPanel",
+          "when": "editorLangId == rblang",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "rainbird.openGraphView",
+          "when": "editorLangId == rblang",
+          "group": "navigation@1"
+        },
+        {
+          "command": "rainbird.pushMap",
+          "when": "editorLangId == rblang",
+          "group": "navigation@2"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "rainbird.explainSelection",
+          "when": "editorLangId == rblang",
+          "group": "rainbird@1"
+        },
+        {
+          "command": "rainbird.semanticDiff",
+          "when": "editorLangId == rblang",
+          "group": "rainbird@2"
+        },
+        {
+          "command": "rainbird.openNlPanel",
+          "when": "editorLangId == rblang",
+          "group": "rainbird@3"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "rainbird.assistantNewChat",
+          "when": "view == rainbird.assistant",
+          "group": "navigation@1"
+        },
+        {
+          "command": "rainbird.setAnthropicKey",
+          "when": "view == rainbird.assistant",
+          "group": "navigation@2"
+        },
+        {
+          "command": "rainbird.mapsAdd",
+          "when": "view == rainbird.platformMaps",
+          "group": "navigation@1"
+        },
+        {
+          "command": "rainbird.mapsRefresh",
+          "when": "view == rainbird.platformMaps",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "rainbird.mapsQuery",
+          "when": "view == rainbird.platformMaps && viewItem =~ /rainbirdMap/",
+          "group": "inline"
+        },
+        {
+          "command": "rainbird.mapsOpen",
+          "when": "view == rainbird.platformMaps && viewItem =~ /rainbirdMap/",
+          "group": "rainbird@0"
+        },
+        {
+          "command": "rainbird.mapsQuery",
+          "when": "view == rainbird.platformMaps && viewItem =~ /rainbirdMap/",
+          "group": "rainbird@1"
+        },
+        {
+          "command": "rainbird.mapsCopyKmId",
+          "when": "view == rainbird.platformMaps && viewItem =~ /rainbirdMap/",
+          "group": "rainbird@2"
+        },
+        {
+          "command": "rainbird.mapsOpenFile",
+          "when": "view == rainbird.platformMaps && viewItem == rainbirdMapWithFile",
+          "group": "rainbird@3"
+        },
+        {
+          "command": "rainbird.mapsRemove",
+          "when": "view == rainbird.platformMaps && viewItem =~ /rainbirdMap/",
+          "group": "rainbird@4"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "rainbird.extractRbird",
+          "when": "resourceExtname == .rbird",
+          "group": "rainbird"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Rainbird",
+      "properties": {
+        "rainbird.apiUrl": {
+          "type": "string",
+          "default": "https://api.rainbird.ai",
+          "description": "Rainbird API base URL (Community: https://api.rainbird.ai, Enterprise: https://enterprise-api.rainbird.ai, or your private environment URL)."
+        },
+        "rainbird.knowledgeMapId": {
+          "type": "string",
+          "default": "",
+          "description": "Knowledge Map ID (kmID) queries run against. Found on the map's Publish page in Rainbird Studio.",
+          "scope": "resource"
+        },
+        "rainbird.useDraft": {
+          "type": "boolean",
+          "default": true,
+          "description": "Query the draft version of the knowledge map instead of the live version."
+        },
+        "rainbird.ai.model": {
+          "type": "string",
+          "default": "claude-opus-5",
+          "description": "Claude model the AI assistant uses (via your Anthropic API key)."
+        }
+      }
+    },
+    "walkthroughs": [
+      {
+        "id": "rainbird.gettingStarted",
+        "title": "Get started with Rainbird",
+        "description": "Author RBLang knowledge maps, run queries and inspect evidence without leaving VSCode.",
+        "steps": [
+          {
+            "id": "rainbird.openExample",
+            "title": "Open an example knowledge map",
+            "description": "Open a sample .rbl file to see RBLang language support in action.\n[Open example](command:rainbird.openExample)",
+            "media": {
+              "markdown": "media/walkthrough/example.md"
+            }
+          },
+          {
+            "id": "rainbird.connectStep",
+            "title": "Connect to your Rainbird environment",
+            "description": "Store your API key securely and choose Community, Enterprise or a private environment.\n[Connect](command:rainbird.connect)",
+            "media": {
+              "markdown": "media/walkthrough/connect.md"
+            },
+            "completionEvents": [
+              "onCommand:rainbird.connect"
+            ]
+          },
+          {
+            "id": "rainbird.queryStep",
+            "title": "Run your first query",
+            "description": "Pick a goal relationship, answer the questions the engine asks, and get a result with certainty and evidence.\n[Run Query](command:rainbird.runQuery)",
+            "media": {
+              "markdown": "media/walkthrough/query.md"
+            },
+            "completionEvents": [
+              "onCommand:rainbird.runQuery"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.4.0",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.3.2"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.122.0"
+  }
+}

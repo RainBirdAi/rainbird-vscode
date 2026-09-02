@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: prototype/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: prototype
+
+      - name: Package VSIX
+        run: >
+          npx --yes @vscode/vsce package
+          --baseContentUrl "https://github.com/${{ github.repository }}/blob/main/prototype"
+          --baseImagesUrl "https://github.com/${{ github.repository }}/raw/main/prototype"
+        working-directory: prototype
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "$GITHUB_REF_NAME" prototype/rainbird-*.vsix
+          --prerelease --generate-notes --title "Rainbird $GITHUB_REF_NAME"

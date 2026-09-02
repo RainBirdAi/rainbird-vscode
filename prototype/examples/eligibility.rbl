@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rbl:kb xmlns:rbl="http://rbl.io/schema/RBLang">
+
+	<!-- Expression-language showcase: age-based eligibility with a derived value -->
+
+	<concept name="Applicant" type="string"/>
+	<concept name="Age" type="number"/>
+	<concept name="Date Of Birth" type="date"/>
+	<concept name="Eligibility" type="string" behaviour="mutually-exclusive"/>
+
+	<concinst name="Eligible" type="Eligibility"/>
+	<concinst name="Not Eligible" type="Eligibility"/>
+
+	<rel name="has date of birth" subject="Applicant" object="Date Of Birth" askable="all">
+		<secondFormObject>What is %S's date of birth?</secondFormObject>
+	</rel>
+	<rel name="has age" subject="Applicant" object="Age" askable="none"/>
+	<rel name="has eligibility" subject="Applicant" object="Eligibility" askable="none"/>
+
+	<!-- Derive age from date of birth: value= is the only assignment mechanism -->
+	<relinst type="has age" cf="100" name="Derive age from DOB">
+		<condition rel="has date of birth" subject="%S" object="%DOB" weight="100"/>
+		<condition expression="yearsBetween(%DOB, today())" value="%O" weight="100"/>
+	</relinst>
+
+	<relinst type="has eligibility" object="Eligible" cf="100" name="Adults are eligible"
+	         alt="{{%S}} is {{%AGE}}, which meets the minimum age of 18">
+		<condition rel="has age" subject="%S" object="%AGE" weight="100"/>
+		<condition expression="%AGE is greater than or equal to 18" weight="100"/>
+	</relinst>
+
+	<relinst type="has eligibility" object="Not Eligible" cf="100" name="Minors are not eligible">
+		<condition rel="has age" subject="%S" object="%AGE" weight="100"/>
+		<condition expression="%AGE is less than 18" weight="100"/>
+	</relinst>
+
+</rbl:kb>

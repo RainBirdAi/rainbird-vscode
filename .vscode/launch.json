@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Rainbird Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/prototype",
+        "${workspaceFolder}/prototype/examples"
+      ],
+      "outFiles": ["${workspaceFolder}/prototype/out/**/*.js"],
+      "preLaunchTask": "compile prototype"
+    }
+  ]
+}

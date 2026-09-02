@@ -1,0 +1,4 @@
+node_modules/
+prototype/out/
+*.vsix
+.DS_Store

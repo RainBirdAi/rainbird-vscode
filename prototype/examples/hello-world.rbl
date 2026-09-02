@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rbl:kb xmlns:rbl="http://rbl.io/schema/RBLang">
+
+	<!-- The classic Rainbird Hello World: who speaks what? -->
+
+	<concept name="Person" type="string"/>
+	<concept name="Country" type="string"/>
+	<concept name="Language" type="string"/>
+
+	<rel name="speaks" subject="Person" object="Language" plural="true" askable="all">
+		<firstForm>Does %S speak %O?</firstForm>
+		<secondFormObject>Which languages does %S speak?</secondFormObject>
+		<secondFormSubject>Who speaks %O?</secondFormSubject>
+	</rel>
+	<rel name="lives in" subject="Person" object="Country" askable="all">
+		<secondFormObject>Which country does %S live in?</secondFormObject>
+	</rel>
+	<rel name="national language" subject="Country" object="Language" askable="none"/>
+
+	<concinst name="Julio" type="Person"/>
+
+	<concinst name="English" type="Language"/>
+	<concinst name="French" type="Language"/>
+	<concinst name="England" type="Country"/>
+	<concinst name="France" type="Country"/>
+
+	<relinst type="national language" subject="England" object="English" cf="100"/>
+	<relinst type="national language" subject="France" object="French" cf="100"/>
+
+	<!-- Rule: people probably speak the national language of the country they live in -->
+	<relinst type="speaks" cf="75" name="Speaks national language of home country"
+	         alt="{{%S}} lives in {{%COUNTRY}}, whose national language is {{%O}}">
+		<condition rel="lives in" subject="%S" object="%COUNTRY" weight="100" behaviour="mandatory"/>
+		<condition rel="national language" subject="%COUNTRY" object="%O" weight="100" behaviour="mandatory"/>
+	</relinst>
+
+</rbl:kb>
