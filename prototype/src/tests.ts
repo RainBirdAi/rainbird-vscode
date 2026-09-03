@@ -1,30 +1,74 @@
 /**
  * Regression tests from real sessions: the query panel can save a finished
- * session (goal + answers given + results) as a .rbtest.json file, and the
- * Test Explorer replays those files against the platform draft — every
- * escalated incident or manual check becomes a permanent regression test.
+ * session (goal + injected facts + answers given + results) as a .rbtest.json
+ * file, and the Test Explorer replays those files against the platform —
+ * every escalated incident or manual check becomes a permanent regression
+ * test. `replay` is the shared engine the promotion diff reuses.
  */
 import * as vscode from "vscode";
-import { Answer, ResultItem } from "./api";
+import { Answer, Fact, Question, RainbirdClient, ResultItem, StartTarget, describeTarget, startOptions } from "./api";
 import { getClientSilent } from "./queryRunner";
 
-export interface SessionRecord {
+/** Everything needed to re-run a decision: which map, what to ask, what was told and answered. */
+export interface Scenario {
   kmId: string;
-  goal: { relationship: string; subject?: string };
+  goal: { relationship: string; subject?: string; object?: string };
+  /** One batch per /response call — a batch holds every answer of a question group. */
   answers: Answer[][];
-  results?: ResultItem[];
+  facts?: Fact[];
 }
 
-interface TestFile {
+export interface SessionRecord extends Scenario {
+  results?: ResultItem[];
+  target?: StartTarget;
+}
+
+export interface TestFile extends Scenario {
   name: string;
-  kmId: string;
-  goal: { relationship: string; subject?: string };
-  answers: Answer[][];
   expected: { subject: string; relationship: string; object: string | number | boolean; certainty: number }[];
   savedAt: string;
+  /** Version to run against; legacy files without it run against the draft. */
+  target?: StartTarget;
+}
+
+export interface ReplayOutcome {
+  sessionId: string;
+  results?: ResultItem[];
+  /** Set when the engine asked something the scenario has no answer for — the question flow changed. */
+  pendingQuestion?: Question;
 }
 
 const CERTAINTY_TOLERANCE = 2;
+
+/** Start a session on `target`, inject, query, and feed the recorded answer batches until a result or an unrecorded question. */
+export async function replay(client: RainbirdClient, scenario: Scenario, target: StartTarget): Promise<ReplayOutcome> {
+  const sessionId = await client.start(scenario.kmId, startOptions(target));
+  if (scenario.facts?.length) await client.inject(sessionId, scenario.facts);
+  let response = await client.query(sessionId, {
+    relationship: scenario.goal.relationship,
+    ...(scenario.goal.subject ? { subject: scenario.goal.subject } : {}),
+    ...(scenario.goal.object ? { object: scenario.goal.object } : {}),
+  });
+  const batches = [...scenario.answers];
+  while (response.kind === "question") {
+    const batch = batches.shift();
+    if (!batch) return { sessionId, pendingQuestion: response.question };
+    // The recorded batch must answer what was actually asked. If this version
+    // asks about a different relationship, the flow has diverged — feeding it a
+    // stale answer would be accepted as a fact and silently corrupt the run.
+    const asked = [response.question, ...(response.extraQuestions ?? [])];
+    const given = new Set(batch.map((a) => a.relationship));
+    const unanswered = asked.find((q) => !given.has(q.relationship));
+    if (unanswered) return { sessionId, pendingQuestion: unanswered };
+    response = await client.respond(sessionId, batch);
+  }
+  return { sessionId, results: response.result };
+}
+
+export async function loadTestFile(uri: vscode.Uri): Promise<TestFile> {
+  const raw = await vscode.workspace.fs.readFile(uri);
+  return JSON.parse(Buffer.from(raw).toString("utf8")) as TestFile;
+}
 
 export async function saveSessionAsTest(record: SessionRecord): Promise<void> {
   if (!record.results?.length) {
@@ -51,6 +95,8 @@ export async function saveSessionAsTest(record: SessionRecord): Promise<void> {
     name,
     kmId: record.kmId,
     goal: record.goal,
+    ...(record.target ? { target: record.target } : {}),
+    ...(record.facts?.length ? { facts: record.facts } : {}),
     answers: record.answers,
     expected: record.results.map((r) => ({
       subject: r.subject,
@@ -75,10 +121,9 @@ export function registerTests(context: vscode.ExtensionContext): void {
 
   const addItem = async (uri: vscode.Uri) => {
     try {
-      const raw = await vscode.workspace.fs.readFile(uri);
-      const parsed = JSON.parse(Buffer.from(raw).toString("utf8")) as TestFile;
+      const parsed = await loadTestFile(uri);
       const item = controller.createTestItem(uri.toString(), parsed.name || uri.path.split("/").pop()!, uri);
-      item.description = parsed.goal.relationship;
+      item.description = `${parsed.goal.relationship} · ${describeTarget(parsed.target)}`;
       controller.items.add(item);
     } catch {
       controller.items.delete(uri.toString());
@@ -115,24 +160,15 @@ export function registerTests(context: vscode.ExtensionContext): void {
       run.started(item);
       const started = Date.now();
       try {
-        const raw = await vscode.workspace.fs.readFile(item.uri!);
-        const test = JSON.parse(Buffer.from(raw).toString("utf8")) as TestFile;
-
-        const sessionId = await client.start(test.kmId, { useDraft: true });
-        let response = await client.query(sessionId, {
-          relationship: test.goal.relationship,
-          ...(test.goal.subject ? { subject: test.goal.subject } : {}),
-        });
-        const batches = [...test.answers];
-        while (response.kind === "question") {
-          const batch = batches.shift();
-          if (!batch) {
-            throw new Error(`Engine asked an unrecorded question: "${response.question.prompt}" — the map's question flow changed.`);
-          }
-          response = await client.respond(sessionId, batch);
+        const test = await loadTestFile(item.uri!);
+        const outcome = await replay(client, test, test.target ?? { kind: "draft" });
+        if (outcome.pendingQuestion) {
+          throw new Error(
+            `Engine asked an unrecorded question: "${outcome.pendingQuestion.prompt}" — the map's question flow changed.`
+          );
         }
 
-        const actual = response.result;
+        const actual = outcome.results ?? [];
         const failures: string[] = [];
         for (const expected of test.expected) {
           const match = actual.find(

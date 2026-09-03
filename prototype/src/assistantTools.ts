@@ -36,13 +36,15 @@ export function buildTools(context: vscode.ExtensionContext): ToolSpec[] {
     {
       name: "run_query",
       description:
-        "Run a live query against a Rainbird knowledge map (uses the draft version). Each call starts a FRESH session, injects `facts`, asks for the goal, then feeds `answers` in order to the questions the engine asks. If the engine still has an unanswered question, it is returned — call again with that answer appended to `answers` (or ask the user). Returns results with certainty when the query completes.",
+        "Run a live query against a Rainbird knowledge map (draft by default; pass `version` to pin a published version). Each call starts a FRESH session, injects `facts`, asks for the goal, then feeds `answers` in order to the questions the engine asks — grouped questions arrive together and take one answer each. If the engine still has unanswered questions, they are returned — call again with answers appended (or ask the user). Returns results with certainty when the query completes.",
       input_schema: {
         type: "object",
         properties: {
           kmId: { type: "string", description: "Knowledge map ID. Omit to use the workspace's configured map." },
           relationship: { type: "string", description: "Goal relationship to query" },
           subject: { type: "string", description: "Optional goal subject" },
+          object: { type: "string", description: "Optional goal object (with subject: ask how certain that exact fact is)" },
+          version: { type: "number", description: "Published version number to run against instead of the draft" },
           facts: {
             type: "array",
             description: "Facts to inject before querying",
@@ -87,20 +89,38 @@ export function buildTools(context: vscode.ExtensionContext): ToolSpec[] {
         if (!kmId) return "No knowledge map ID — pass kmId or tell the user to set rainbird.knowledgeMapId (or push the map first).";
 
         recordKnownMap(context, { kmId, source: "queried" });
-        const sessionId = await client.start(kmId, { useDraft: true });
+        const version = typeof input.version === "number" ? input.version : undefined;
+        const sessionId = await client.start(kmId, version ? { version } : { useDraft: true });
         const facts = (input.facts as Fact[] | undefined) ?? [];
         if (facts.length) await client.inject(sessionId, facts);
 
         let response = await client.query(sessionId, {
           relationship: String(input.relationship),
           ...(input.subject ? { subject: String(input.subject) } : {}),
+          ...(input.object ? { object: String(input.object) } : {}),
         });
+        // Grouped questions (question + extraQuestions) must be answered together
+        // in one /response call — consume one answer per question in the group.
         const answers = [...((input.answers as Answer[] | undefined) ?? [])];
-        while (response.kind === "question" && answers.length > 0) {
-          response = await client.respond(sessionId, [answers.shift()!]);
+        while (response.kind === "question") {
+          const groupSize = 1 + (response.extraQuestions?.length ?? 0);
+          if (answers.length < groupSize) break;
+          response = await client.respond(sessionId, answers.splice(0, groupSize));
         }
         if (response.kind === "question") {
-          return JSON.stringify({ status: "question", question: response.question }, null, 2);
+          const questions = [response.question, ...(response.extraQuestions ?? [])];
+          return JSON.stringify(
+            {
+              status: "question",
+              questions,
+              note:
+                questions.length > 1
+                  ? `These ${questions.length} questions are a group: supply one answer per question, in this order, appended to answers.`
+                  : "Append one answer for this question to answers and call again.",
+            },
+            null,
+            2
+          );
         }
         return JSON.stringify({ status: "result", results: response.result }, null, 2);
       },

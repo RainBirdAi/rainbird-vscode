@@ -117,6 +117,15 @@
         "title": "Rainbird: Semantic Diff (vs git HEAD)…"
       },
       {
+        "command": "rainbird.promotionDiff",
+        "title": "Rainbird: Compare Versions (Promotion Diff)…",
+        "icon": "$(diff)"
+      },
+      {
+        "command": "rainbird.diffAgainstPushed",
+        "title": "Rainbird: Diff Against Last Pushed Snapshot"
+      },
+      {
         "command": "rainbird.mapsRefresh",
         "title": "Rainbird: Refresh Maps",
         "icon": "$(refresh)"
@@ -158,6 +167,20 @@
       {
         "command": "rainbird.extractRbird",
         "title": "Rainbird: Extract RBLang from .rbird export"
+      },
+      {
+        "command": "rainbird.compareDraft",
+        "title": "Rainbird: Compare Draft vs Saved Version…",
+        "icon": "$(diff)"
+      },
+      {
+        "command": "rainbird.pullMap",
+        "title": "Rainbird: Pull Map RBLang from Platform…",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "rainbird.diffAgainstDraft",
+        "title": "Rainbird: Diff Open File Against Platform Draft"
       },
       {
         "command": "rainbird.addMcpServer",
@@ -256,6 +279,26 @@
           "command": "rainbird.openNlPanel",
           "when": "editorLangId == rblang",
           "group": "rainbird@3"
+        },
+        {
+          "command": "rainbird.promotionDiff",
+          "when": "editorLangId == rblang",
+          "group": "rainbird@4"
+        },
+        {
+          "command": "rainbird.diffAgainstPushed",
+          "when": "editorLangId == rblang",
+          "group": "rainbird@5"
+        },
+        {
+          "command": "rainbird.compareDraft",
+          "when": "editorLangId == rblang",
+          "group": "rainbird@6"
+        },
+        {
+          "command": "rainbird.diffAgainstDraft",
+          "when": "editorLangId == rblang",
+          "group": "rainbird@7"
         }
       ],
       "view/title": [
@@ -278,6 +321,11 @@
           "command": "rainbird.mapsRefresh",
           "when": "view == rainbird.platformMaps",
           "group": "navigation@2"
+        },
+        {
+          "command": "rainbird.pullMap",
+          "when": "view == rainbird.platformMaps",
+          "group": "navigation@0"
         }
       ],
       "view/item/context": [
@@ -315,6 +363,11 @@
       "explorer/context": [
         {
           "command": "rainbird.extractRbird",
+          "when": "resourceExtname == .rbird",
+          "group": "rainbird"
+        },
+        {
+          "command": "rainbird.compareDraft",
           "when": "resourceExtname == .rbird",
           "group": "rainbird"
         }

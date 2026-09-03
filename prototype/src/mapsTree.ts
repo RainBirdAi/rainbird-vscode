@@ -10,6 +10,7 @@
  */
 import * as vscode from "vscode";
 import { getClientSilent } from "./queryRunner";
+import { platformUri } from "./platform";
 
 export interface KnownMap {
   kmId: string;
@@ -57,8 +58,8 @@ export function recordKnownMap(
   }
   void context.globalState.update(key, maps.slice(0, 100));
 
-  // The platform has no export API, so the moment of push is the only chance
-  // to keep this map's source retrievable — snapshot it.
+  // Snapshot exactly what was sent: it is the offline record of the push and
+  // the base for quick-diff gutter bars.
   if (rblang) {
     const dir = vscode.Uri.joinPath(context.globalStorageUri, "map-snapshots", environmentDir());
     void vscode.workspace.fs
@@ -188,13 +189,30 @@ export class PlatformMapsProvider implements vscode.TreeDataProvider<Node> {
   }
 
   /**
-   * Click action: open the map's RBLang. The platform has no export API, so
-   * the best available source wins: the workspace file it was pushed from →
-   * the snapshot taken at push time → an honest explanation.
+   * Click action: open the map's RBLang. Best available source wins: the
+   * platform draft (GET /analysis/file) → the workspace file it was pushed
+   * from → the snapshot taken at push time → an honest explanation.
    */
   async openRblang(node?: Node): Promise<void> {
     if (!node || node.kind !== "map") return;
     const map = node.map;
+
+    // Best source first: the platform draft itself (GET /analysis/file), read-only.
+    const client = await getClientSilent(this.context);
+    if (client) {
+      try {
+        await client.getFile(map.kmId);
+        const doc = await vscode.workspace.openTextDocument(platformUri(map.kmId, { kind: "draft" }));
+        await vscode.window.showTextDocument(doc);
+        vscode.window.setStatusBarMessage(
+          `Read-only RBLang of the platform draft for "${map.name ?? map.kmId}" — “Rainbird: Pull Map RBLang…” saves a local copy.`,
+          8000
+        );
+        return;
+      } catch {
+        // Not readable with this key (or offline) — fall back to the local file / snapshot.
+      }
+    }
 
     if (map.file) {
       try {
@@ -223,8 +241,8 @@ export class PlatformMapsProvider implements vscode.TreeDataProvider<Node> {
     }
 
     const action = await vscode.window.showInformationMessage(
-      `No RBLang source is available for "${map.name ?? map.kmId}" — the platform has no export API (proposal ask #8). ` +
-        `Export a .rbird from Studio and extract it, or query the map live.`,
+      `No RBLang source is available for "${map.name ?? map.kmId}": the platform did not return it for this key (connect first, or check the kmID), ` +
+        `and there is no local file or push snapshot. Export a .rbird from Studio and extract it, or query the map live.`,
       "Extract .rbird…",
       "Run query"
     );

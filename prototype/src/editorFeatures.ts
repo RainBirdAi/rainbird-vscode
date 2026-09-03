@@ -5,7 +5,8 @@
  * are pure functions over the tag index so they can be tested headlessly.
  */
 import * as vscode from "vscode";
-import { buildIndex, TagOccurrence } from "./mapIndex";
+import { buildIndex, TagOccurrence, attrValueRange } from "./mapIndex";
+import { analyseExpression } from "./expressions";
 import { collectIssues, getCachedIssues } from "./diagnostics";
 
 // ---------------------------------------------------------------------------
@@ -234,5 +235,42 @@ export function registerEditorFeatures(context: vscode.ExtensionContext): void {
         );
       },
     })
+  );
+}
+
+/**
+ * Inlay hints showing how the engine actually reads an arithmetic expression.
+ * Only chains where left-to-right evaluation differs from conventional
+ * precedence get a hint, so quiet maps stay quiet.
+ */
+export function registerInlayHints(context: vscode.ExtensionContext): void {
+  context.subscriptions.push(
+    vscode.languages.registerInlayHintsProvider(
+      { language: "rblang" },
+      {
+        provideInlayHints(doc, range) {
+          const index = buildIndex(doc.getText());
+          const hints: vscode.InlayHint[] = [];
+          for (const tag of index.tags) {
+            if (tag.closing || tag.name !== "condition" || !tag.attrs.expression) continue;
+            const valueRange = attrValueRange(tag, "expression");
+            if (!valueRange) continue;
+            const position = doc.positionAt(valueRange.end + 1); // just after the closing quote
+            if (!range.contains(position)) continue;
+            const chains = analyseExpression(tag.attrs.expression).filter((c) => c.mixed);
+            if (!chains.length) continue;
+            const hint = new vscode.InlayHint(position, ` ⇢ ${chains.map((c) => c.leftToRight).join(" · ")}`);
+            hint.paddingLeft = true;
+            hint.tooltip = new vscode.MarkdownString(
+              "**How Rainbird evaluates this expression.** The engine applies operators strictly left to right, with no precedence. " +
+                chains.map((c) => `\`${c.text}\` → \`${c.leftToRight}\` (conventional maths would read it as \`${c.conventional}\`).`).join(" ") +
+                " Use the lightbulb on the warning to insert explicit parentheses."
+            );
+            hints.push(hint);
+          }
+          return hints;
+        },
+      }
+    )
   );
 }

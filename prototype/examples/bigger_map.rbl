@@ -770,7 +770,6 @@
   <concinst name="OPCS-4:H20.5" type="Code"/>
   <concinst name="OPCS-4:H20.6" type="Code"/>
   <concinst name="OPCS-4:H23.1" type="Code"/>
-  <concinst name="OPCS-4:H20.6" type="Code"/>
   <concinst name="OPCS-4:Y20.9" type="Code"/>
   <concinst name="OPCS-4:Y20.3" type="Code"/>
   <concinst name="OPCS-4:Y13.1" type="Code"/>
@@ -1081,7 +1080,6 @@
   <relinst type="has classification" subject="OPCS-4:H20.5" object="OPCS-4"/>
   <relinst type="has classification" subject="OPCS-4:H20.6" object="OPCS-4"/>
   <relinst type="has classification" subject="OPCS-4:H23.1" object="OPCS-4"/>
-  <relinst type="has classification" subject="OPCS-4:H20.6" object="OPCS-4"/>
   <relinst type="has classification" subject="OPCS-4:Z27.1" object="OPCS-4"/>
   <relinst type="has classification" subject="OPCS-4:Z27.2" object="OPCS-4"/>
   <relinst type="has classification" subject="OPCS-4:Z27.3" object="OPCS-4"/>

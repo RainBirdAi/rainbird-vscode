@@ -14,6 +14,25 @@ interface RbirdFile {
   studioData?: unknown;
 }
 
+/** RBLang source from a .rbird buffer (gzip or plain JSON), or undefined when the export has none. */
+export function decodeRbird(raw: Buffer): string | undefined {
+  const json = raw[0] === 0x1f && raw[1] === 0x8b ? gunzipSync(raw) : raw;
+  const parsed = JSON.parse(json.toString("utf8")) as RbirdFile;
+  const rblang = parsed.unicronData?.rblang;
+  return rblang && rblang.length ? rblang.join("\n") : undefined;
+}
+
+/** Read RBLang from a .rbird export or a plain .rbl/.xml file — the two shapes a Studio round-trip produces. */
+export async function readRblang(uri: vscode.Uri): Promise<string> {
+  const raw = Buffer.from(await vscode.workspace.fs.readFile(uri));
+  if (/\.rbird$/i.test(uri.path) || (raw[0] === 0x1f && raw[1] === 0x8b)) {
+    const rblang = decodeRbird(raw);
+    if (!rblang) throw new Error(`${uri.path.split("/").pop()} contains no RBLang source.`);
+    return rblang;
+  }
+  return raw.toString("utf8");
+}
+
 export async function extractRbird(uri?: vscode.Uri): Promise<void> {
   const target =
     uri ??
@@ -26,17 +45,14 @@ export async function extractRbird(uri?: vscode.Uri): Promise<void> {
   if (!target) return;
 
   try {
-    const raw = Buffer.from(await vscode.workspace.fs.readFile(target));
-    const json = raw[0] === 0x1f && raw[1] === 0x8b ? gunzipSync(raw) : raw;
-    const parsed = JSON.parse(json.toString("utf8")) as RbirdFile;
-    const rblang = parsed.unicronData?.rblang;
-    if (!rblang || rblang.length === 0) {
+    const rblang = decodeRbird(Buffer.from(await vscode.workspace.fs.readFile(target)));
+    if (!rblang) {
       vscode.window.showErrorMessage("No RBLang source found in this .rbird file.");
       return;
     }
 
     const output = vscode.Uri.file(target.fsPath.replace(/\.rbird$/i, ".rbl"));
-    await vscode.workspace.fs.writeFile(output, Buffer.from(rblang.join("\n"), "utf8"));
+    await vscode.workspace.fs.writeFile(output, Buffer.from(rblang, "utf8"));
     const doc = await vscode.workspace.openTextDocument(output);
     await vscode.window.showTextDocument(doc);
     vscode.window.showInformationMessage(`Extracted RBLang to ${vscode.workspace.asRelativePath(output)}`);

@@ -14,6 +14,7 @@
 import * as vscode from "vscode";
 import { SCHEMA, EXPRESSION_FUNCTIONS } from "./schema";
 import { buildIndex, MapIndex, TagOccurrence, attrValueRange, attrFullRange } from "./mapIndex";
+import { analyseExpression } from "./expressions";
 
 /** A machine-applicable repair for an issue (offsets into the linted text). */
 export interface LintFix {
@@ -151,6 +152,9 @@ export function collectIssues(text: string): LintIssue[] {
   checkMutexInstances(index, add);
   checkOrphanConcepts(index, add);
   checkQuestionForms(text, index, add);
+  checkEvaluationOrder(index, add);
+  checkReachability(index, add);
+  checkCycles(index, add);
 
   return issues;
 }
@@ -444,6 +448,149 @@ function checkOrphanConcepts(index: MapIndex, add: AddIssue): void {
       add(tag, `Concept "${tag.attrs.name}" is not used by any relationship`, "info");
     }
   }
+}
+
+/**
+ * Left-to-right arithmetic: the engine has no operator precedence, so
+ * `%A + %B * 2` is `(%A + %B) * 2`. Warn on every chain where that differs
+ * from the conventional reading and offer both explicit forms as fixes.
+ */
+function checkEvaluationOrder(index: MapIndex, add: AddIssue): void {
+  for (const tag of index.tags) {
+    if (tag.closing || tag.name !== "condition" || !tag.attrs.expression) continue;
+    const range = attrValueRange(tag, "expression");
+    if (!range) continue;
+    for (const chain of analyseExpression(tag.attrs.expression)) {
+      if (!chain.mixed) continue;
+      const start = range.start + chain.start;
+      const end = range.start + chain.end;
+      add(
+        tag,
+        `Expressions evaluate strictly left to right (no operator precedence): "${chain.text}" is computed as ${chain.leftToRight}, not ${chain.conventional}. Add parentheses to make the intended order explicit`,
+        "warning",
+        [
+          { title: `Keep the engine's order: ${chain.leftToRight}`, edits: [{ start, end, newText: chain.leftToRight }] },
+          { title: `Use conventional precedence: ${chain.conventional}`, edits: [{ start, end, newText: chain.conventional }] },
+        ]
+      );
+    }
+  }
+}
+
+/** A relationship is askable unless it says otherwise (askable="none" / legacy "false"). */
+function isAskable(relTag: TagOccurrence): boolean {
+  const askable = relTag.attrs.askable ?? "all";
+  return askable !== "none" && askable !== "false";
+}
+
+/**
+ * Reachability: in a conversational map, a relationship with no facts, no
+ * rules, no question and no datasource can only ever be satisfied by injected
+ * facts — so every mandatory condition on it, and every rule behind such a
+ * condition, is dead in a live session. This is the static half of the docs'
+ * "why did I get no result?" troubleshooting page.
+ *
+ * Skipped for headless maps (nothing askable → everything arrives by
+ * injection by design) and for maps with <import>s (linked maps may supply
+ * the missing facts or rules).
+ */
+function checkReachability(index: MapIndex, add: AddIssue): void {
+  const relTags = index.tags.filter((t) => !t.closing && t.name === "rel" && t.attrs.name);
+  if (!relTags.some(isAskable)) return;
+  if (index.tags.some((t) => !t.closing && t.name === "import")) return;
+
+  const hasFact = new Set<string>();
+  const hasRule = new Set<string>();
+  eachRelinst(index, (tag, conditions) => {
+    if (!tag.attrs.type) return;
+    (conditions.length ? hasRule : hasFact).add(tag.attrs.type);
+  });
+  const hasDatasource = new Set<string>();
+  for (const tag of index.tags) {
+    if (tag.closing || tag.name !== "action" || !tag.attrs.map) continue;
+    const eq = tag.attrs.map.indexOf("=");
+    if (eq > 0) hasDatasource.add(tag.attrs.map.slice(0, eq).trim());
+  }
+
+  const injectOnly = new Set<string>();
+  for (const relTag of relTags) {
+    const name = relTag.attrs.name;
+    if (isAskable(relTag) || hasFact.has(name) || hasRule.has(name) || hasDatasource.has(name)) continue;
+    injectOnly.add(name);
+    add(
+      relTag,
+      `"${name}" can only be satisfied by injected facts: it has no facts, no rules, askable="none" and no datasource maps to it. In a conversational session, conditions on it can never be met`,
+      "warning"
+    );
+  }
+  if (!injectOnly.size) return;
+
+  eachRelinst(index, (tag, conditions) => {
+    if (!conditions.length) return;
+    const blockers = conditions
+      .filter((c) => c.attrs.rel && injectOnly.has(c.attrs.rel) && c.attrs.behaviour !== "optional")
+      .map((c) => `"${c.attrs.rel}"`);
+    if (!blockers.length) return;
+    const unique = [...new Set(blockers)];
+    add(
+      tag,
+      `This rule can never fire without injected facts: its mandatory condition${unique.length > 1 ? "s" : ""} on ${unique.join(", ")} can never be satisfied (make the condition optional, add facts or rules, or make the relationship askable)`,
+      "warning"
+    );
+  });
+}
+
+/**
+ * Rule recursion: a relationship that (transitively) depends on itself is
+ * legal — transitive "is in" chains are the classic use — but unbounded
+ * recursion is what hits the engine's query-depth limit. Surface each
+ * recursive rule as a hint with the cycle it closes.
+ */
+function checkCycles(index: MapIndex, add: AddIssue): void {
+  const deps = new Map<string, Set<string>>();
+  eachRelinst(index, (tag, conditions) => {
+    if (!conditions.length || !tag.attrs.type) return;
+    const set = deps.get(tag.attrs.type) ?? new Set<string>();
+    for (const c of conditions) if (c.attrs.rel) set.add(c.attrs.rel);
+    deps.set(tag.attrs.type, set);
+  });
+  if (!deps.size) return;
+
+  /** Shortest path from → to over the dependency graph, or undefined. */
+  const pathTo = (from: string, to: string): string[] | undefined => {
+    const queue: string[][] = [[from]];
+    const seen = new Set<string>([from]);
+    while (queue.length) {
+      const path = queue.shift()!;
+      const last = path[path.length - 1];
+      if (last === to && path.length > 1) return path;
+      for (const next of deps.get(last) ?? []) {
+        if (next === to) return [...path, next];
+        if (!seen.has(next)) {
+          seen.add(next);
+          queue.push([...path, next]);
+        }
+      }
+    }
+    return undefined;
+  };
+
+  eachRelinst(index, (tag, conditions) => {
+    if (!conditions.length || !tag.attrs.type) return;
+    const head = tag.attrs.type;
+    for (const c of conditions) {
+      if (!c.attrs.rel) continue;
+      const path = c.attrs.rel === head ? [head] : pathTo(c.attrs.rel, head);
+      if (!path) continue;
+      const chain = [head, ...path].map((r) => `"${r}"`).join(" → ");
+      add(
+        tag,
+        `Recursive rule: ${chain}. Recursion is legal, but unbounded recursion hits the engine's query-depth limit — make sure a base case (a fact, an answer or a datasource) terminates it`,
+        "info"
+      );
+      break; // one hint per rule is enough
+    }
+  });
 }
 
 // ---------------------------------------------------------------------------

@@ -7,6 +7,7 @@
  */
 import * as vscode from "vscode";
 import { buildIndex, MapIndex, TagOccurrence } from "./mapIndex";
+import { readRblang } from "./rbird";
 
 interface Rule {
   identity: string;
@@ -16,6 +17,49 @@ interface Rule {
   behaviour?: string;
   alt?: string;
   conditions: string[];
+  /** Set by pairRules: this rule's identity in the "after" model when it was renamed (or newly named). */
+  renamed?: string;
+}
+
+/** A condition without its tunables (weight, mandatory) — what identifies it across edits. */
+const conditionSignature = (c: string) => c.replace(/ \(mandatory\)/, "").replace(/ w=\d+$/, "");
+
+/**
+ * Unnamed rules are identified positionally ("speaks #1"), so naming a rule, or
+ * renaming one, looks like a removal plus an addition. Pair the leftovers on
+ * each side — first by identical relationship + condition set, then when a
+ * relationship has exactly one unmatched rule on both sides — and re-key the
+ * "after" rule under the "before" identity so the diff reports a modification.
+ */
+function pairRules(before: Map<string, Rule>, after: Map<string, Rule>): Map<string, Rule> {
+  const paired = new Map(after);
+  const onlyBefore = [...before.keys()].filter((k) => !after.has(k));
+  const onlyAfter = [...after.keys()].filter((k) => !before.has(k));
+  const shape = (r: Rule) => `${r.type}|${r.conditions.map(conditionSignature).sort().join("|")}`;
+  const adopt = (kb: string, ka: string) => {
+    const ra = paired.get(ka)!;
+    paired.delete(ka);
+    paired.set(kb, { ...ra, renamed: ka });
+    onlyAfter.splice(onlyAfter.indexOf(ka), 1);
+  };
+  for (const kb of [...onlyBefore]) {
+    const rb = before.get(kb)!;
+    const ka = onlyAfter.find((k) => shape(after.get(k)!) === shape(rb));
+    if (ka) {
+      adopt(kb, ka);
+      onlyBefore.splice(onlyBefore.indexOf(kb), 1);
+    }
+  }
+  for (const kb of [...onlyBefore]) {
+    const rb = before.get(kb)!;
+    const sameTypeBefore = onlyBefore.filter((k) => before.get(k)!.type === rb.type);
+    const sameTypeAfter = onlyAfter.filter((k) => after.get(k)!.type === rb.type);
+    if (sameTypeBefore.length === 1 && sameTypeAfter.length === 1) {
+      adopt(kb, sameTypeAfter[0]);
+      onlyBefore.splice(onlyBefore.indexOf(kb), 1);
+    }
+  }
+  return paired;
 }
 
 interface Model {
@@ -61,13 +105,12 @@ async function baseContent(doc: vscode.TextDocument): Promise<{ text: string; la
     }
   }
   const picked = await vscode.window.showOpenDialog({
-    title: "No git history for this file — pick the base version to compare against",
-    filters: { RBLang: ["rbl", "rblang", "xml"] },
+    title: "No git history for this file — pick the base version to compare against (.rbl or a Studio .rbird export)",
+    filters: { "RBLang or Studio export": ["rbl", "rblang", "xml", "rbird"] },
     canSelectMany: false,
   });
   if (!picked?.[0]) return undefined;
-  const raw = await vscode.workspace.fs.readFile(picked[0]);
-  return { text: Buffer.from(raw).toString("utf8"), label: picked[0].path.split("/").pop() ?? "base" };
+  return { text: await readRblang(picked[0]), label: picked[0].path.split("/").pop() ?? "base" };
 }
 
 export function buildModel(text: string): Model {
@@ -179,17 +222,35 @@ export function diffReport(before: Model, after: Model, baseLabel: string, fileL
   section(
     "Rules",
     before.rules,
-    after.rules,
+    pairRules(before.rules, after.rules),
     (r) => `${r.type}, cf ${r.cf}, ${r.conditions.length} condition${r.conditions.length === 1 ? "" : "s"}`,
     (ra, rb) => {
       const details: string[] = [];
+      if (rb.renamed) details.push(ra.name ? `renamed to "${rb.renamed}"` : `named "${rb.renamed}"`);
       if (ra.cf !== rb.cf) details.push(`cf ${ra.cf} → ${rb.cf}`);
       if (ra.behaviour !== rb.behaviour) details.push(`behaviour ${ra.behaviour ?? "default"} → ${rb.behaviour ?? "default"}`);
       if (ra.alt !== rb.alt) details.push("evidence text (alt) changed");
       const dropped = ra.conditions.filter((c) => !rb.conditions.includes(c));
       const gained = rb.conditions.filter((c) => !ra.conditions.includes(c));
-      for (const c of gained) details.push(`condition added: ${c}`);
-      for (const c of dropped) details.push(`condition removed: ${c}`);
+      // Pair a dropped and a gained condition that share the same triple / expression:
+      // that is one condition whose weight or behaviour changed, not a swap.
+      const signature = conditionSignature;
+      const weightOf = (c: string) => / w=(\d+)$/.exec(c)?.[1] ?? "100";
+      const mandatory = (c: string) => / \(mandatory\)/.test(c);
+      const unmatchedGained = [...gained];
+      for (const before of dropped) {
+        const at = unmatchedGained.findIndex((after) => signature(after) === signature(before));
+        if (at === -1) {
+          details.push(`condition removed: ${before}`);
+          continue;
+        }
+        const after = unmatchedGained.splice(at, 1)[0];
+        const changes: string[] = [];
+        if (weightOf(before) !== weightOf(after)) changes.push(`weight ${weightOf(before)} → ${weightOf(after)}`);
+        if (mandatory(before) !== mandatory(after)) changes.push(mandatory(after) ? "now mandatory" : "now optional");
+        details.push(`condition ${signature(before)}: ${changes.join(", ") || "changed"}`);
+      }
+      for (const c of unmatchedGained) details.push(`condition added: ${c}`);
       return details.length ? details.join("; ") : undefined;
     }
   );

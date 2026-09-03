@@ -2,7 +2,7 @@
  * Minimal Rainbird Decisions API client (documented surface only).
  *
  * Session lifecycle: GET /start/{kmID} → POST /{sid}/inject → POST /{sid}/query
- * → loop POST /{sid}/response until a result arrives. Evidence via
+ * → loop POST /{sid}/response (or /undo to step back) until a result arrives. Evidence via
  * GET /analysis/evidence/{factID}/{sessionID}.
  */
 
@@ -47,6 +47,22 @@ export interface Answer extends Partial<Fact> {
   cf?: number;
 }
 
+/** Which version of a map a session runs against. */
+export type StartTarget = { kind: "draft" } | { kind: "live" } | { kind: "version"; version: number };
+
+/** Query-string options for GET /start: draft → useDraft=true, live → nothing (the engine default), version → version=N. */
+export function startOptions(target: StartTarget | undefined): { useDraft?: boolean; version?: number } {
+  if (!target || target.kind === "draft") return { useDraft: true };
+  if (target.kind === "live") return {};
+  return { version: target.version };
+}
+
+export function describeTarget(target: StartTarget | undefined): string {
+  if (!target || target.kind === "draft") return "draft";
+  if (target.kind === "live") return "live";
+  return `version ${target.version}`;
+}
+
 export interface EvidenceNode {
   factID: string;
   source: "knowledgemap" | "rule" | "answer" | "injection" | "datasource" | "synthesis";
@@ -71,6 +87,13 @@ export interface EvidenceNode {
       alt?: string;
     }>;
   };
+}
+
+/** A map as served by GET /analysis/file: RBLang plus Studio's structured model. */
+export interface MapFile {
+  concepts: unknown[];
+  rels: unknown[];
+  rblang: string;
 }
 
 /** HTTP failure with the status and raw body preserved so callers can branch on error *shape*. */
@@ -150,6 +173,11 @@ export class RainbirdClient {
     return normalise(
       await this.request(`/${sessionId}/response`, { method: "POST", body: JSON.stringify({ answers: normalised }) })
     );
+  }
+
+  /** POST /{sid}/undo — step back one answer; the engine re-asks the previous question (or re-decides). */
+  async undo(sessionId: string): Promise<EngineResponse> {
+    return normalise(await this.request(`/${sessionId}/undo`, { method: "POST", body: "{}" }));
   }
 
   async evidence(factId: string, sessionId: string, evidenceKey?: string): Promise<EvidenceNode> {
@@ -232,6 +260,57 @@ export class RainbirdClient {
       (v): v is string => typeof v === "string" && v.length > 0
     );
     return { kmId, raw };
+  }
+
+  /**
+   * GET /analysis/file/{kmID}[?version=N] — the map's RBLang source plus
+   * Studio's structured model arrays (concepts, rels). Without `version` it
+   * returns the draft. Verified live 2026-09-03; not in the public OpenAPI
+   * spec, so treat the shape defensively.
+   */
+  async getFile(kmId: string, version?: number): Promise<MapFile> {
+    const query = version !== undefined ? `?version=${version}` : "";
+    const raw = await this.request<Record<string, unknown>>(`/analysis/file/${kmId}${query}`, {
+      headers: { "X-API-Key": this.apiKey },
+    });
+    if (typeof raw.rblang !== "string") {
+      throw new Error(`Unexpected /analysis/file response (no rblang field): ${JSON.stringify(raw).slice(0, 200)}`);
+    }
+    return {
+      concepts: Array.isArray(raw.concepts) ? raw.concepts : [],
+      rels: Array.isArray(raw.rels) ? raw.rels : [],
+      rblang: raw.rblang,
+    };
+  }
+
+  /**
+   * Highest saved version number, or undefined when the map has none. There is
+   * no list-versions API; versions auto-increment from 1, so probe
+   * /analysis/file with a doubling search then bisect (a handful of small GETs).
+   */
+  async latestVersion(kmId: string): Promise<number | undefined> {
+    const exists = async (n: number): Promise<boolean> => {
+      try {
+        await this.getFile(kmId, n);
+        return true;
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) return false;
+        throw error;
+      }
+    };
+    if (!(await exists(1))) return undefined;
+    let lo = 1;
+    let hi = 2;
+    while (hi <= 4096 && (await exists(hi))) {
+      lo = hi;
+      hi *= 2;
+    }
+    while (hi - lo > 1) {
+      const mid = Math.floor((lo + hi) / 2);
+      if (await exists(mid)) lo = mid;
+      else hi = mid;
+    }
+    return lo;
   }
 
   /** Recursively expand an evidence tree by following condition factIDs. */

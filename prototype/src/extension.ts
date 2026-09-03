@@ -1,10 +1,11 @@
 /**
  * Rainbird for VSCode — prototype entry point.
  *
- * Wires up: RBLang diagnostics + completions + hovers, the interactive query
- * panel and graph view webviews, the Claude-powered authoring assistant,
- * push-to-platform, the map explorer sidebar, .rbird extraction, MCP
- * served-graph registration, and a connection status bar item.
+ * Wires up: RBLang diagnostics + completions + hovers + inlay hints, the
+ * interactive query panel and graph view webviews, the Claude-powered
+ * authoring assistant, push-to-platform (with quick-diff against the pushed
+ * snapshot), the promotion diff, the map explorer sidebar, .rbird extraction,
+ * MCP served-graph registration, and a connection status bar item.
  */
 import * as vscode from "vscode";
 import { registerDiagnostics } from "./diagnostics";
@@ -21,10 +22,14 @@ import { PlatformMapsProvider } from "./mapsTree";
 import { pushMap } from "./push";
 import { setAnthropicKey } from "./anthropic";
 import { registerLanguageFeatures } from "./languageFeatures";
-import { registerEditorFeatures } from "./editorFeatures";
+import { registerEditorFeatures, registerInlayHints } from "./editorFeatures";
 import { registerTests } from "./tests";
 import { NlPanel } from "./nlPanel";
 import { semanticDiff } from "./semanticDiff";
+import { promotionDiff } from "./promotionDiff";
+import { registerQuickDiff } from "./quickDiff";
+import { registerCompareSource } from "./compareSource";
+import { registerPlatformSource } from "./platform";
 
 export function activate(context: vscode.ExtensionContext): void {
   registerDiagnostics(context);
@@ -45,6 +50,10 @@ export function activate(context: vscode.ExtensionContext): void {
   registerLanguageFeatures(context);
   registerEditorFeatures(context);
   registerTests(context);
+  registerInlayHints(context);
+  registerQuickDiff(context);
+  registerPlatformSource(context);
+  registerCompareSource(context);
 
   const assistant = new AssistantViewProvider(context);
   const mapTree = new MapTreeProvider(context);
@@ -75,6 +84,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand("rainbird.openGraphView", () => GraphView.open(context)),
     vscode.commands.registerCommand("rainbird.openNlPanel", () => NlPanel.open(context)),
     vscode.commands.registerCommand("rainbird.semanticDiff", () => semanticDiff()),
+    vscode.commands.registerCommand("rainbird.promotionDiff", () => promotionDiff(context, QueryPanel.lastRecord())),
     vscode.commands.registerCommand("rainbird.pushMap", () => pushMap(context)),
     vscode.commands.registerCommand("rainbird.setAnthropicKey", () => setAnthropicKey(context)),
     vscode.commands.registerCommand("rainbird.assistantNewChat", () => assistant.newChat()),
