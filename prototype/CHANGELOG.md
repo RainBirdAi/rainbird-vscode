@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.0.3 — 2026-09-03
 
 - **Query panel**: grouped questions (`extraQuestions`) are now shown together and answered in one call — previously only the first question of a group was answered and the session desynchronised. Added **↶ Back** (`POST /undo`), a **facts-to-inject** box (JSON or CSV, or load a fixture file), a **draft / live / version** target picker, and an optional **object** so subject queries and first-form certainty queries work. When a map has no live version the engine silently serves the draft; the panel and the promotion diff now say so. Saved tests record the target and injected facts and replay them.
 - **Promotion diff** (`Rainbird: Compare Versions…`, also “Compare with another version…” on a result): replays a saved test or the last panel session against two versions of the same map (draft vs live by default) and reports result and certainty changes plus, when evidence is accessible, the facts, rule conditions and impacts that moved.

@@ -5,3 +5,6 @@ tsconfig.json
 package-lock.json
 examples/.vscode/**
 **/*.vsix
+.env
+.env.*
+*.vsix
