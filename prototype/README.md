@@ -1,5 +1,7 @@
 # Rainbird for VSCode — prototype
 
+> **Beta.** This extension is under active development. Features, commands and the `.rbtest.json` / `.facts.json` file formats may change between releases, and some platform surfaces it relies on are undocumented. Please report problems and ideas at [github.com/juliodt-ai/rainbird-vscode/issues](https://github.com/juliodt-ai/rainbird-vscode/issues).
+
 A working skeleton of the Rainbird VSCode extension proposed in [`PROPOSAL.md`](https://github.com/juliodt-ai/rainbird-vscode/blob/main/PROPOSAL.md). It demonstrates the MVP tier end-to-end: RBLang language support and a live query loop against the real Decisions API.
 
 ## Install a test build

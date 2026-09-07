@@ -396,6 +396,13 @@ function checkRelinsts(text: string, index: MapIndex, add: AddIssue): void {
 
 const KNOWN_FUNCTIONS = new Set(EXPRESSION_FUNCTIONS.map((f) => f.name));
 
+/**
+ * Words that may legitimately precede "(" without being a function call: the
+ * logical operators and the natural-language comparison aliases, e.g.
+ * `%A > 1 and (%B < 2 or %C < 3)` or `%X is equal to (%Y + 1)`.
+ */
+const EXPRESSION_KEYWORDS = new Set(["and", "or", "is", "equal", "to", "not", "greater", "less", "than", "equals", "does", "gt", "gte", "lt", "lte"]);
+
 /** Expression sanity: only engine functions exist; parens and quotes must balance. */
 function checkExpressions(index: MapIndex, add: AddIssue): void {
   for (const tag of index.tags) {
@@ -416,6 +423,7 @@ function checkExpressions(index: MapIndex, add: AddIssue): void {
     if (depth !== 0) add(tag, "Unbalanced parentheses in expression");
 
     for (const m of stripped.matchAll(/([A-Za-z_][A-Za-z0-9_]*)\s*\(/g)) {
+      if (EXPRESSION_KEYWORDS.has(m[1].toLowerCase())) continue;
       if (!KNOWN_FUNCTIONS.has(m[1])) {
         add(tag, `Unknown expression function: ${m[1]} (the engine supports exactly ${KNOWN_FUNCTIONS.size} functions)`);
       }

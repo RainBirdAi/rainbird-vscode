@@ -1,8 +1,9 @@
 {
   "name": "rainbird",
-  "displayName": "Rainbird",
-  "description": "RBLang language support, knowledge-map tooling, query running and evidence trees for the Rainbird decision-intelligence platform.",
-  "version": "0.0.3",
+  "displayName": "Rainbird (Beta)",
+  "description": "Beta — RBLang language support, knowledge-map tooling, query running and evidence trees for the Rainbird decision-intelligence platform.",
+  "version": "0.0.4",
+  "preview": true,
   "publisher": "rainbird",
   "license": "SEE LICENSE IN LICENSE",
   "icon": "media/icon.png",
@@ -403,7 +404,7 @@
       {
         "id": "rainbird.gettingStarted",
         "title": "Get started with Rainbird",
-        "description": "Author RBLang knowledge maps, run queries and inspect evidence without leaving VSCode.",
+        "description": "Author RBLang knowledge maps, run queries and inspect evidence without leaving VSCode. This extension is in beta — expect rough edges and please report issues on GitHub.",
         "steps": [
           {
             "id": "rainbird.openExample",

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.4 — 2026-09-07
+
+- The extension is now labelled **Beta** (display name, Marketplace `preview` flag, README and walkthrough) to set expectations while formats and platform surfaces settle.
+- `.rbl` files now show the Rainbird mark as their file icon (same as the activity bar), instead of a generic graph glyph. Shown by file icon themes that support language icons, such as the default Seti theme.
+- **Fix**: expressions using `and` / `or` (or a natural-language comparison alias) followed by a parenthesised group, e.g. `%A > 1 and (%B < 2 or %C < 3)`, were wrongly reported as “Unknown expression function”. Logical and comparison keywords are no longer mistaken for function calls.
+
 ## 0.0.3 — 2026-09-03
 
 - **Query panel**: grouped questions (`extraQuestions`) are now shown together and answered in one call — previously only the first question of a group was answered and the session desynchronised. Added **↶ Back** (`POST /undo`), a **facts-to-inject** box (JSON or CSV, or load a fixture file), a **draft / live / version** target picker, and an optional **object** so subject queries and first-form certainty queries work. When a map has no live version the engine silently serves the draft; the panel and the promotion diff now say so. Saved tests record the target and injected facts and replay them.
