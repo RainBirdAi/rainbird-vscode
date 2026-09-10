@@ -10,7 +10,7 @@
 import * as vscode from "vscode";
 import { RainbirdClient } from "./api";
 import { getClient, getClientSilent } from "./queryRunner";
-import { buildModel, diffReport } from "./semanticDiff";
+import { buildModel, diffReportDetailed, showSideBySideDiff } from "./semanticDiff";
 
 export const PLATFORM_SCHEME = "rainbird-platform";
 
@@ -176,17 +176,17 @@ async function diffAgainstDraft(context: vscode.ExtensionContext): Promise<void>
       vscode.window.showInformationMessage(`${name} matches the platform draft of ${kmId} exactly.`);
       return;
     }
-    const report = diffReport(buildModel(file.rblang), buildModel(local), `platform draft (${kmId})`, name).replace(
+    const baseLabel = `platform draft (${kmId})`;
+    const report = diffReportDetailed(buildModel(file.rblang), buildModel(local), baseLabel, name);
+    report.markdown = report.markdown.replace(
       /^# Semantic diff — .*$/m,
       `# Local file vs platform draft — ${name} vs ${kmId}\n\n_Changes are read from the platform draft to your local file: ＋ means your file has it and the draft does not._`
     );
-    const md = await vscode.workspace.openTextDocument({ language: "markdown", content: report });
-    await vscode.window.showTextDocument(md, { preview: false });
-    await vscode.commands.executeCommand("markdown.showPreview", md.uri);
-    const open = await vscode.window.showInformationMessage("Semantic report opened.", "Open side-by-side text diff");
-    if (open) {
-      await vscode.commands.executeCommand("vscode.diff", platformUri(kmId, { kind: "draft" }), editor.document.uri, `platform draft ↔ ${name}`);
-    }
+    await showSideBySideDiff(
+      { label: baseLabel, text: file.rblang, uri: platformUri(kmId, { kind: "draft" }) },
+      { label: name, text: local, uri: editor.document.uri },
+      report
+    );
   } catch (error) {
     vscode.window.showErrorMessage(`Could not fetch the platform draft: ${(error as Error).message}`);
   }

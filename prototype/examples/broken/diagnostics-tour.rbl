@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	A deliberately broken map for testing the extension's diagnostics.
+
+	Every wrong element is preceded by an EXPECT comment naming the finding it
+	should produce (and the quick fix it should offer, where there is one).
+	Elements marked OK are edge cases that must NOT be reported. Open the file
+	and compare against the Problems panel.
+
+	The linter's unit tests (npm test) load this file and check every EXPECT
+	and OK block, so it is also a fixture: applying the quick fixes edits this
+	file and makes those tests fail until it is restored (once committed:
+	git restore examples/broken/diagnostics-tour.rbl). Break it further all you
+	like; just restore it before running the tests.
+
+	Kept out on purpose: raw < or > inside attribute values (use "is greater
+	than" instead) — combined with the unbalanced-quote sample near the end
+	they would let one broken tag swallow the rest of the file.
+-->
+<rbl:kb xmlns:rbl="http://rbl.io/schema/RBLang">
+
+	<!-- ================================================================ -->
+	<!-- Concepts                                                          -->
+	<!-- ================================================================ -->
+
+	<concept name="Person" type="string"/>
+	<concept name="Country" type="string"/>
+	<concept name="Age" type="number"/>
+	<concept name="Birthday" type="date"/>
+	<concept name="Resident" type="truth"/>
+	<concept name="Team" type="string"/>
+
+	<concept name="Postcode" type="string">
+		<!-- EXPECT error: datasource hostname must start with http:// or https:// -->
+		<datasource hostname="api.example.com" path="/lookup">
+			<!-- EXPECT error: Datasource input: %S is a "Postcode", but the object of "has age" must be a "Age" -->
+			<input rel="has age" object="%S"/>
+			<!-- EXPECT error: Unknown relationship in datasource input: "has postcod"  (fix: Change to "has postcode") -->
+			<input rel="has postcod" subject="%S"/>
+			<action map="lives in=/Response/Country"/>
+		</datasource>
+	</concept>
+
+	<!-- EXPECT error: Duplicate concept: "Person"  (fix: Remove this declaration) -->
+	<concept name="Person" type="string"/>
+
+	<!-- EXPECT error: concept element has missing attribute: type  (fix: Add type="") -->
+	<concept name="Vehicle"/>
+
+	<!-- EXPECT error: concept element has empty attribute: name -->
+	<concept name="" type="string"/>
+
+	<!-- EXPECT error: concept has invalid value for attribute: type="text"  (fixes: Change to string / number / date / truth) -->
+	<concept name="Note" type="text"/>
+
+	<!-- EXPECT info: concept type="boolean" is a legacy spelling of "truth"  (fix: Change to "truth") -->
+	<concept name="Flag" type="boolean"/>
+
+	<!-- EXPECT warning: concept element has unrecognised attribute: colour  (fix: Remove colour) -->
+	<concept name="Pet" type="string" colour="brown"/>
+
+	<!-- EXPECT error: Names cannot contain quote, backslash or angle-bracket characters -->
+	<concept name="Bad\Name" type="string"/>
+
+	<!-- EXPECT error: Duplicate attribute type on <concept>  (fix: Remove duplicate type). The first value, string, wins -->
+	<concept name="Colour" type="string" type="number"/>
+
+	<!-- EXPECT error: Malformed attribute in <concept>: "name=Vehicle2" (expected name="value") -->
+	<concept name=Vehicle2 type="string"/>
+
+	<!-- EXPECT error: Unrecognised element: concpet -->
+	<concpet name="Typo" type="string"/>
+
+	<!-- EXPECT info: Concept "Orphan" is not used by any relationship -->
+	<concept name="Orphan" type="string"/>
+
+	<!-- EXPECT warning: Mutually-exclusive concept "Answer" should declare exactly 2 instances (found 3) -->
+	<concept name="Answer" type="string" behaviour="mutually-exclusive"/>
+	<concinst name="Yes" type="Answer"/>
+	<concinst name="No" type="Answer"/>
+	<concinst name="Maybe" type="Answer"/>
+
+	<!-- ================================================================ -->
+	<!-- Instances                                                         -->
+	<!-- ================================================================ -->
+
+	<concinst name="Julio" type="Person"/>
+	<concinst name="Ana" type="Person"/>
+	<concinst name="France" type="Country"/>
+	<concinst name="Spain" type="Country"/>
+	<concinst name="Lyon" type="Team"/>
+
+	<!-- OK: the same name under another concept is a different instance, not a duplicate -->
+	<concinst name="France" type="Team"/>
+
+	<!-- EXPECT warning: Duplicate concept instance: "Julio" of "Person"  (fix: Remove this declaration) -->
+	<concinst name="Julio" type="Person"/>
+
+	<!-- EXPECT error: Unknown concept type: "Perso"  (fix: Change to "Person") -->
+	<concinst name="Marta" type="Perso"/>
+
+	<!-- EXPECT error: Concept instances are only valid for string concepts; "Age" is number -->
+	<concinst name="42" type="Age"/>
+
+	<!-- ================================================================ -->
+	<!-- Relationships                                                     -->
+	<!-- ================================================================ -->
+
+	<rel name="lives in" subject="Person" object="Country" plural="true">
+		<firstForm>Does %S live in %O?</firstForm>
+		<secondFormObject>Where does %S live?</secondFormObject>
+		<secondFormSubject>Who lives in %O?</secondFormSubject>
+	</rel>
+	<rel name="has age" subject="Person" object="Age"/>
+	<rel name="was born on" subject="Person" object="Birthday"/>
+	<rel name="is resident" subject="Person" object="Resident"/>
+	<rel name="has postcode" subject="Person" object="Postcode"/>
+	<rel name="supports" subject="Person" object="Team"/>
+	<rel name="has score" subject="Person" object="Age"/>
+	<rel name="has bonus" subject="Person" object="Age"/>
+	<rel name="is in" subject="Country" object="Country"/>
+
+	<!-- OK: plumbing so the concepts above are not all reported as orphans -->
+	<rel name="drives" subject="Person" object="Vehicle"/>
+	<rel name="has note" subject="Person" object="Note"/>
+	<rel name="has flag" subject="Person" object="Flag"/>
+	<rel name="owns" subject="Person" object="Pet"/>
+	<rel name="likes colour" subject="Person" object="Colour"/>
+	<rel name="answered" subject="Person" object="Answer"/>
+	<rel name="has bad" subject="Person" object="Bad\Name"/>
+
+	<!-- EXPECT error: Duplicate relationship: "lives in"  (fix: Remove this declaration) -->
+	<rel name="lives in" subject="Person" object="Country"/>
+
+	<!-- EXPECT error: Unknown concept in subject: "Persn"  (fix: Change to "Person") -->
+	<rel name="knows" subject="Persn" object="Person"/>
+
+	<!-- EXPECT error: Relationship subjects must be string concepts; "Age" is number -->
+	<rel name="is over" subject="Age" object="Person"/>
+
+	<!-- EXPECT error: rel has invalid value for attribute: askable="sometimes"  (fixes: Change to all / none / ...) -->
+	<rel name="likes" subject="Person" object="Country" askable="sometimes"/>
+
+	<!-- EXPECT warning x2: firstForm should include %S and %O; secondFormObject should not contain %O -->
+	<rel name="visited" subject="Person" object="Country">
+		<firstForm>Has %S visited?</firstForm>
+		<secondFormObject>Which %O has %S visited?</secondFormObject>
+	</rel>
+
+	<!-- EXPECT error x2: Mismatched closing tag: expected </firstForm>  (on the stray </secondFormObject> and again on </rel>) -->
+	<rel name="works in" subject="Person" object="Country">
+		<firstForm>Does %S work in %O?</secondFormObject>
+	</rel>
+
+	<!-- EXPECT error: Closing tag </rel> cannot have attributes or text -->
+	<rel name="studies in" subject="Person" object="Country"></rel name="studies in">
+
+	<!-- EXPECT warning: "is flagged" can only be satisfied by injected facts (askable="none", no facts, no rules, no datasource) -->
+	<rel name="is flagged" subject="Person" object="Resident" askable="none"/>
+
+	<!-- EXPECT error: Unexpected text outside an element -->
+	this sentence does not belong here
+
+	<!-- ================================================================ -->
+	<!-- Facts                                                             -->
+	<!-- ================================================================ -->
+
+	<relinst type="lives in" subject="Julio" object="France"/>
+
+	<!-- EXPECT warning: Duplicate fact: Julio lives in France  (fix: Remove this declaration) -->
+	<relinst type="lives in" subject="Julio" object="France"/>
+
+	<!-- OK: France the Team, not France the Country -->
+	<relinst type="supports" subject="Julio" object="France"/>
+
+	<!-- EXPECT warning: "Portugal" is not a declared instance of "Country"  (fix: Declare <concinst name="Portugal" type="Country"/>) -->
+	<relinst type="lives in" subject="Ana" object="Portugal"/>
+
+	<!-- EXPECT warning: "Lyon" is an instance of "Team", but object of this relationship must be a "Country" -->
+	<relinst type="lives in" subject="Ana" object="Lyon"/>
+
+	<!-- EXPECT error: Unknown relationship type: "lives at"  (fix: Change to "lives in") -->
+	<relinst type="lives at" subject="Ana" object="Spain"/>
+
+	<!-- EXPECT error: Relationship "has age" expects a number as its object (got "abc") -->
+	<relinst type="has age" subject="Julio" object="abc"/>
+
+	<!-- EXPECT error: Relationship "has age" expects a number as its object — 16 digits exceeds the engine's 15-digit limit -->
+	<relinst type="has age" subject="Ana" object="1000000000000000"/>
+
+	<!-- OK: what the platform accepts — JavaScript-style numbers, ISO-8601 dates, epoch milliseconds, lower-case truth -->
+	<relinst type="has age" subject="Ana" object="1e3"/>
+	<relinst type="was born on" subject="Ana" object="1990-09-10"/>
+	<relinst type="was born on" subject="Julio" object="652924800000"/>
+	<relinst type="is resident" subject="Ana" object="true"/>
+
+	<!-- EXPECT error: Relationship "was born on" expects a date as its object — the platform rejects long-form dates (this is the platform's own wording) -->
+	<relinst type="was born on" subject="Ana" object="10 September 1990"/>
+
+	<!-- EXPECT error: Relationship "was born on" expects a date as its object (got "someday") -->
+	<relinst type="was born on" subject="Julio" object="someday"/>
+
+	<!-- EXPECT error: Relationship "is resident" must have true or false as its object — TRUE is rejected by the platform -->
+	<relinst type="is resident" subject="Ana" object="TRUE"/>
+
+	<!-- EXPECT error: Relationship "is resident" must have true or false as its object (got "yes") -->
+	<relinst type="is resident" subject="Julio" object="yes"/>
+
+	<!-- EXPECT error: A fact (relinst without conditions) needs a object -->
+	<relinst type="lives in" subject="Julio"/>
+
+	<!-- EXPECT error: relinst element has empty attribute: object -->
+	<relinst type="lives in" subject="Julio" object=""/>
+
+	<!-- EXPECT error: cf must be a number between 0 and 100 -->
+	<relinst type="lives in" subject="Ana" object="Spain" cf="150"/>
+
+	<!-- ================================================================ -->
+	<!-- Rules                                                             -->
+	<!-- ================================================================ -->
+
+	<!-- EXPECT error: Rule headers cannot use custom variables (%X) -->
+	<relinst type="is resident" subject="%X" object="true">
+		<condition rel="lives in" subject="%X" object="France"/>
+		<condition rel="has age" subject="%X" object="30"/>
+	</relinst>
+
+	<!-- EXPECT error: minimum-rule-certainty (90) must not exceed the rule's cf (60) -->
+	<relinst type="is resident" subject="%S" object="true" cf="60" minimum-rule-certainty="90">
+		<condition rel="lives in" subject="%S" object="Spain"/>
+	</relinst>
+
+	<!-- EXPECT error: Unknown relationship in condition: "live in"  (fix: Change to "lives in") -->
+	<relinst type="is resident" subject="%S" object="false">
+		<condition rel="live in" subject="%S" object="Spain"/>
+	</relinst>
+
+	<!-- EXPECT error: A condition is either a relationship condition or an expression, not both -->
+	<relinst type="is resident" subject="%S" object="true">
+		<condition rel="has age" subject="%S" object="%AGE" expression="%AGE is greater than 18"/>
+	</relinst>
+
+	<!-- EXPECT error: weight must be a non-negative integer -->
+	<relinst type="is resident" subject="%S" object="true">
+		<condition rel="lives in" subject="%S" object="France" weight="-10"/>
+	</relinst>
+
+	<!-- EXPECT error: Every condition has weight 0 -->
+	<relinst type="is resident" subject="%S" object="true">
+		<condition rel="lives in" subject="%S" object="France" weight="0"/>
+		<condition rel="has age" subject="%S" object="30" weight="0"/>
+	</relinst>
+
+	<!-- EXPECT warning: Variable %ONCE appears only once in this rule -->
+	<relinst type="is resident" subject="%S" object="true">
+		<condition rel="lives in" subject="%S" object="%COUNTRY"/>
+		<condition rel="is in" subject="%COUNTRY" object="France"/>
+		<condition rel="has age" subject="%S" object="%ONCE"/>
+	</relinst>
+
+	<!-- EXPECT error: Unknown expression function: sumary -->
+	<relinst type="has score" subject="%S" object="%O">
+		<condition rel="has age" subject="%S" object="%AGE"/>
+		<condition expression="sumary(%AGE, 1)" value="%O"/>
+	</relinst>
+
+	<!-- EXPECT error: Unbalanced parentheses in expression -->
+	<relinst type="has bonus" subject="%S" object="%O">
+		<condition rel="has age" subject="%S" object="%AGE"/>
+		<condition expression="round((%AGE * 2), 0" value="%O"/>
+	</relinst>
+
+	<!-- EXPECT error: Unbalanced single quote in expression -->
+	<relinst type="has bonus" subject="%S" object="%O">
+		<condition rel="has postcode" subject="%S" object="%PC"/>
+		<condition expression="includes(%PC, 'SW1)" value="%O"/>
+	</relinst>
+
+	<!-- EXPECT warning: Expressions evaluate strictly left to right: "%AGE + %BONUS * 2"  (fixes: keep the engine's order / use conventional precedence; also an inlay hint) -->
+	<relinst type="has score" subject="%S" object="%O">
+		<condition rel="has age" subject="%S" object="%AGE"/>
+		<condition rel="has bonus" subject="%S" object="%BONUS"/>
+		<condition expression="%AGE + %BONUS * 2" value="%O"/>
+	</relinst>
+
+	<!-- EXPECT warning: This rule can never fire without injected facts (mandatory condition on "is flagged") -->
+	<relinst type="is resident" subject="%S" object="false">
+		<condition rel="is flagged" subject="%S" object="true"/>
+	</relinst>
+
+	<!-- EXPECT info: Recursive rule: "is in" -> "is in" -->
+	<relinst type="is in" subject="%S" object="%O">
+		<condition rel="is in" subject="%S" object="%MID"/>
+		<condition rel="is in" subject="%MID" object="%O"/>
+	</relinst>
+
+	<!-- EXPECT error: <condition> is not allowed inside <rbl:kb> -->
+	<condition rel="lives in" subject="%S" object="France"/>
+
+	<!-- EXPECT error: Malformed element ... could not be parsed — check for unbalanced quotes. The whole tag is reported and dropped -->
+	<concept name="Broken type="string"/>
+
+</rbl:kb>
+<!-- EXPECT error: Unexpected closing tag </stray>: no element is open -->
+</stray>

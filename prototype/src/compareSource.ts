@@ -3,31 +3,18 @@
  *
  * Each side of the comparison can come from the platform (draft, live, latest
  * or a numbered version via GET /analysis/file), from the open editor, or from
- * a Studio .rbird export / .rbl file. The report is the model-level semantic
- * diff — "rule X: cf 100 → 75, condition Y now optional" — plus an optional
- * side-by-side text diff of the two sources.
+ * a Studio .rbird export / .rbl file. Both sources open side by side in the
+ * diff editor (like git diff: added / removed / changed lines highlighted),
+ * with the model-level semantic report — "rule X: cf 100 → 75, condition Y now
+ * optional" — summarised in the notification and a click away.
  */
 import * as vscode from "vscode";
 import { getClientSilent } from "./queryRunner";
-import { readRblang } from "./rbird";
-import { buildModel, diffReport } from "./semanticDiff";
+import { EXPORT_SCHEME, exportUri, readRblang } from "./rbird";
+import { buildModel, diffReportDetailed, DiffSide as Side, showSideBySideDiff } from "./semanticDiff";
 import { pickPlatformRef, platformUri, resolveKmId } from "./platform";
 
-/** Read-only virtual documents for export files, so they can take part in a text diff. */
-const EXPORT_SCHEME = "rainbird-export";
-
-interface Side {
-  label: string;
-  text: string;
-  uri: vscode.Uri;
-}
-
 const EXPORT_FILTER = { "Studio export or RBLang": ["rbird", "rbl", "rblang", "xml"] };
-
-function exportUri(file: vscode.Uri): vscode.Uri {
-  const name = (file.path.split("/").pop() ?? "export").replace(/\.rbird$/i, ".rbl");
-  return vscode.Uri.from({ scheme: EXPORT_SCHEME, path: `/${name}`, query: encodeURIComponent(file.fsPath) });
-}
 
 async function fileSide(file: vscode.Uri): Promise<Side> {
   return { label: file.path.split("/").pop() ?? "export", text: await readRblang(file), uri: exportUri(file) };
@@ -113,15 +100,12 @@ export async function compareDraft(context: vscode.ExtensionContext, clicked?: v
     const base = await resolve(baseChoice, "base");
     if (!base) return;
 
-    const report = diffReport(buildModel(base.text), buildModel(draft.text), base.label, draft.label).replace(
+    const report = diffReportDetailed(buildModel(base.text), buildModel(draft.text), base.label, draft.label);
+    report.markdown = report.markdown.replace(
       /^# Semantic diff — .*$/m,
       `# Draft vs saved version — ${draft.label} vs ${base.label}\n\n_Changes are read from **${base.label}** (base) to **${draft.label}** (newer)._`
     );
-    const md = await vscode.workspace.openTextDocument({ language: "markdown", content: report });
-    await vscode.window.showTextDocument(md, { preview: false });
-    await vscode.commands.executeCommand("markdown.showPreview", md.uri);
-    const open = await vscode.window.showInformationMessage("Semantic report opened.", "Open side-by-side text diff");
-    if (open) await vscode.commands.executeCommand("vscode.diff", base.uri, draft.uri, `${base.label} ↔ ${draft.label}`);
+    await showSideBySideDiff(base, draft, report);
   } catch (error) {
     vscode.window.showErrorMessage(`Could not compare: ${(error as Error).message}`);
   }

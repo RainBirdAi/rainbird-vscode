@@ -22,6 +22,17 @@ export function decodeRbird(raw: Buffer): string | undefined {
   return rblang && rblang.length ? rblang.join("\n") : undefined;
 }
 
+/**
+ * Read-only virtual documents for export files (content provider registered in
+ * compareSource.ts), so a .rbird export can be one side of the diff editor.
+ */
+export const EXPORT_SCHEME = "rainbird-export";
+
+export function exportUri(file: vscode.Uri): vscode.Uri {
+  const name = (file.path.split("/").pop() ?? "export").replace(/\.rbird$/i, ".rbl");
+  return vscode.Uri.from({ scheme: EXPORT_SCHEME, path: `/${name}`, query: encodeURIComponent(file.fsPath) });
+}
+
 /** Read RBLang from a .rbird export or a plain .rbl/.xml file — the two shapes a Studio round-trip produces. */
 export async function readRblang(uri: vscode.Uri): Promise<string> {
   const raw = Buffer.from(await vscode.workspace.fs.readFile(uri));

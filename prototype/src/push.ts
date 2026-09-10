@@ -12,6 +12,8 @@ import { getClient } from "./queryRunner";
 import { collectIssues } from "./diagnostics";
 import { QueryPanel } from "./queryPanel";
 import { recordKnownMap } from "./mapsTree";
+import { ApiError } from "./api";
+import { clearPlatformErrors, showPlatformErrors, showPlatformOutput } from "./platformDiagnostics";
 
 export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
   const editor = vscode.window.activeTextEditor;
@@ -52,7 +54,8 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
   if (description === undefined) return;
 
   try {
-    const { kmId, raw } = await vscode.window.withProgress(
+    clearPlatformErrors(doc.uri);
+    const { kmId, raw, validation } = await vscode.window.withProgress(
       { location: vscode.ProgressLocation.Notification, title: `Pushing "${name}" to Rainbird…` },
       () => client.createMap(rblang, name, description)
     );
@@ -78,13 +81,27 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
       ...(doc.uri.scheme === "file" ? { file: doc.uri.fsPath } : {}),
     });
 
-    const action = await vscode.window.showInformationMessage(
-      `Pushed to Rainbird — new map "${name}" (kmID ${kmId}). Remember: pushes are create-only; delete old scratch maps in Studio.`,
-      "Run query",
-      "Copy kmID",
-      "Use as workspace kmID"
-    );
-    if (action === "Run query") {
+    let action: string | undefined;
+    if (validation.length) {
+      // The platform stores the draft as-is and reports (only) the first problem it found.
+      showPlatformErrors(doc, validation, `Push of "${name}" (kmID ${kmId}) accepted with validation errors`);
+      action = await vscode.window.showWarningMessage(
+        `Pushed "${name}" (kmID ${kmId}), but Rainbird reported a validation error, shown in the Problems panel: ${validation[0]}. The platform reports one problem per push; fix it and the next push may reveal another.`,
+        "Show Problems",
+        "Run query",
+        "Copy kmID"
+      );
+    } else {
+      action = await vscode.window.showInformationMessage(
+        `Pushed to Rainbird — new map "${name}" (kmID ${kmId}). Remember: pushes are create-only; delete old scratch maps in Studio.`,
+        "Run query",
+        "Copy kmID",
+        "Use as workspace kmID"
+      );
+    }
+    if (action === "Show Problems") {
+      await vscode.commands.executeCommand("workbench.actions.view.problems");
+    } else if (action === "Run query") {
       await QueryPanel.open(context, kmId);
     } else if (action === "Copy kmID") {
       await vscode.env.clipboard.writeText(kmId);
@@ -94,6 +111,19 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
         .update("knowledgeMapId", kmId, vscode.ConfigurationTarget.Workspace);
     }
   } catch (error) {
+    const validation = error instanceof ApiError ? error.errMessages() : undefined;
+    if (validation?.length) {
+      showPlatformErrors(doc, validation, `Push of "${name}" rejected by Rainbird`);
+      const n = validation.length;
+      const action = await vscode.window.showErrorMessage(
+        `Rainbird rejected "${name}": ${n} validation error${n === 1 ? "" : "s"}, shown in the Problems panel at the elements they refer to. First: ${validation[0]}`,
+        "Show Problems",
+        "Show all"
+      );
+      if (action === "Show Problems") await vscode.commands.executeCommand("workbench.actions.view.problems");
+      else if (action === "Show all") showPlatformOutput();
+      return;
+    }
     const message = (error as Error).message;
     const hint = /NAME_ERROR|DESCRIPTION_ERROR/.test(message)
       ? " — the platform rejected the name/description text; retry with only letters, numbers and spaces."

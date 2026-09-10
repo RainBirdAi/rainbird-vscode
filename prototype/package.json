@@ -2,7 +2,7 @@
   "name": "rainbird",
   "displayName": "Rainbird (Beta)",
   "description": "Beta — RBLang language support, knowledge-map tooling, query running and evidence trees for the Rainbird decision-intelligence platform.",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "preview": true,
   "publisher": "rainbird",
   "license": "SEE LICENSE IN LICENSE",
@@ -115,7 +115,7 @@
       },
       {
         "command": "rainbird.semanticDiff",
-        "title": "Rainbird: Semantic Diff (vs git HEAD)…"
+        "title": "Rainbird: Diff vs git HEAD (side by side + semantic report)…"
       },
       {
         "command": "rainbird.promotionDiff",
@@ -186,6 +186,41 @@
       {
         "command": "rainbird.addMcpServer",
         "title": "Rainbird: Add Served Graph as MCP Server…"
+      },
+      {
+        "command": "rainbird.insertElement",
+        "title": "Rainbird: Insert… (concept, relationship, instance, fact, rule)",
+        "icon": "$(add)"
+      },
+      {
+        "command": "rainbird.addConcept",
+        "title": "Rainbird: Add Concept…",
+        "icon": "$(add)"
+      },
+      {
+        "command": "rainbird.addRelationship",
+        "title": "Rainbird: Add Relationship…",
+        "icon": "$(add)"
+      },
+      {
+        "command": "rainbird.addInstance",
+        "title": "Rainbird: Add Instance…",
+        "icon": "$(add)"
+      },
+      {
+        "command": "rainbird.addFact",
+        "title": "Rainbird: Add Fact…",
+        "icon": "$(add)"
+      },
+      {
+        "command": "rainbird.addRule",
+        "title": "Rainbird: Add Rule…",
+        "icon": "$(add)"
+      },
+      {
+        "command": "rainbird.addCondition",
+        "title": "Rainbird: Add Condition to Rule at Cursor…",
+        "icon": "$(add)"
       }
     ],
     "viewsContainers": {
@@ -220,7 +255,7 @@
     "viewsWelcome": [
       {
         "view": "rainbird.mapExplorer",
-        "contents": "Open an RBLang (.rbl) file to explore its concepts, relationships and rules.\n[Open example](command:rainbird.openExample)"
+        "contents": "Open an RBLang (.rbl) file to explore its concepts, relationships and rules — or start one.\n[Open example](command:rainbird.openExample)\n[Insert into the open file…](command:rainbird.insertElement)"
       }
     ],
     "menus": {
@@ -255,6 +290,11 @@
       ],
       "editor/title": [
         {
+          "command": "rainbird.insertElement",
+          "when": "editorLangId == rblang",
+          "group": "navigation@0"
+        },
+        {
           "command": "rainbird.openGraphView",
           "when": "editorLangId == rblang",
           "group": "navigation@1"
@@ -266,6 +306,11 @@
         }
       ],
       "editor/context": [
+        {
+          "command": "rainbird.insertElement",
+          "when": "editorLangId == rblang",
+          "group": "rainbird@0"
+        },
         {
           "command": "rainbird.explainSelection",
           "when": "editorLangId == rblang",
@@ -327,6 +372,11 @@
           "command": "rainbird.pullMap",
           "when": "view == rainbird.platformMaps",
           "group": "navigation@0"
+        },
+        {
+          "command": "rainbird.insertElement",
+          "when": "view == rainbird.mapExplorer",
+          "group": "navigation@0"
         }
       ],
       "view/item/context": [
@@ -359,6 +409,31 @@
           "command": "rainbird.mapsRemove",
           "when": "view == rainbird.platformMaps && viewItem =~ /rainbirdMap/",
           "group": "rainbird@4"
+        },
+        {
+          "command": "rainbird.addConcept",
+          "when": "view == rainbird.mapExplorer && viewItem == rainbirdCategory.concepts",
+          "group": "inline"
+        },
+        {
+          "command": "rainbird.addRelationship",
+          "when": "view == rainbird.mapExplorer && viewItem == rainbirdCategory.relationships",
+          "group": "inline"
+        },
+        {
+          "command": "rainbird.addRule",
+          "when": "view == rainbird.mapExplorer && viewItem == rainbirdCategory.rules",
+          "group": "inline"
+        },
+        {
+          "command": "rainbird.addFact",
+          "when": "view == rainbird.mapExplorer && viewItem == rainbirdCategory.facts",
+          "group": "inline"
+        },
+        {
+          "command": "rainbird.addInstance",
+          "when": "view == rainbird.mapExplorer && viewItem == rainbirdCategory.instances",
+          "group": "inline"
         }
       ],
       "explorer/context": [
@@ -443,7 +518,8 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "vscode:prepublish": "npm run compile"
+    "vscode:prepublish": "npm run compile",
+    "test": "npm run compile && node --test \"out/test/**/*.test.js\""
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

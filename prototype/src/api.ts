@@ -6,6 +6,8 @@
  * GET /analysis/evidence/{factID}/{sessionID}.
  */
 
+import { normaliseErrMessages } from "./platformErrors";
+
 export interface Question {
   relationship: string;
   subject?: string;
@@ -107,15 +109,40 @@ export class ApiError extends Error {
     this.name = "ApiError";
   }
 
-  /** Validation failures arrive as {"err": ["message", …]}; other errors are plain text. */
+  /** Validation failures arrive as {"err": ["message", …]} (occasionally a string or objects); other errors are plain text. */
   errMessages(): string[] | undefined {
     try {
       const parsed = JSON.parse(this.body) as { err?: unknown };
-      return Array.isArray(parsed.err) ? parsed.err.map(String) : undefined;
+      const messages = normaliseErrMessages(parsed.err);
+      return messages.length ? messages : undefined;
     } catch {
       return undefined;
     }
   }
+}
+
+export interface CreateMapResult {
+  kmId?: string;
+  /**
+   * Validation messages the platform attached to a *successful* upload.
+   * Verified live 2026-09-10: POST /maps answers 201 with
+   * {"kmID": "…", "id": "…", "error": "Line: 35 - Datasource hostname must start with …"}
+   * — the map is created and the draft stored as-is, and only the first
+   * problem is reported, so a second push may reveal the next one.
+   */
+  validation: string[];
+  raw: unknown;
+}
+
+/** Read the kmID and any validation messages out of a POST /maps body. Pure, so it is unit-tested against captured responses. */
+export function parseCreateMapResponse(raw: Record<string, unknown>): CreateMapResult {
+  // The response shape is not publicly documented; look in the usual places.
+  const nested = (raw.map ?? raw.data ?? {}) as Record<string, unknown>;
+  const kmId = [raw.kmID, raw.kmId, nested.kmID, nested.kmId].find((v): v is string => typeof v === "string" && v.length > 0);
+  const validation = [raw.error, raw.errors, raw.err, raw.warnings, raw.validation, nested.error, nested.errors]
+    .flatMap((v) => normaliseErrMessages(v))
+    .filter((m, i, all) => all.indexOf(m) === i);
+  return { kmId, validation, raw };
 }
 
 export class RainbirdClient {
@@ -248,18 +275,13 @@ export class RainbirdClient {
    * map with a new kmID. Contract: X-API-Key + Version: v1, body
    * {rblang, name, description}.
    */
-  async createMap(rblang: string, name: string, description: string): Promise<{ kmId?: string; raw: unknown }> {
+  async createMap(rblang: string, name: string, description: string): Promise<CreateMapResult> {
     const raw = await this.request<Record<string, unknown>>(`/maps`, {
       method: "POST",
       headers: { "X-API-Key": this.apiKey, Version: "v1" },
       body: JSON.stringify({ rblang, name, description }),
     });
-    // The response shape is not publicly documented; look in the usual places.
-    const nested = (raw.map ?? raw.data ?? {}) as Record<string, unknown>;
-    const kmId = [raw.kmID, raw.kmId, raw.id, nested.kmID, nested.kmId, nested.id].find(
-      (v): v is string => typeof v === "string" && v.length > 0
-    );
-    return { kmId, raw };
+    return parseCreateMapResponse(raw);
   }
 
   /**

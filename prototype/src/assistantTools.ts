@@ -8,8 +8,9 @@ import * as vscode from "vscode";
 import { ToolSpec } from "./anthropic";
 import { collectIssues } from "./diagnostics";
 import { getClientSilent } from "./queryRunner";
-import { Answer, Fact } from "./api";
+import { Answer, ApiError, CreateMapResult, Fact } from "./api";
 import { recordKnownMap } from "./mapsTree";
+import { showPlatformErrors } from "./platformDiagnostics";
 
 export function buildTools(context: vscode.ExtensionContext): ToolSpec[] {
   return [
@@ -151,13 +152,29 @@ export function buildTools(context: vscode.ExtensionContext): ToolSpec[] {
       async run(input) {
         const client = await getClientSilent(context);
         if (!client) return "Not connected to Rainbird — tell the user to run “Rainbird: Connect” first.";
-        const { kmId, raw } = await client.createMap(
-          String(input.rblang),
-          String(input.name),
-          String(input.description)
-        );
+        let created: CreateMapResult;
+        try {
+          created = await client.createMap(String(input.rblang), String(input.name), String(input.description));
+        } catch (error) {
+          const validation = error instanceof ApiError ? error.errMessages() : undefined;
+          if (!validation?.length) throw error;
+          // If the pushed text is an open document, put the platform's findings on it too.
+          const doc = vscode.workspace.textDocuments.find((d) => d.languageId === "rblang" && d.getText() === String(input.rblang));
+          if (doc) showPlatformErrors(doc, validation, `Assistant push of "${input.name}" rejected by Rainbird`);
+          return `The platform rejected the map with ${validation.length} validation error${validation.length === 1 ? "" : "s"}:\n${validation
+            .map((m) => `- ${m}`)
+            .join("\n")}\nFix the RBLang and push again.`;
+        }
+        const { kmId, raw, validation } = created;
         if (!kmId) return `Uploaded, but no kmID found in the response: ${JSON.stringify(raw).slice(0, 400)}`;
         recordKnownMap(context, { kmId, name: String(input.name), source: "pushed", rblang: String(input.rblang) });
+        if (validation.length) {
+          const doc = vscode.workspace.textDocuments.find((d) => d.languageId === "rblang" && d.getText() === String(input.rblang));
+          if (doc) showPlatformErrors(doc, validation, `Assistant push of "${input.name}" (kmID ${kmId}) accepted with validation errors`);
+          return `Created map "${input.name}" with kmID ${kmId}, but the platform reported a validation error (it reports one per push):\n${validation
+            .map((m) => `- ${m}`)
+            .join("\n")}\nThe draft was stored as-is; fix the RBLang before relying on it.`;
+        }
         return `Created map "${input.name}" with kmID ${kmId}.`;
       },
     },

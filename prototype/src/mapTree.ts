@@ -1,6 +1,8 @@
 /**
  * Map Explorer: a sidebar tree of the active RBLang document's concepts,
- * relationships, instances and rules. Clicking an item reveals its source.
+ * relationships, rules, facts and instances. Clicking an item reveals its
+ * source; each category header has a ＋ button that starts the guided flow
+ * for adding one (authoring.ts).
  */
 import * as vscode from "vscode";
 import { buildIndex } from "./mapIndex";
@@ -9,9 +11,18 @@ type Item = CategoryItem | EntryItem;
 
 interface CategoryItem {
   kind: "category";
+  /** Drives the ＋ button shown on the header (viewItem == rainbirdCategory.<key>). */
+  key: "concepts" | "relationships" | "rules" | "facts" | "instances";
+  /**
+   * The document this tree shows. VS Code passes the tree item itself as the
+   * argument of an inline (＋) command, so the authoring commands read the
+   * target file from here — never from the item being mistaken for a Uri.
+   */
+  uri: vscode.Uri;
   label: string;
   icon: string;
   entries: EntryItem[];
+  collapsed?: boolean;
 }
 
 interface EntryItem {
@@ -54,11 +65,15 @@ export class MapTreeProvider implements vscode.TreeDataProvider<Item> {
     if (item.kind === "category") {
       const tree = new vscode.TreeItem(
         `${item.label} (${item.entries.length})`,
-        item.entries.length
-          ? vscode.TreeItemCollapsibleState.Expanded
-          : vscode.TreeItemCollapsibleState.None
+        !item.entries.length
+          ? vscode.TreeItemCollapsibleState.None
+          : item.collapsed
+            ? vscode.TreeItemCollapsibleState.Collapsed
+            : vscode.TreeItemCollapsibleState.Expanded
       );
       tree.iconPath = new vscode.ThemeIcon(item.icon);
+      tree.contextValue = `rainbirdCategory.${item.key}`;
+      tree.resourceUri = this.doc?.uri;
       return tree;
     }
     const tree = new vscode.TreeItem(item.label, vscode.TreeItemCollapsibleState.None);
@@ -102,16 +117,19 @@ export class MapTreeProvider implements vscode.TreeDataProvider<Item> {
     }));
 
     const rules: EntryItem[] = [];
+    const facts: EntryItem[] = [];
     for (let i = 0; i < index.tags.length; i++) {
       const tag = index.tags[i];
-      if (tag.closing || tag.name !== "relinst" || tag.selfClosing) continue;
+      if (tag.closing || tag.name !== "relinst") continue;
       let hasCondition = false;
-      for (let j = i + 1; j < index.tags.length; j++) {
-        const inner = index.tags[j];
-        if (inner.name === "relinst" && inner.closing) break;
-        if (inner.name === "condition" && !inner.closing) {
-          hasCondition = true;
-          break;
+      if (!tag.selfClosing) {
+        for (let j = i + 1; j < index.tags.length; j++) {
+          const inner = index.tags[j];
+          if (inner.name === "relinst" && inner.closing) break;
+          if (inner.name === "condition" && !inner.closing) {
+            hasCondition = true;
+            break;
+          }
         }
       }
       if (hasCondition) {
@@ -122,14 +140,24 @@ export class MapTreeProvider implements vscode.TreeDataProvider<Item> {
           icon: "law",
           offset: tag.start,
         });
+      } else {
+        facts.push({
+          kind: "entry",
+          label: `${tag.attrs.subject ?? "?"} ${tag.attrs.type ?? "?"} ${tag.attrs.object ?? "?"}`,
+          description: tag.attrs.cf && tag.attrs.cf !== "100" ? `cf ${tag.attrs.cf}` : undefined,
+          icon: "symbol-constant",
+          offset: tag.start,
+        });
       }
     }
 
+    const uri = this.doc.uri;
     return [
-      { kind: "category", label: "Concepts", icon: "symbol-class", entries: concepts },
-      { kind: "category", label: "Relationships", icon: "arrow-right", entries: rels },
-      { kind: "category", label: "Rules", icon: "law", entries: rules },
-      { kind: "category", label: "Instances", icon: "symbol-field", entries: instances },
+      { kind: "category", key: "concepts", label: "Concepts", icon: "symbol-class", entries: concepts, uri },
+      { kind: "category", key: "relationships", label: "Relationships", icon: "arrow-right", entries: rels, uri },
+      { kind: "category", key: "rules", label: "Rules", icon: "law", entries: rules, uri },
+      { kind: "category", key: "facts", label: "Facts", icon: "symbol-constant", entries: facts, collapsed: true, uri },
+      { kind: "category", key: "instances", label: "Instances", icon: "symbol-field", entries: instances, uri },
     ];
   }
 }

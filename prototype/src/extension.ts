@@ -5,10 +5,12 @@
  * interactive query panel and graph view webviews, the Claude-powered
  * authoring assistant, push-to-platform (with quick-diff against the pushed
  * snapshot), the promotion diff, the map explorer sidebar, .rbird extraction,
- * MCP served-graph registration, and a connection status bar item.
+ * MCP served-graph registration, guided authoring (＋ concept / relationship /
+ * instance / fact / rule / condition), and a connection status bar item.
  */
 import * as vscode from "vscode";
 import { registerDiagnostics } from "./diagnostics";
+import { registerPlatformDiagnostics } from "./platformDiagnostics";
 import { registerCompletions } from "./completions";
 import { connect, runQuery, getClient, getEvidenceKey, setEvidenceKey } from "./queryRunner";
 import { extractRbird } from "./rbird";
@@ -30,9 +32,11 @@ import { promotionDiff } from "./promotionDiff";
 import { registerQuickDiff } from "./quickDiff";
 import { registerCompareSource } from "./compareSource";
 import { registerPlatformSource } from "./platform";
+import { registerAuthoring } from "./authoring";
 
 export function activate(context: vscode.ExtensionContext): void {
   registerDiagnostics(context);
+  registerPlatformDiagnostics(context);
   registerCompletions(context);
 
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 90);
@@ -54,6 +58,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerQuickDiff(context);
   registerPlatformSource(context);
   registerCompareSource(context);
+  registerAuthoring(context);
 
   const assistant = new AssistantViewProvider(context);
   const mapTree = new MapTreeProvider(context);

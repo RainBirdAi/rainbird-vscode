@@ -170,6 +170,15 @@ export const SCHEMA: Record<string, ElementSpec> = {
   },
 };
 
+/**
+ * Attribute values the platform still accepts but that have a preferred modern
+ * spelling (element → attribute → legacy value → preferred value). The linter
+ * reports these as hints with a rename fix rather than as invalid values.
+ */
+export const LEGACY_VALUES: Record<string, Record<string, Record<string, string>>> = {
+  concept: { type: { boolean: "truth" } },
+};
+
 /** The complete expression-language function catalogue (engine v4.118). */
 export const EXPRESSION_FUNCTIONS: { name: string; signature: string; doc: string }[] = [
   { name: "countRelationshipInstances", signature: "countRelationshipInstances(subject, 'relationship', object)", doc: "Count facts matching the pattern; * is a wildcard. Use `is equal to 0` to test absence — there is no null test." },

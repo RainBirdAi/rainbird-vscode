@@ -1,13 +1,14 @@
 /**
- * Semantic diff: compares the open RBLang file against git HEAD (or a picked
- * base file) at the model level — concepts, relationships, instances, facts,
- * rules — instead of XML line noise. This operationalizes the "export, diff,
- * review in a pull request" promise; the output is a markdown report an SME
- * can read in a PR.
+ * Diff the open RBLang file against git HEAD (or a picked base file). The
+ * primary view is the git-diff experience — both sources side by side in
+ * VS Code's diff editor with added / removed / changed lines highlighted. On
+ * top of that, the model-level semantic diff (concepts, relationships,
+ * instances, facts, rules — not XML line noise) is summarised in the
+ * notification and available as a markdown report an SME can read in a PR.
  */
 import * as vscode from "vscode";
 import { buildIndex, MapIndex, TagOccurrence } from "./mapIndex";
-import { readRblang } from "./rbird";
+import { exportUri, readRblang } from "./rbird";
 
 interface Rule {
   identity: string;
@@ -70,6 +71,41 @@ interface Model {
   rules: Map<string, Rule>;
 }
 
+/** One side of a comparison: its RBLang text, a label for titles, and a URI the diff editor can open. */
+export interface DiffSide {
+  label: string;
+  text: string;
+  uri: vscode.Uri;
+}
+
+/** The report markdown plus how many model-level changes it lists. */
+export interface Report {
+  markdown: string;
+  changes: number;
+}
+
+/**
+ * Show two versions side by side in VS Code's diff editor (like `git diff`:
+ * additions green, removals red, changed lines highlighted), then summarise the
+ * model-level changes and offer the semantic report.
+ */
+export async function showSideBySideDiff(base: DiffSide, newer: DiffSide, report: Report): Promise<void> {
+  await vscode.commands.executeCommand("vscode.diff", base.uri, newer.uri, `${base.label} ↔ ${newer.label}`);
+  const summary =
+    report.changes === 0
+      ? "No model-level changes — highlighted lines, if any, are formatting only."
+      : `${report.changes} model-level change${report.changes === 1 ? "" : "s"} (concepts, relationships, instances, facts, rules).`;
+  const open = await vscode.window.showInformationMessage(summary, "Semantic report");
+  if (open) await showReport(report.markdown);
+}
+
+/** Open the markdown report in an editor with its preview. */
+export async function showReport(markdown: string): Promise<void> {
+  const md = await vscode.workspace.openTextDocument({ language: "markdown", content: markdown });
+  await vscode.window.showTextDocument(md, { preview: false });
+  await vscode.commands.executeCommand("markdown.showPreview", md.uri);
+}
+
 export async function semanticDiff(): Promise<void> {
   const editor = vscode.window.activeTextEditor;
   if (!editor || editor.document.languageId !== "rblang") {
@@ -81,13 +117,11 @@ export async function semanticDiff(): Promise<void> {
   const base = await baseContent(doc);
   if (!base) return;
 
-  const report = diffReport(buildModel(base.text), buildModel(doc.getText()), base.label, doc.uri.path.split("/").pop() ?? "current");
-  const md = await vscode.workspace.openTextDocument({ language: "markdown", content: report });
-  await vscode.window.showTextDocument(md, { preview: false });
-  await vscode.commands.executeCommand("markdown.showPreview", md.uri);
+  const newer: DiffSide = { label: doc.uri.path.split("/").pop() ?? "current", text: doc.getText(), uri: doc.uri };
+  await showSideBySideDiff(base, newer, diffReportDetailed(buildModel(base.text), buildModel(newer.text), base.label, newer.label));
 }
 
-async function baseContent(doc: vscode.TextDocument): Promise<{ text: string; label: string } | undefined> {
+async function baseContent(doc: vscode.TextDocument): Promise<DiffSide | undefined> {
   // Prefer git HEAD when the file is in a repository.
   const gitExtension = vscode.extensions.getExtension("vscode.git");
   if (gitExtension) {
@@ -98,7 +132,7 @@ async function baseContent(doc: vscode.TextDocument): Promise<{ text: string; la
       );
       if (repo) {
         const text = await repo.show("HEAD", doc.uri.fsPath);
-        return { text, label: "HEAD" };
+        return { text, label: "HEAD", uri: api.toGitUri(doc.uri, "HEAD") };
       }
     } catch {
       // Not in git / unborn HEAD — fall through to file picker.
@@ -110,7 +144,7 @@ async function baseContent(doc: vscode.TextDocument): Promise<{ text: string; la
     canSelectMany: false,
   });
   if (!picked?.[0]) return undefined;
-  return { text: await readRblang(picked[0]), label: picked[0].path.split("/").pop() ?? "base" };
+  return { text: await readRblang(picked[0]), label: picked[0].path.split("/").pop() ?? "base", uri: exportUri(picked[0]) };
 }
 
 export function buildModel(text: string): Model {
@@ -175,6 +209,10 @@ function collectRelinsts(index: MapIndex, visit: (tag: TagOccurrence, conditions
 }
 
 export function diffReport(before: Model, after: Model, baseLabel: string, fileLabel: string): string {
+  return diffReportDetailed(before, after, baseLabel, fileLabel).markdown;
+}
+
+export function diffReportDetailed(before: Model, after: Model, baseLabel: string, fileLabel: string): Report {
   const lines: string[] = [`# Semantic diff — ${fileLabel} vs ${baseLabel}`, ""];
   let changes = 0;
 
@@ -257,5 +295,5 @@ export function diffReport(before: Model, after: Model, baseLabel: string, fileL
 
   if (changes === 0) lines.push("No model-level changes — differences (if any) are formatting only.");
   else lines.splice(2, 0, `**${changes} model-level change${changes > 1 ? "s" : ""}.** Unnamed rules are matched positionally per relationship — naming rules makes diffs more precise.`, "");
-  return lines.join("\n");
+  return { markdown: lines.join("\n"), changes };
 }
