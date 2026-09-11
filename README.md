@@ -1,86 +1,142 @@
-# Rainbird for VSCode — prototype
+# Rainbird for VS Code
 
-> **Beta.** This extension is under active development. Features, commands and the `.rbtest.json` / `.facts.json` file formats may change between releases, and some platform surfaces it relies on are undocumented. Please report problems and ideas at [github.com/juliodt-ai/rainbird-vscode/issues](https://github.com/juliodt-ai/rainbird-vscode/issues).
+Author, check, query and ship Rainbird knowledge maps without leaving your editor.
 
-A working skeleton of the Rainbird VSCode extension proposed in [`PROPOSAL.md`](https://github.com/juliodt-ai/rainbird-vscode/blob/main/PROPOSAL.md). It demonstrates the MVP tier end-to-end: RBLang language support and a live query loop against the real Decisions API.
+> **Beta.** Commands, file formats and some platform endpoints this extension relies on may change between releases. Test builds do not auto-update. Please report problems and ideas on [GitHub Issues](https://github.com/juliodt-ai/rainbird-vscode/issues).
 
-## Install a test build
+Rainbird is a decision-intelligence platform. Its knowledge maps are written in **RBLang**, an XML dialect that declares concepts, relationships, facts and rules. This extension turns VS Code into a first-class RBLang editor and connects it to your Rainbird environment so you can run real queries, read the evidence behind every answer, and push maps to the platform.
 
-1. Download the latest `.vsix` from the [Releases page](https://github.com/juliodt-ai/rainbird-vscode/releases).
-2. In VSCode: **Extensions** view → `…` menu → **Install from VSIX…** (or run `code --install-extension rainbird-<version>.vsix`).
-3. Open any `.rbl` file — the walkthrough (`Help: Get Started` → Rainbird) takes it from there.
+## Features
 
-Test builds do not auto-update: install the new `.vsix` from Releases when one is announced.
+### Write RBLang with confidence
 
-## What's implemented
+- **Syntax highlighting** for elements, attributes, enum values and the expression language inside `expression="…"`, including `%VARIABLES` and natural-language operators.
+- **Diagnostics as you type**, matched check by check against Studio's validator: unknown or misspelled elements and attributes, missing required attributes, invalid values, undeclared or duplicate concepts, relationships and instances, type mismatches in facts and conditions, certainty out of range, unbalanced quotes and unclosed elements, expression precedence traps, rules that can never fire, recursive rules, and more.
+- **Quick fixes** on most problems: declare a missing instance, accept a did-you-mean rename, pick a valid value, add or remove attributes, delete duplicates, parenthesise an expression.
+- **Completions and hovers** that know your map: child elements by context, attribute names, enum values, the concepts, relationships and instances you have declared, and every expression function with its documentation.
+- **Navigation**: go to definition, find references and rename for concepts, relationships and instances. Rename also updates quoted names inside expressions and evidence text.
+- **Outline, breadcrumbs and folding** for the structure of the map, plus a full snippet catalogue.
 
-| Area | Status |
+### Author without memorising the syntax
+
+- **Guided authoring**: use **Rainbird: Insert…** from the editor title bar, the right-click menu or the Map Explorer to add a concept, relationship, instance, fact, rule or condition by answering a few plain-English questions. Choices come from what the map already declares, and the element is inserted in the recommended section of the file.
+- **CodeLens** above every relationship and rule to run it as a query or add a fact, rule or condition in place.
+- **Map Explorer** in the Rainbird sidebar lists the concepts, relationships, rules, facts and instances of the open map. Click any item to jump to its source.
+- **Graph view** shows the open map as a live, force-directed graph. Click a node or edge to jump to its line.
+
+### Query the real engine and see the evidence
+
+- **Run Query** opens an interactive panel: pick a goal from the open map, optionally set a subject and object, choose draft, live or a specific version, inject facts, and answer the engine's questions as cards with yes/no buttons, option chips, sliders and free text. Step back with Undo.
+- **Results** show certainty bars and an **inline evidence tree** explaining how each answer was reached, colour-coded by source.
+- **Show on graph** projects the inference path of a result onto the graph view.
+- **Explain with AI** turns a result into a plain-English narrative of why the engine decided what it did.
+- **Ask in Natural Language** sends a free-text question to Rainbird's natural-language endpoint.
+
+### Work with the platform
+
+- **Connect** once per environment. Your API key is stored in VS Code's encrypted secret storage, never in settings files.
+- **Push Map to Platform** uploads the open file as a new map. The extension lints the map first, then shows any validation message the platform returns in the Problems panel on the element it refers to.
+- **Pull Map RBLang from Platform** opens the draft or any saved version of a map as read-only RBLang.
+- **Maps view** keeps a per-environment list of the maps you have pushed, queried or added by ID. Open a map's live draft or run a query straight from the list.
+- **Extract RBLang from .rbird export** unpacks a Studio export into an editable `.rbl` file.
+- **Add Served Graph as MCP Server** registers a served-graph endpoint in `.vscode/mcp.json` for use in Copilot agent mode.
+
+### Compare and test
+
+- **Side-by-side diffs** against git HEAD, the platform draft, a saved version, a Studio export or the last snapshot you pushed. Each comes with a **semantic report** that lists the concepts, relationships, facts and rules that were added, removed or changed, rather than line noise.
+- **Promotion diff** replays a saved test or your last query session against two versions of the same map and reports every result and certainty that moved.
+- **Regression tests**: save any finished query as a `.rbtest.json`. The Test Explorer replays it against the recorded target and flags certainty drift.
+
+### AI assistant
+
+The Rainbird sidebar includes a chat assistant powered by Claude using your own Anthropic API key. Describe the logic you want and get valid RBLang, ask it to explain a map, or ask it to fix a problem. Generated code is checked with the extension's own linter before it is offered, and the assistant can lint, query and push on your behalf. Pushing always asks for confirmation.
+
+## Requirements
+
+- VS Code 1.90 or later.
+- A Rainbird account and API key for querying and pushing. The key and the Knowledge Map ID are on the map's **Publish** page in Rainbird Studio. Editing, linting and the graph view work offline.
+- An Anthropic API key if you want to use the AI assistant.
+- To see evidence trees, enable the map's **Evidence Tree Link** in Studio under Publish, API Management, Access Control.
+
+## Getting started
+
+1. Install the extension. Until it is listed on the Marketplace, download the latest `.vsix` from [Releases](https://github.com/juliodt-ai/rainbird-vscode/releases) and use **Extensions: Install from VSIX…** or:
+
+   ```bash
+   code --install-extension rainbird-<version>.vsix
+   ```
+
+2. Open any `.rbl` file, or run **Help: Get Started** and choose **Get started with Rainbird** for a three-step walkthrough with an example map.
+3. Run **Rainbird: Connect**, pick Community, Enterprise or a custom URL, and paste your API key.
+4. Click the play button in the editor title bar, or run **Rainbird: Run Query…**. Enter the Knowledge Map ID when prompted, pick a goal, answer the questions and expand the evidence tree.
+5. Optional: open the **Rainbird** icon in the activity bar, choose **AI Assistant** and paste an Anthropic API key when prompted.
+
+## Commands
+
+All commands are available from the Command Palette. The most used ones:
+
+| Command | What it does |
 |---|---|
-| RBLang language (`.rbl`, `.rblang`) with TextMate grammar | ✅ Elements, attributes, enum values, embedded expression language (51 functions, `%VARS`, natural-language operators), `alt` interpolation (`{{%VAR.rel}}`), question-text placeholders |
-| Diagnostics | ✅ Malformed/duplicate attributes, unbalanced quotes, stray text, unclosed elements; unknown elements/attributes, missing or empty required attributes, invalid enum values (legacy `boolean` accepted with a rename hint), undeclared concept/relationship references, duplicate concept/relationship declarations (errors) and instance declarations (an instance is name + concept), non-string subjects, cf ranges, rule-header variable misuse, datasource hostname + `<input>` concept agreement, illegal name characters, element nesting + mismatched closing tags, fact completeness + duplicate facts, subject/object type agreement (typed literals validated, string endpoints checked against declared instances), all-zero condition weights, single-use rule variables, unknown expression functions + unbalanced parens/quotes, mutex instance counts, orphan concepts, question-form placeholder coherence, **left-to-right evaluation order** (with parenthesise quick fixes + inlay hint), **reachability** (relationships only injected facts can satisfy; rules that can never fire), **recursive rules** |
-| Completions | ✅ Context-aware: child elements by enclosing element, attribute names filtered by presence, enum values, map-local concept/relationship/instance names, expression functions with docs |
-| Hovers | ✅ Element docs and expression-function signatures |
-| Snippets | ✅ Full catalogue: skeleton, concepts, datasources (GET/POST), instances, relationships, facts, rules (incl. top-down), all three condition forms, list-function conditions, import, compound |
-| Query panel | ✅ `Rainbird: Run Query…` — interactive webview: goal picker from the open map, optional subject **and object** (subject, object and certainty queries), **draft / live / version** target, **facts to inject** (JSON/CSV or a fixture file), question **cards** (grouped questions answered together, yes/no buttons, option chips, multi-select, certainty sliders, `allowUnknown` skip, `canAdd` free text, **↶ Back** via `/undo`), running transcript, result cards with certainty bars and **inline evidence trees**. (The original QuickPick loop survives as `Run Query (Quick Pick)…`) |
-| Graph view | ✅ Force-directed graph of the open map — typed concept nodes, labelled relationship edges with rule/fact counts, instances orbiting their concepts. Click anything to jump to its source line; re-renders live as you type. Editor-title button on `.rbl` files |
-| AI assistant | ✅ Sidebar chat (Rainbird activity-bar icon) powered by Claude via your Anthropic API key (SecretStorage): describe logic → get valid RBLang, explain maps, fix problems. Generated code is **linted with the extension's own diagnostics before it's offered**, with one-click Insert / Replace file / Ask-to-fix. The system prompt is generated from the same schema table the linter uses |
-| Push to platform | ✅ `Rainbird: Push Map to Platform` — uploads the open `.rbl` via the (undocumented, verified) `POST /maps` endpoint; lints first, warns about create-only semantics, remembers the returned kmID per file, chains into the query panel. **If the platform reports a validation error** (it accepts the map anyway, stores the draft as-is and returns the first problem it found) **it appears in the Problems panel on the element it refers to** (source “Rainbird platform”) and in the Rainbird output channel |
-| Map explorer | ✅ Sidebar tree of the active map's concepts / relationships / rules / instances; click to reveal source |
-| Evidence overlay | ✅ "Show on graph" on any query result projects the decision's inference path onto the graph view — used relationships/instances highlighted with certainty, everything else dimmed |
-| AI decision explanation | ✅ "Explain (AI)" on any result streams a plain-English narrative of why the engine decided what it did (per-fact provenance: told-to-us / inferred / datasource) |
-| Regression tests | ✅ "Save as test" on any finished query writes a `.rbtest.json` (goal + target version + injected facts + answers + expected results); the **Test Explorer** replays them against the recorded target (draft by default) with certainty-drift detection (±2) |
-| Agentic assistant | ✅ The AI assistant has tools — `lint_map`, `run_query`, `push_map` (push is confirmation-gated) — so "build a map for X and prove it works" lints, pushes and queries autonomously |
-| Go-to-def / references / rename | ✅ For concepts, relationships and instances (space-containing names handled); rename updates every reference **including quoted names inside expressions, `{{%VAR.rel}}` evidence-text traversals and datasource `action map=` targets**. Single-file scope |
-| Quick fixes | ✅ 💡 on diagnostics: declare a missing instance, did-you-mean renames for case/typo'd references (edit distance ≤ 2), pick a valid enum value, add missing / remove unrecognised attributes, delete duplicate declarations & facts — every fix generated by the lint engine itself, so applying it provably clears the diagnostic |
-| Outline & folding | ✅ DocumentSymbolProvider (Outline pane, breadcrumbs, Cmd+Shift+O, sticky scroll): concepts, instances, relationships with question forms, rules with their conditions, facts. Structure-based folding for elements and comment blocks |
-| CodeLens | ✅ "▶ Run query" and rule/fact counts above every `<rel>`, pre-selecting the goal in the query panel |
-| NL querying | ✅ `Rainbird: Ask in Natural Language (beta)` — Rainbird's own `/nl/interact` (endpoint verified live, body shape undocumented → defensive parsing with a raw-JSON expander on every reply) |
-| Guided authoring | ✅ `＋ Insert…` on the editor title bar, the right-click menu and the Map Explorer, plus a `＋` on every Map Explorer category (Concepts, Relationships, Rules, Facts, Instances) and CodeLenses on relationships (`＋ fact`, `＋ rule`) and rules (`＋ condition`). Each flow asks a few plain-English questions — picks come from what the map already declares, so a subject is always a real string concept and a fact's instances exist — then inserts the RBLang in the docs' recommended section (concepts → relationships → instances → facts → rules) and leaves the cursor on it. Rules are built condition by condition with a running “IF … AND … THEN …” summary; variables bound by one condition are offered to the next |
-| Diff vs git HEAD | ✅ `Rainbird: Diff vs git HEAD…` — the open `.rbl` and its git HEAD version (or a picked `.rbl` / `.rbird` base) **side by side in the diff editor**, added / removed / changed lines highlighted like `git diff`. The notification counts the model-level changes and opens the **semantic report**: concepts/rels/instances/facts/rules added·removed·changed, cf drifts, renamed rules paired, per-condition weight/mandatory changes — the meaning behind the line noise |
-| Promotion diff | ✅ `Rainbird: Compare Versions (Promotion Diff)…` (also on every result card) — replays a saved test or the last panel session against two versions of the same map (draft vs live by default, any version number) and reports result/certainty changes plus, when evidence is accessible, the facts, rule conditions and impacts that moved. Studio has no version diff |
-| Draft vs saved version | ✅ `Rainbird: Compare Draft vs Saved Version…` — the platform draft (or the open `.rbl`, or a Studio `.rbird` export) against the latest / live / numbered saved version fetched from the platform, or another export. Side by side in the diff editor, with the model-level semantic report a click away. Also on right-click of any `.rbird`. Studio itself has no version diff |
-| Pull from platform | ✅ `Rainbird: Pull Map RBLang from Platform…` — read-only RBLang of the draft or any saved version via `GET /analysis/file/{kmID}[?version=N]` (verified live, undocumented), with Save As. `Rainbird: Diff Open File Against Platform Draft` opens the buffer and the platform draft side by side in the diff editor, with the semantic report a click away |
-| Quick diff vs pushed snapshot | ✅ Gutter change bars (SCM quick-diff provider) and `Rainbird: Diff Against Last Pushed Snapshot` compare the buffer with exactly what was last pushed from VSCode |
-| Package as .rbird | ❌ Removed — the round-trip test failed: Studio's importer relies on the structured model arrays, not the `rblang` lines, so a text-only repack imports broken. Rebuilding those arrays needs the full parser (see PROPOSAL.md). Push via `POST /maps` is the working VSCode→platform path |
-| Maps view | ✅ Per-environment registry of every kmID you push/query/add (there is still **no public list-maps API** — `GET /maps` → 404, verified; platform ask \#8). Clicking a map opens its **live platform draft** read-only (`GET /analysis/file`), falling back to the pushed file or snapshot. Probes `GET /maps` on refresh so it upgrades to a live listing if it ever ships |
-| Evidence tree | ✅ Webview with recursive evidence expansion, source colour-coding per docs, per-condition impact/salience |
-| Connection management | ✅ Environment picker (Community/Enterprise/custom), API key in SecretStorage, status bar item |
-| `.rbird` interop | ✅ `Rainbird: Extract RBLang from .rbird export` (gunzip → JSON → `.rbl`) |
-| MCP | ✅ `Rainbird: Add Served Graph as MCP Server…` writes the served-graph endpoint into `.vscode/mcp.json` for Copilot agent mode |
-| Walkthrough | ✅ 3-step Getting Started |
+| Rainbird: Connect | Choose an environment and store an API key |
+| Rainbird: Run Query… | Open the interactive query panel for the open map |
+| Rainbird: Show Graph View | Show the open map as a live graph |
+| Rainbird: Insert… | Guided authoring of a concept, relationship, instance, fact, rule or condition |
+| Rainbird: Push Map to Platform | Upload the open file as a new map |
+| Rainbird: Pull Map RBLang from Platform… | Open the draft or a saved version as read-only RBLang |
+| Rainbird: Diff vs git HEAD… | Side-by-side diff with a semantic report |
+| Rainbird: Diff Open File Against Platform Draft | Check whether your file matches the platform draft |
+| Rainbird: Compare Draft vs Saved Version… | Compare the platform draft with a saved version or an export |
+| Rainbird: Compare Versions (Promotion Diff)… | Replay a test or session against two versions |
+| Rainbird: Ask in Natural Language (beta)… | Free-text question against the engine |
+| Rainbird: Explain with AI | Plain-English explanation of the selection or a result |
+| Rainbird: Extract RBLang from .rbird export | Convert a Studio export to `.rbl` |
+| Rainbird: Add Served Graph as MCP Server… | Register a served graph in `.vscode/mcp.json` |
+| Rainbird: Set Anthropic API Key | Store the key used by the AI assistant |
+| Rainbird: Set Evidence Key | Store the evidence key a map requires for evidence trees |
 
-## What's deliberately stubbed (see PROPOSAL.md for the real architecture)
+## Settings
 
-- The regex-based document index stands in for a proper **language server** (incremental XML parser, workspace-wide symbols, rename, go-to-definition, formatting).
-- The graph view is **read-only** — no two-way visual editing (CustomTextEditorProvider sync, Miragon/drawio pattern).
-- No **test explorer** integration for Studio automated tests / graded evals.
-- Push exists and **pull** now works (`GET /analysis/file`, undocumented), but there is still no **update-in-place or delete** against the platform — `POST /maps` is create-only; update semantics are platform ask \#1 in the proposal.
-- No **chat participant / language-model tools** (`@rainbird` in Copilot) — the AI assistant uses your Anthropic key directly instead.
+| Setting | Default | Description |
+|---|---|---|
+| `rainbird.apiUrl` | `https://api.rainbird.ai` | API base URL. Use `https://enterprise-api.rainbird.ai` for Enterprise or your private environment URL. |
+| `rainbird.knowledgeMapId` | empty | Knowledge Map ID that queries run against. The extension also remembers the ID returned by each push per file. |
+| `rainbird.useDraft` | `true` | Query the draft version of the map instead of the live version. |
+| `rainbird.ai.model` | `claude-opus-5` | Claude model used by the AI assistant. |
 
-## Run it
+API keys are never stored in settings. Use **Rainbird: Connect** and **Rainbird: Set Anthropic API Key** to change them.
 
-```bash
-npm install
-npm run compile
-npm test          # linter unit tests (node:test, no VS Code host needed)
-```
+## File types
 
-Then open the repo in VSCode and press **F5** (Run Extension). In the Extension Development Host:
+| Extension | Purpose |
+|---|---|
+| `.rbl`, `.rblang` | RBLang knowledge maps. Full language support. |
+| `.rbird` | Studio exports. Right-click to extract RBLang or compare against the platform. |
+| `.rbtest.json` | Saved query sessions replayed by the Test Explorer. |
+| `.facts.json` | Fact fixtures that can be injected into a query. |
 
-1. Open `examples/hello-world.rbl` — highlighting, completions, diagnostics work offline. Click the graph icon in the editor title to see the map as a live graph.
-2. `Rainbird: Connect` — pick an environment, paste an API key.
-3. Click ▶ (or `Rainbird: Run Query…`) — set the kmID when prompted, pick a goal, answer the question cards, and expand the evidence tree inline.
-4. Open the **Rainbird** icon in the activity bar → **AI Assistant** → paste an Anthropic API key when prompted (or `Rainbird: Set Anthropic API Key`). Try: *“Add a rule that people also speak the languages of countries they have lived in.”* Requests run on `claude-opus-5` (configurable via `rainbird.ai.model`) with server-side refusal fallback enabled.
-5. `Rainbird: Push Map to Platform` uploads the buffer as a **new** map (create-only endpoint) and offers to query it immediately.
+## Known limitations
 
-Try breaking the example: rename a concept, misspell an attribute, set `cf="150"`, or use a custom variable in a rule header — the linter catches each one (and the AI assistant's generated code is checked against the same linter before you insert it). For the full tour, open `examples/broken/diagnostics-tour.rbl`: every diagnostic the linter knows, each preceded by an `EXPECT` comment saying what should show up in the Problems panel.
+- **Push creates a new map** every time. The platform API has no update-in-place or delete, so promote changes through Studio.
+- **Linked maps** are not resolved. References to symbols declared in an imported map are reported as unknown.
+- **Single-file scope.** Navigation, rename and diagnostics work within the open file. There is no workspace-wide index yet.
+- **The graph view is read-only.** Edit the RBLang, and the graph follows.
+- **No map listing** from the platform. The Maps view shows the maps you have pushed, queried or added by ID.
+- **Packaging to `.rbird`** is not supported. Studio's importer needs its structured model, not just the RBLang text. Use Push instead.
 
-## Provenance notes
+## Privacy
 
-- The structural schema, snippet catalogue and completion behaviour are **clean-room reimplementations** from Rainbird's public RBLang reference docs and observed Studio behaviour — no Studio code is copied.
-- The two example maps are adapted from Rainbird's public documentation examples.
-- MCP endpoint URLs are self-authenticating secrets: the extension stores them only in your workspace's `.vscode/mcp.json` and masks input.
+- Rainbird API keys, the evidence key and the Anthropic API key are stored in VS Code's secret storage.
+- The AI assistant sends the text of the open map and your prompts to Anthropic using your own key. Nothing is sent unless you use the assistant or an AI command.
+- MCP endpoint URLs are self-authenticating secrets. They are written only to your workspace's `.vscode/mcp.json` and masked on input.
 
-## Background
+## Release notes
 
-The product proposal, feature ideas and research corpus behind this extension live in [docs/](docs/).
+See the [changelog](CHANGELOG.md).
+
+## Contributing and background
+
+Development setup, test instructions and the product research behind this extension are in [docs/](https://github.com/juliodt-ai/rainbird-vscode/tree/main/docs).
+
+## Licence
+
+See [LICENSE](LICENSE).

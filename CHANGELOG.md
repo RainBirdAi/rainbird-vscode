@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **README rewritten for users.** The Marketplace page now describes what the extension does and how to use it: features, requirements, getting started, commands, settings, file types, known limitations and privacy.
+
 ## 0.0.5 — 2026-09-10
 
 - **Guided authoring — edit RBLang without knowing RBLang.** `＋ Insert…` (editor title bar, right-click menu, Map Explorer title) and a `＋` on each Map Explorer category open short guided flows for a concept, relationship, instance, fact, rule or condition. Every choice is a pick from what the map already declares (string concepts for subjects, instances of the right concept for facts, `%S` / `%O` / already-bound variables for conditions), with a “New …” escape hatch that declares the missing piece first. The element is inserted in the docs' recommended section of the file with the file's own indentation, and the cursor lands on it. Rules are built condition by condition with a running `IF … AND … THEN …` summary. CodeLenses add `＋ fact` and `＋ rule` to every relationship and `＋ condition` to every rule. The Map Explorer gained a collapsed **Facts** category.
