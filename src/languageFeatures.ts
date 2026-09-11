@@ -75,8 +75,8 @@ function refsIn(tag: TagOccurrence, index: MapIndex): RefSpan[] {
 
     // Quoted names inside expressions: list functions name relationships, comparisons may name instances.
     if ((tag.name === "condition" || tag.name === "input") && (span.attr === "expression" || span.attr === "value")) {
-      for (const m of span.value.matchAll(/'([^']*)'/g)) {
-        const name = m[1];
+      for (const m of span.value.matchAll(/'((?:[^'\\]|\\.)*)'/g)) {
+        const name = m[1].replace(/\\'/g, "'");
         const at = span.start + (m.index ?? 0) + 1;
         if (index.relationships.has(name)) refs.push({ kind: "rel", name, start: at, end: at + name.length });
         else if (index.instances.has(name)) refs.push({ kind: "instance", name, start: at, end: at + name.length });
@@ -183,7 +183,7 @@ export function registerLanguageFeatures(context: vscode.ExtensionContext): void
       provideRenameEdits(doc, position, newName) {
         const { index, hit } = resolveAt(doc, position);
         if (!hit) return undefined;
-        if (/["'\\<>]/.test(newName)) throw new Error(`Names cannot contain " ' \\ < > characters`);
+        if (/["\\<>]/.test(newName)) throw new Error(`Names cannot contain " \\ < > characters`);
         const edit = new vscode.WorkspaceEdit();
         for (const span of allSpans(index, hit.kind, hit.name)) {
           edit.replace(doc.uri, toRange(doc, span), newName);

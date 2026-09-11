@@ -54,8 +54,10 @@ function tokenize(expr: string): Token[] {
     const rest = expr.slice(i);
     let m: RegExpExecArray | null;
     if (ch === "'") {
-      const close = expr.indexOf("'", i + 1);
-      push("string", expr.slice(i, close === -1 ? expr.length : close + 1));
+      // Find the closing quote, skipping escaped ones (\').
+      let close = i + 1;
+      while (close < expr.length && expr[close] !== "'") close += expr[close] === "\\" ? 2 : 1;
+      push("string", expr.slice(i, close >= expr.length ? expr.length : close + 1));
     } else if ((m = /^-?\d+(\.\d+)?/.exec(rest)) && (ch !== "-" || !lastIsOperand())) {
       push("number", m[0]);
     } else if ((m = /^%[A-Za-z0-9_]+/.exec(rest))) {

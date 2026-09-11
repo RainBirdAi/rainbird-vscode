@@ -233,6 +233,220 @@ describe("lexical checks", () => {
   });
 });
 
+/**
+ * Document-level structure, mirroring the platform parser's own acceptance
+ * tests: root element present, correctly named and closed; no text where the
+ * schema allows none; XML character rules. Whole documents, not wrapped bodies.
+ */
+describe("document structure", () => {
+  const XML = `<?xml version="1.0" encoding="utf-8"?>\n`;
+  const OPEN = `<rbl:kb xmlns:rbl="http://rbl.io/schema/RBLang">\n`;
+  const docErrors = (text: string): string[] => ofSeverity(collectIssues(text), "error");
+
+  const BUS_PASS = (concinstWorking: string, ageCondition: string, relinstLead = "") => `${XML}${OPEN}
+    <concept name="Person" type="string"/>
+    <concept name="Age" type="number"/>
+    <concept name="Pass" type="string"/>
+    <concept name="Occupation Status" type="string"/>
+    <concinst name="Bus Pass" type="Pass"/>
+    <concinst name="Retired's" type="Occupation Status"/>
+    ${concinstWorking}
+    <rel name="is aged" subject="Person" object="Age" askable="secondFormObject">
+      <secondFormObject>How old is %S?</secondFormObject>
+    </rel>
+    <rel name="has occupation status" subject="Person" object="Occupation Status" askable="secondFormObject">
+      <secondFormObject>What is the occupation status of %S?</secondFormObject>
+    </rel>
+    <rel name="is eligible for" subject="Person" object="Pass" askable="none"/>
+    <relinst type="is eligible for" object="Bus Pass" cf="100">
+      ${relinstLead}
+      ${ageCondition}
+      <condition rel="has occupation status" subject="%S" object="%OCCUPATION_STATUS"/>
+      <condition expression="(%AGE is greater than 60) or (%OCCUPATION_STATUS is equal to 'Retired\\'s')"/>
+    </relinst>
+    </rbl:kb>`;
+
+  test("the platform's bus-pass map is accepted verbatim: apostrophes in names, \\' escapes in expressions", () => {
+    const issues = collectIssues(`${XML}${OPEN}
+  <concept name="Person" type="string"/>
+  <concept name="Age" type="number"/>
+  <concept name="Pass" type="string"/>
+  <concept name="Occupation Status" type="string"/>
+  <concinst name="Bus Pass" type="Pass"/>
+  <concinst name="Retired's" type="Occupation Status"/>
+  <concinst name="Working" type="Occupation Status"/>
+  <rel name="is aged" subject="Person" object="Age" askable="secondFormObject">
+    <secondFormObject>How old is %S?</secondFormObject>
+  </rel>
+  <rel name="has occupation status" subject="Person" object="Occupation Status" askable="secondFormObject">
+    <secondFormObject>What is the occupation status of %S?</secondFormObject>
+  </rel>
+  <rel name="is eligible for" subject="Person" object="Pass" askable="none"/>
+  <relinst type="is eligible for" object="Bus Pass" cf="100">
+    <condition rel="is aged" subject="%S" object="%AGE"/>
+    <condition rel="has occupation status" subject="%S" object="%OCCUPATION_STATUS"/>
+    <condition expression="(%AGE is greater than 60) or (%OCCUPATION_STATUS is equal to 'Retired\\'s')"/>
+  </relinst>
+  <relinst type="is eligible for" object="Bus Pass" cf="100">
+    <condition rel="is aged" subject="%S" object="%AGE"/>
+    <condition rel="has occupation status" subject="%S" object="%OCCUPATION_STATUS"/>
+    <condition expression="((%AGE is greater than 60) and (%AGE is less than 80)) or (%OCCUPATION_STATUS is equal to 'Retired\\'s')"/>
+  </relinst>
+</rbl:kb>`);
+    assert.deepEqual(ofSeverity(issues, "error"), []);
+    assert.deepEqual(ofSeverity(issues, "warning"), []);
+  });
+
+  test("quote balance in expressions understands the \\' escape", () => {
+    const rule = (expr: string) => `${BASE}<relinst type="is resident" subject="%S" object="true"><condition rel="lives in" subject="%S" object="%C"/><condition expression="${expr}"/></relinst>`;
+    assertNone(errors(rule(`%C is equal to 'Retired\\'s'`)), /Unbalanced single quote/);
+    assertNone(errors(rule(`includes(%C, 'it\\'s') or includes(%C, 'wasn\\'t')`)), /Unbalanced single quote/);
+    assertHas(errors(rule(`%C is equal to 'Retired\\'s`)), /Unbalanced single quote/);
+    assertHas(errors(rule(`includes(%C, 'SW1)`)), /Unbalanced single quote/);
+  });
+
+  test("names may contain apostrophes but not quotes, backslashes or angle brackets", () => {
+    assertNone(errors(`<concept name="Retired's" type="string"/><rel name="r" subject="Retired's" object="Retired's"/>`), /Names cannot contain/);
+    for (const bad of ["Bad\\Name", "Bad<Name", "Bad>Name"]) assertHas(errors(`<concept name="${bad}" type="string"/>`), /Names cannot contain/);
+  });
+
+  test("the bus-pass map used by the structure cases is itself clean", () => {
+    assert.deepEqual(docErrors(BUS_PASS(`<concinst name="Working" type="Occupation Status"/>`, `<condition rel="is aged" subject="%S" object="%AGE"/>`)), []);
+  });
+
+  test("missing opening root tag", () => {
+    const e = docErrors(`${XML}</rbl:kb>\n`);
+    assertHas(e, /Missing root element/);
+    assertHas(e, /Unexpected closing tag <\/rbl:kb>: no element is open/);
+  });
+
+  test("missing closing root tag", () => {
+    assertHas(docErrors(`${XML}${OPEN}`), /Unclosed element <rbl:kb>: missing <\/rbl:kb>/);
+  });
+
+  test("wrong root prefix, with or without a namespace declaration", () => {
+    for (const root of [`<xyz:kb>\n</xyz:kb>`, `<xyz:kb xmlns:xyz="http://rbl.io/schema/RBLang">\n</xyz:kb>`]) {
+      const e = docErrors(`${XML}${root}\n`);
+      assertHas(e, /Unrecognised element: xyz:kb/);
+      assertHas(e, /Missing root element/);
+    }
+  });
+
+  test("wrong root local name", () => {
+    const e = docErrors(`${XML}<rbl:lc>\n</rbl:lc>\n`);
+    assertHas(e, /Unrecognised element: rbl:lc/);
+    assertHas(e, /Missing root element/);
+  });
+
+  test("a second root element is an error", () => {
+    assertHas(docErrors(`${XML}${OPEN}</rbl:kb>\n${OPEN}</rbl:kb>\n`), /Only one <rbl:kb> root is allowed/);
+  });
+
+  test("random text inside the root element", () => {
+    assertHas(docErrors(`${XML}${OPEN}This is some random text\n<concept name="animal" type="string"/>\n</rbl:kb>\n`), /Unexpected text outside an element: "This is some random text"/);
+  });
+
+  test("random text inside rel", () => {
+    const e = docErrors(`${XML}${OPEN}
+      <concept name="animal" type="string"/>
+      <concept name="legs" type="number"/>
+      <concept name="bipedal" type="truth"/>
+      <rel name="is" subject="animal" object="bipedal">
+        This is some random text
+      </rel>
+      <rel name="has number of legs" subject="animal" object="legs"/>
+      <relinst type="has number of legs" object="2" cf="100">
+        <condition rel="is" subject="%S" object="true"/>
+      </relinst>
+      </rbl:kb>`);
+    assertHas(e, /Unexpected text outside an element: "This is some random text"/);
+  });
+
+  test("random text inside concinst, condition and relinst", () => {
+    const RANDOM = /Unexpected text outside an element: "This is some random text"/;
+    assertHas(docErrors(BUS_PASS(`<concinst name="Working" type="Occupation Status">\n  This is some random text\n</concinst>`, `<condition rel="is aged" subject="%S" object="%AGE"/>`)), RANDOM);
+    assertHas(docErrors(BUS_PASS(`<concinst name="Working" type="Occupation Status"/>`, `<condition rel="is aged" subject="%S" object="%AGE">\n  This is some random text\n</condition>`)), RANDOM);
+    assertHas(docErrors(BUS_PASS(`<concinst name="Working" type="Occupation Status"/>`, `<condition rel="is aged" subject="%S" object="%AGE"/>`, "This is some random text")), RANDOM);
+  });
+
+  test("random text inside concept", () => {
+    const e = docErrors(`${XML}${OPEN}<concept name="Person" type="string">\n  This is some random text\n</concept>\n<rel name="knows" subject="Person" object="Person"/>\n</rbl:kb>`);
+    assertHas(e, /Unexpected text outside an element: "This is some random text"/);
+  });
+
+  test("the XML declaration is optional", () => {
+    assert.deepEqual(docErrors(`${OPEN}</rbl:kb>\n`), []);
+  });
+
+  test("a root without xmlns:rbl is an error (Studio requires the namespace verbatim)", () => {
+    assertHas(docErrors(`${XML}<rbl:kb>\n</rbl:kb>\n`), /rbl:kb element has missing attribute: xmlns:rbl/);
+  });
+
+  test("no XML at all", () => {
+    const e = docErrors(`This is just plain text with no XML whatsoever.`);
+    assertHas(e, /Missing root element/);
+    assertHas(e, /Unexpected text outside an element/);
+  });
+
+  test("only the processing instruction, no root element", () => {
+    assertHas(docErrors(`<?xml version="1.0" encoding="utf-8"?>`), /Missing root element/);
+  });
+
+  test("a mid-line <?xml with no real document is an error", () => {
+    const e = docErrors(`The <?xml processing instruction starts every document.`);
+    assertHas(e, /Missing root element/);
+  });
+
+  test("a blank document is left alone", () => {
+    assert.deepEqual(collectIssues("").map((i) => i.message), []);
+    assert.deepEqual(collectIssues("\n  \n").map((i) => i.message), []);
+  });
+
+  test("LLM-style preface, postscript and code fences around the map are errors in a file", () => {
+    assertHas(docErrors(`Hi, I am a helpful LLM\n${XML}${OPEN}</rbl:kb>\n`), /Unexpected text outside an element: "Hi, I am a helpful LLM"/);
+    assertHas(docErrors(`${XML}${OPEN}</rbl:kb>\nI am a LLM and I really like RBLang\n`), /Unexpected text outside an element: "I am a LLM and I really like RBLang"/);
+    const fenced = "Here is the RBLang:\n\n```xml\n" + XML + OPEN + "</rbl:kb>\n```\n\nI hope this helps!";
+    const e = docErrors(fenced);
+    assertHas(e, /Unexpected text outside an element: "Here is the RBLang: ```xml"/);
+    assertHas(e, /Unexpected text outside an element: "``` I hope this helps!"/);
+  });
+
+  test("an unclosed child element is rejected", () => {
+    const e = docErrors(`${XML}${OPEN}<concept name="animal" type="string">\n</rbl:kb>`);
+    assertHas(e, /Mismatched closing tag: expected <\/concept>/);
+  });
+
+  test("a mismatched closing tag is rejected", () => {
+    assertHas(docErrors(`${XML}${OPEN}<concept name="animal" type="string"></rel>\n</rbl:kb>`), /Mismatched closing tag: expected <\/concept>/);
+  });
+
+  test("a bare ampersand in an attribute is rejected, with an &amp; fix", () => {
+    const text = `${XML}${OPEN}<concept name="cats & dogs" type="string"/>\n<rel name="likes" subject="cats & dogs" object="cats & dogs"/>\n</rbl:kb>`;
+    const issue = collectIssues(text).find((i) => /Bare "&" in name of <concept>/.test(i.message));
+    assert.ok(issue, "expected a bare-ampersand error");
+    assert.equal(issue!.severity, "error");
+    const fixed = applyFix(text, issue!.fixes![0]);
+    assert.match(fixed, /name="cats &amp; dogs" type="string"/);
+    assertNone(collectIssues(fixed).map((i) => i.message), /Bare "&" in name of <concept>/);
+  });
+
+  test("a bare ampersand in text is rejected; entities and comments are fine", () => {
+    const body = (q: string) => `${BASE}<rel name="knows" subject="Person" object="Person"><firstForm>${q}</firstForm></rel>`;
+    assertHas(errors(body("Does %S know %O & like them?")), /Bare "&" in text/);
+    assertNone(errors(body("Does %S know %O &amp; like them? &lt;3 &#38; &#x26;")), /Bare "&"/);
+    assertNone(errors(`${BASE}<!-- pros & cons -->`), /Bare "&"/);
+  });
+
+  test("a datasource path may contain a raw query string", () => {
+    const e = errors(`${BASE}
+      <concept name="Postcode" type="string">
+        <datasource hostname="https://api.example.com" path="/lookup?a=1&b=2"/>
+      </concept>
+      <rel name="has postcode" subject="Person" object="Postcode"/>`);
+    assertNone(e, /Bare "&"/);
+  });
+});
+
 describe("datasource inputs", () => {
   const withDatasource = (inputs: string) => `${BASE}
     <concept name="Postcode" type="string">

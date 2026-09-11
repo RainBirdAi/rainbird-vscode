@@ -251,13 +251,6 @@
 		<condition rel="has age" subject="%S" object="30" weight="0"/>
 	</relinst>
 
-	<!-- EXPECT warning: Variable %ONCE appears only once in this rule -->
-	<relinst type="is resident" subject="%S" object="true">
-		<condition rel="lives in" subject="%S" object="%COUNTRY"/>
-		<condition rel="is in" subject="%COUNTRY" object="France"/>
-		<condition rel="has age" subject="%S" object="%ONCE"/>
-	</relinst>
-
 	<!-- EXPECT error: Unknown expression function: sumary -->
 	<relinst type="has score" subject="%S" object="%O">
 		<condition rel="has age" subject="%S" object="%AGE"/>

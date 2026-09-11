@@ -13,7 +13,7 @@
  * before it is offered and under plain node in the unit tests. diagnostics.ts
  * adapts it to the editor.
  */
-import { SCHEMA, EXPRESSION_FUNCTIONS, LEGACY_VALUES } from "./schema";
+import { SCHEMA, EXPRESSION_FUNCTIONS, LEGACY_VALUES, RBLANG_NAMESPACE } from "./schema";
 import {
   buildIndex,
   maskNonMarkup,
@@ -152,7 +152,9 @@ export function collectIssues(text: string): LintIssue[] {
     checkSemantics(tag, index, add);
   }
 
+  checkRoot(text, index, addAt);
   checkStrayText(text, index, addAt);
+  checkEntities(text, index, addAt);
   checkNesting(index, add);
   checkRelinsts(text, index, add);
   checkDatasourceInputs(index, add);
@@ -243,10 +245,53 @@ function checkSemantics(tag: TagOccurrence, _index: MapIndex, add: AddIssue): vo
   if (tag.name === "datasource" && tag.attrs.hostname && !/^https?:\/\//.test(tag.attrs.hostname)) {
     add(tag, "datasource hostname must start with http:// or https://");
   }
+  // Apostrophes are fine ("Retired's"); inside an expression they are written \'.
   const nameLike = tag.attrs.name;
-  if (nameLike && /["'\\<>]/.test(nameLike)) {
-    add(tag, `Names cannot contain " ' \\ < > characters`);
+  if (nameLike && /["\\<>]/.test(nameLike)) {
+    add(tag, `Names cannot contain " \\ < > characters`);
   }
+}
+
+/** Every map has exactly one <rbl:kb> root. Blank documents are left alone (a new file gets snippets, not an error). */
+function checkRoot(text: string, index: MapIndex, addAt: AddAt): void {
+  if (!text.trim()) return;
+  const roots = index.tags.filter((t) => !t.closing && t.name === "rbl:kb");
+  if (roots.length === 0) {
+    const start = text.search(/\S/);
+    const eol = text.indexOf("\n", start);
+    addAt(start, eol === -1 ? text.length : eol, `Missing root element: the map must be wrapped in <rbl:kb xmlns:rbl="${RBLANG_NAMESPACE}"> … </rbl:kb>`);
+  }
+  for (const extra of roots.slice(1)) addAt(extra.start, extra.end, "Only one <rbl:kb> root is allowed per map");
+}
+
+const BARE_AMPERSAND_RE = /&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g;
+
+/**
+ * XML character rules the platform's importer enforces: a bare "&" (one that
+ * does not start an entity such as &amp;) is rejected wherever it appears,
+ * in attribute values and in text. The one exception is a datasource path,
+ * where the importer tolerates raw query strings.
+ */
+function checkEntities(text: string, index: MapIndex, addAt: AddAt): void {
+  const masked = maskNonMarkup(text);
+  const report = (start: number, where: string) => {
+    addAt(start, start + 1, `Bare "&" ${where} — write &amp; (XML treats "&" as the start of an entity)`, "error", [
+      { title: "Replace with &amp;", edits: [{ start, end: start + 1, newText: "&amp;" }] },
+    ]);
+  };
+  let cursor = 0;
+  for (const tag of index.tags) {
+    for (const m of masked.slice(cursor, tag.start).matchAll(BARE_AMPERSAND_RE)) report(cursor + m.index!, "in text");
+    cursor = tag.end;
+    if (tag.closing || tag.malformed) continue;
+    for (const attr of Object.keys(tag.attrs)) {
+      if (tag.name === "datasource" && attr === "path") continue;
+      const range = attrValueRange(tag, attr);
+      if (!range) continue;
+      for (const m of tag.attrs[attr].matchAll(BARE_AMPERSAND_RE)) report(range.start + m.index!, `in ${attr} of <${tag.name}>`);
+    }
+  }
+  for (const m of masked.slice(cursor).matchAll(BARE_AMPERSAND_RE)) report(cursor + m.index!, "in text");
 }
 
 /**
@@ -388,8 +433,7 @@ function eachRelinst(
 /**
  * Fact/rule-level checks: fact completeness, duplicate facts, weight sums,
  * subject/object agreement against the relationship's signature (declared
- * instances for string concepts, literal parsing for typed concepts), and
- * single-use custom variables that can never connect.
+ * instances for string concepts, literal parsing for typed concepts).
  */
 function checkRelinsts(text: string, index: MapIndex, add: AddIssue): void {
   const seenFacts = new Map<string, TagOccurrence>();
@@ -404,7 +448,7 @@ function checkRelinsts(text: string, index: MapIndex, add: AddIssue): void {
     const types = instanceTypes(index, value);
     if (types.length === 0) {
       const fixes = [
-        ...(!/["'\\<>]/.test(value) ? [declareInstanceFix(index, value, conceptName)] : []),
+        ...(!/["\\<>]/.test(value) ? [declareInstanceFix(index, value, conceptName)] : []),
         ...didYouMean(tag, role, value, instancesOf(index, conceptName)),
       ].filter((f): f is LintFix => !!f);
       add(tag, `"${value}" is not a declared instance of "${conceptName}" — the fact will attach to nothing until that instance exists`, "warning", fixes);
@@ -444,22 +488,6 @@ function checkRelinsts(text: string, index: MapIndex, add: AddIssue): void {
       const weights = conditions.map((c) => (c.attrs.weight !== undefined ? Number(c.attrs.weight) : 100));
       if (weights.every((w) => w === 0)) {
         add(tag, "Every condition has weight 0 — this rule can never contribute any certainty");
-      }
-
-      // Custom variables must appear at least twice across the rule's conditions to connect.
-      const counts = new Map<string, number>();
-      for (const c of conditions) {
-        for (const attr of ["subject", "object", "expression", "value"] as const) {
-          for (const m of (c.attrs[attr] ?? "").matchAll(/%([A-Z][A-Z0-9_]*)/g)) {
-            if (m[1] === "S" || m[1] === "O") continue;
-            counts.set(m[1], (counts.get(m[1]) ?? 0) + 1);
-          }
-        }
-      }
-      for (const [name, count] of counts) {
-        if (count === 1) {
-          add(tag, `Variable %${name} appears only once in this rule — it binds nothing and can never connect conditions`, "warning");
-        }
       }
     }
 
@@ -528,15 +556,18 @@ const KNOWN_FUNCTIONS = new Set(EXPRESSION_FUNCTIONS.map((f) => f.name));
  */
 const EXPRESSION_KEYWORDS = new Set(["and", "or", "is", "equal", "to", "not", "greater", "less", "than", "equals", "does", "gt", "gte", "lt", "lte"]);
 
+/** A single-quoted string literal in an expression; an apostrophe inside it is escaped as \' ('Retired\'s'). */
+export const STRING_LITERAL_RE = /'(?:[^'\\]|\\.)*'/g;
+
 /** Expression sanity: only engine functions exist; parens and quotes must balance. */
 function checkExpressions(index: MapIndex, add: AddIssue): void {
   for (const tag of index.tags) {
     if (tag.closing || tag.name !== "condition" || !tag.attrs.expression) continue;
     const expression = tag.attrs.expression;
 
-    // Strip single-quoted string literals before structural checks.
-    const stripped = expression.replace(/'[^']*'/g, "''");
-    if ((expression.match(/'/g)?.length ?? 0) % 2 !== 0) {
+    // Strip single-quoted string literals before structural checks; any quote left over has no partner.
+    const stripped = expression.replace(STRING_LITERAL_RE, "''");
+    if (stripped.replace(/''/g, "").replace(/\\'/g, "").includes("'")) {
       add(tag, "Unbalanced single quote in expression");
     }
     let depth = 0;

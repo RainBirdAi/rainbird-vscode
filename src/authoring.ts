@@ -34,7 +34,7 @@ import {
   variablesIn,
 } from "./authoringModel";
 
-const NAME_FORBIDDEN = /["'\\<>]/;
+const NAME_FORBIDDEN = /["\\<>]/;
 const NEW = "$(add) ";
 
 type Item<T> = vscode.QuickPickItem & { value: T };
@@ -110,7 +110,7 @@ async function inputName(prompt: string, placeHolder: string, taken: Iterable<st
       !v.trim()
         ? "Enter a name"
         : NAME_FORBIDDEN.test(v)
-          ? `Names cannot contain " ' \\ < >`
+          ? `Names cannot contain " \\ < >`
           : existing.has(v.trim())
             ? `A ${kindLabel} named "${v.trim()}" already exists`
             : undefined,
@@ -455,7 +455,7 @@ export async function addRule(uri?: vscode.Uri, relName?: string): Promise<void>
     prompt: `Rule name — what it establishes, in plain words (optional, shown in evidence and diffs)`,
     placeHolder: `e.g. ${rel === "speaks" ? "Speaks national language of home country" : `Infer ${rel}`}`,
     ignoreFocusOut: true,
-    validateInput: (v) => (NAME_FORBIDDEN.test(v) ? `Names cannot contain " ' \\ < >` : undefined),
+    validateInput: (v) => (NAME_FORBIDDEN.test(v) ? `Names cannot contain " \\ < >` : undefined),
   });
   if (name === undefined) return;
 
