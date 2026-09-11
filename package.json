@@ -9,8 +9,7 @@
   "icon": "media/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/juliodt-ai/rainbird-vscode.git",
-    "directory": "prototype"
+    "url": "https://github.com/juliodt-ai/rainbird-vscode.git"
   },
   "bugs": {
     "url": "https://github.com/juliodt-ai/rainbird-vscode/issues"

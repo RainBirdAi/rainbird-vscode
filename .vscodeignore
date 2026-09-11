@@ -9,3 +9,6 @@ examples/.vscode/**
 .env
 .env.*
 *.vsix
+docs/**
+.github/**
+.gitignore
