@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.0.6 — 2026-09-11
 
 - **README rewritten for users.** The Marketplace page now describes what the extension does and how to use it: features, requirements, getting started, commands, settings, file types, known limitations and privacy.
 

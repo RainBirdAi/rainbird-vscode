@@ -2,9 +2,9 @@
   "name": "rainbird",
   "displayName": "Rainbird (Beta)",
   "description": "Beta — RBLang language support, knowledge-map tooling, query running and evidence trees for the Rainbird decision-intelligence platform.",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "preview": true,
-  "publisher": "rainbird",
+  "publisher": "RainbirdTechnologies",
   "license": "SEE LICENSE IN LICENSE",
   "icon": "media/icon.png",
   "repository": {
