@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.8 — 2026-09-11
+
+- **Linter: the bare `&` check from 0.0.7 has been removed.** A `&` that does not start an entity is no longer reported in attribute values or text, and the **Replace with &amp;** quick fix is gone with it. The document-structure tests for it were removed; the rest of the 0.0.7 structure checks (missing or duplicate root, stray text, nesting) are unchanged.
+
 ## 0.0.7 — 2026-09-11
 
 - **Linter: document-structure checks aligned with the platform parser's acceptance tests.** Two gaps closed: a document with no `<rbl:kb>` root (plain text, or just the `<?xml …?>` declaration) is now an error at its first line, as is a second root; a bare `&` that does not start an entity is an error wherever it appears — attribute values and text, with a **Replace with &amp;** quick fix — except in a datasource `path`, where the importer tolerates raw query strings. `npm test` gains a *document structure* suite that runs the parser's cases end to end: missing or mismatched root tags, wrong prefix or local name, stray text inside `rbl:kb`, `concept`, `concinst`, `rel`, `relinst` and `condition`, unclosed and mismatched child elements, LLM-style preface/postscript/code fences (errors in a file), and the optional XML declaration. Two false positives removed, confirmed against a map the platform accepts: apostrophes are allowed in names (`Retired's`), so the name-character rule now forbids only `" \ < >` in the linter, rename and the guided flows; and expression string literals may escape an apostrophe as `\'` (`'Retired\'s'`), which the quote-balance check, the left-to-right analyser and quoted-name references now understand. The warning that a custom variable appearing only once in a rule binds nothing has been removed: a variable bound in one condition and read only by the engine's output is legitimate.

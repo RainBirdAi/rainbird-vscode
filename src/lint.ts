@@ -154,7 +154,6 @@ export function collectIssues(text: string): LintIssue[] {
 
   checkRoot(text, index, addAt);
   checkStrayText(text, index, addAt);
-  checkEntities(text, index, addAt);
   checkNesting(index, add);
   checkRelinsts(text, index, add);
   checkDatasourceInputs(index, add);
@@ -262,36 +261,6 @@ function checkRoot(text: string, index: MapIndex, addAt: AddAt): void {
     addAt(start, eol === -1 ? text.length : eol, `Missing root element: the map must be wrapped in <rbl:kb xmlns:rbl="${RBLANG_NAMESPACE}"> … </rbl:kb>`);
   }
   for (const extra of roots.slice(1)) addAt(extra.start, extra.end, "Only one <rbl:kb> root is allowed per map");
-}
-
-const BARE_AMPERSAND_RE = /&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g;
-
-/**
- * XML character rules the platform's importer enforces: a bare "&" (one that
- * does not start an entity such as &amp;) is rejected wherever it appears,
- * in attribute values and in text. The one exception is a datasource path,
- * where the importer tolerates raw query strings.
- */
-function checkEntities(text: string, index: MapIndex, addAt: AddAt): void {
-  const masked = maskNonMarkup(text);
-  const report = (start: number, where: string) => {
-    addAt(start, start + 1, `Bare "&" ${where} — write &amp; (XML treats "&" as the start of an entity)`, "error", [
-      { title: "Replace with &amp;", edits: [{ start, end: start + 1, newText: "&amp;" }] },
-    ]);
-  };
-  let cursor = 0;
-  for (const tag of index.tags) {
-    for (const m of masked.slice(cursor, tag.start).matchAll(BARE_AMPERSAND_RE)) report(cursor + m.index!, "in text");
-    cursor = tag.end;
-    if (tag.closing || tag.malformed) continue;
-    for (const attr of Object.keys(tag.attrs)) {
-      if (tag.name === "datasource" && attr === "path") continue;
-      const range = attrValueRange(tag, attr);
-      if (!range) continue;
-      for (const m of tag.attrs[attr].matchAll(BARE_AMPERSAND_RE)) report(range.start + m.index!, `in ${attr} of <${tag.name}>`);
-    }
-  }
-  for (const m of masked.slice(cursor).matchAll(BARE_AMPERSAND_RE)) report(cursor + m.index!, "in text");
 }
 
 /**

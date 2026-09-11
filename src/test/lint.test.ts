@@ -420,31 +420,6 @@ describe("document structure", () => {
     assertHas(docErrors(`${XML}${OPEN}<concept name="animal" type="string"></rel>\n</rbl:kb>`), /Mismatched closing tag: expected <\/concept>/);
   });
 
-  test("a bare ampersand in an attribute is rejected, with an &amp; fix", () => {
-    const text = `${XML}${OPEN}<concept name="cats & dogs" type="string"/>\n<rel name="likes" subject="cats & dogs" object="cats & dogs"/>\n</rbl:kb>`;
-    const issue = collectIssues(text).find((i) => /Bare "&" in name of <concept>/.test(i.message));
-    assert.ok(issue, "expected a bare-ampersand error");
-    assert.equal(issue!.severity, "error");
-    const fixed = applyFix(text, issue!.fixes![0]);
-    assert.match(fixed, /name="cats &amp; dogs" type="string"/);
-    assertNone(collectIssues(fixed).map((i) => i.message), /Bare "&" in name of <concept>/);
-  });
-
-  test("a bare ampersand in text is rejected; entities and comments are fine", () => {
-    const body = (q: string) => `${BASE}<rel name="knows" subject="Person" object="Person"><firstForm>${q}</firstForm></rel>`;
-    assertHas(errors(body("Does %S know %O & like them?")), /Bare "&" in text/);
-    assertNone(errors(body("Does %S know %O &amp; like them? &lt;3 &#38; &#x26;")), /Bare "&"/);
-    assertNone(errors(`${BASE}<!-- pros & cons -->`), /Bare "&"/);
-  });
-
-  test("a datasource path may contain a raw query string", () => {
-    const e = errors(`${BASE}
-      <concept name="Postcode" type="string">
-        <datasource hostname="https://api.example.com" path="/lookup?a=1&b=2"/>
-      </concept>
-      <rel name="has postcode" subject="Person" object="Postcode"/>`);
-    assertNone(e, /Bare "&"/);
-  });
 });
 
 describe("datasource inputs", () => {
