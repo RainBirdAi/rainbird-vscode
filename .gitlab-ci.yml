@@ -17,6 +17,10 @@ stages:
   - release
 
 default:
+  # Pin to GitLab.com's hosted Docker runners. Without a tag, a self-hosted
+  # shell runner in the group can pick the job up, ignore `image` and fail
+  # with "npm: command not found".
+  tags: [saas-linux-small-amd64]
   image: node:22
   cache:
     key:
