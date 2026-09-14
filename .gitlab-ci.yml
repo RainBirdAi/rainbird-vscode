@@ -17,7 +17,7 @@ stages:
   - release
 
 default:
-  image: node:20
+  image: node:22
   cache:
     key:
       files: [package-lock.json]
