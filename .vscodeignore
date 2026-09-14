@@ -10,5 +10,5 @@ examples/.vscode/**
 .env.*
 *.vsix
 docs/**
-.github/**
 .gitignore
+.gitlab-ci.yml

@@ -44,9 +44,10 @@ See [PROPOSAL.md](PROPOSAL.md) for the intended architecture.
 
 ## Releasing
 
-1. Bump `version` in `package.json` and add a dated entry to `CHANGELOG.md`.
-2. Commit, then tag `v<version>` and push the tag.
-3. The **Release** workflow in `.github/workflows/release.yml` checks the tag matches the manifest version, packages the VSIX with `vsce`, and attaches it to a GitHub pre-release.
+1. Bump `version` in `package.json` and add a dated `## <version> — <date>` entry to `CHANGELOG.md`.
+2. Commit, then tag `v<version>` and push the branch and the tag: `git push origin main v<version>`.
+3. The GitLab pipeline in `.gitlab-ci.yml` runs the tests, checks the tag matches the manifest version and that the changelog has a section for it, packages the VSIX with `vsce`, uploads it to the project's package registry, and creates a GitLab Release whose notes are that changelog section.
+4. To publish to the VS Code Marketplace, run the manual **publish-marketplace** job on the tag pipeline. It needs a masked CI/CD variable `VSCE_PAT` holding a Marketplace personal access token for the `RainbirdTechnologies` publisher.
 
 To check what will ship before tagging:
 
@@ -54,7 +55,7 @@ To check what will ship before tagging:
 npx @vscode/vsce@3 ls
 ```
 
-`.vscodeignore` keeps `src/`, tests, source maps, `docs/`, the workflow and any local `.env` files out of the package. `README.md`, `CHANGELOG.md` and `LICENSE` do ship and appear on the extension's Marketplace page, so keep internal material out of them.
+`.vscodeignore` keeps `src/`, tests, source maps, `docs/`, the CI config and any local `.env` files out of the package. `README.md`, `CHANGELOG.md` and `LICENSE` do ship and appear on the extension's Marketplace page, so keep internal material out of them.
 
 ## Provenance
 

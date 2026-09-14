@@ -1,0 +1,116 @@
+# Release pipeline for the Rainbird VS Code extension.
+#
+# - Every push and merge request: install, compile and run the tests.
+# - Every tag `vX.Y.Z`: check the tag matches package.json, package the VSIX,
+#   store it in the project's generic package registry, and create a GitLab
+#   Release whose notes are the matching section of CHANGELOG.md.
+# - Optional, manual: publish the same VSIX to the VS Code Marketplace. Needs a
+#   masked CI variable `VSCE_PAT` holding a Marketplace personal access token
+#   for the `RainbirdTechnologies` publisher.
+#
+# Release flow: bump `version` in package.json, add a dated CHANGELOG entry,
+# commit, `git tag vX.Y.Z`, `git push origin main vX.Y.Z`.
+
+stages:
+  - test
+  - package
+  - release
+
+default:
+  image: node:20
+  cache:
+    key:
+      files: [package-lock.json]
+    paths: [.npm/]
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+
+variables:
+  VSIX_NAME: rainbird
+  PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${VSIX_NAME}"
+
+.release-tag: &release-tag
+  if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/
+
+test:
+  stage: test
+  script:
+    - npm test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+    - *release-tag
+
+package:
+  stage: package
+  rules:
+    - *release-tag
+  script:
+    - VERSION=$(node -p "require('./package.json').version")
+    - |
+      if [ "v$VERSION" != "$CI_COMMIT_TAG" ]; then
+        echo "Tag $CI_COMMIT_TAG does not match package.json version $VERSION" >&2
+        exit 1
+      fi
+    - |
+      if ! grep -q "^## $VERSION " CHANGELOG.md; then
+        echo "CHANGELOG.md has no '## $VERSION' section" >&2
+        exit 1
+      fi
+    # Release notes: the CHANGELOG section for this version, without its heading.
+    - awk -v v="$VERSION" '/^## /{p = ($2 == v)} p && !/^## /' CHANGELOG.md > release-notes.md
+    # Relative links in README and CHANGELOG are rewritten by vsce to the
+    # `repository` URL in package.json, the public GitHub mirror.
+    - npx --yes @vscode/vsce@3 package --out "${VSIX_NAME}-${VERSION}.vsix"
+    - >
+      curl --fail --silent --show-error
+      --header "JOB-TOKEN: ${CI_JOB_TOKEN}"
+      --upload-file "${VSIX_NAME}-${VERSION}.vsix"
+      "${PACKAGE_REGISTRY_URL}/${VERSION}/${VSIX_NAME}-${VERSION}.vsix"
+    - echo "VERSION=$VERSION" > release.env
+  artifacts:
+    paths:
+      - "${VSIX_NAME}-*.vsix"
+      - release-notes.md
+    reports:
+      dotenv: release.env
+    expire_in: 1 year
+
+release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  cache: []
+  before_script: []
+  needs:
+    - job: package
+      artifacts: true
+  rules:
+    - *release-tag
+  script:
+    - echo "Creating release $CI_COMMIT_TAG for version $VERSION"
+  release:
+    tag_name: $CI_COMMIT_TAG
+    name: "Rainbird $CI_COMMIT_TAG"
+    description: release-notes.md
+    assets:
+      links:
+        - name: "${VSIX_NAME}-${VERSION}.vsix"
+          url: "${PACKAGE_REGISTRY_URL}/${VERSION}/${VSIX_NAME}-${VERSION}.vsix"
+          link_type: package
+
+publish-marketplace:
+  stage: release
+  needs:
+    - job: package
+      artifacts: true
+  rules:
+    - <<: *release-tag
+      when: manual
+      allow_failure: true
+  script:
+    - |
+      if [ -z "$VSCE_PAT" ]; then
+        echo "Set a masked CI variable VSCE_PAT with a Marketplace token to publish" >&2
+        exit 1
+      fi
+    - npx --yes @vscode/vsce@3 publish --packagePath "${VSIX_NAME}-${VERSION}.vsix" --pat "$VSCE_PAT"

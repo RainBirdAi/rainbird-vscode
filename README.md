@@ -2,7 +2,7 @@
 
 Author, check, query and ship Rainbird knowledge maps without leaving your editor.
 
-> **Beta.** Commands, file formats and some platform endpoints this extension relies on may change between releases. Test builds do not auto-update. Please report problems and ideas on [GitHub Issues](https://github.com/juliodt-ai/rainbird-vscode/issues).
+> **Beta.** Commands, file formats and some platform endpoints this extension relies on may change between releases. Please report problems and ideas on [GitHub Issues](https://github.com/juliodt-ai/rainbird-vscode/issues).
 
 Rainbird is a decision-intelligence platform. Its knowledge maps are written in **RBLang**, an XML dialect that declares concepts, relationships, facts and rules. This extension turns VS Code into a first-class RBLang editor and connects it to your Rainbird environment so you can run real queries, read the evidence behind every answer, and push maps to the platform.
 
@@ -60,10 +60,10 @@ The Rainbird sidebar includes a chat assistant powered by Claude using your own 
 
 ## Getting started
 
-1. Install the extension. Until it is listed on the Marketplace, download the latest `.vsix` from [Releases](https://github.com/juliodt-ai/rainbird-vscode/releases) and use **Extensions: Install from VSIX…** or:
+1. Install **Rainbird** from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=RainbirdTechnologies.rainbird), or from the Extensions view in VS Code, or from a terminal:
 
    ```bash
-   code --install-extension rainbird-<version>.vsix
+   code --install-extension RainbirdTechnologies.rainbird
    ```
 
 2. Open any `.rbl` file, or run **Help: Get Started** and choose **Get started with Rainbird** for a three-step walkthrough with an example map.
