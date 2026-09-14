@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.9 — 2026-09-14
+
+- **Released under the MIT licence.** The previous LICENSE only covered internal evaluation by selected testers, which did not match Marketplace distribution. The extension is now open source under MIT, copyright Rainbird Technologies Ltd, and `package.json` declares the `MIT` SPDX identifier.
+- **RBLang in `.xml` files is recognised.** Maps saved with the `.xml` extension the platform and Studio hand out now get the full language support — linting, Map Explorer, graph view, push, diffs, guided authoring — without renaming. When an XML (or plain-text, or untitled) document opens, the extension looks in its first 2 KB for `xmlns:rbl="http://rbl.io/schema/RBLang"` or a bare `<rbl:kb>` root and switches the document's language to RBLang. Only documents VS Code typed by default are switched; one the user set to another language by hand is left alone, as is every other XML file. RBLang pasted into a new untitled document is recognised as it is typed. The extension now also activates when an XML file is opened. `npm test` gains a *detection* suite.
+- **`.rbird` exports show the Rainbird mark as their file icon**, like `.rbl` files, in file icon themes that support language icons (such as the default Seti theme). The export is gzip-compressed JSON, so opening it still shows VS Code's binary-file notice; use **Extract RBLang** or **Compare Draft vs Saved Version** from the right-click menu as before.
+
 ## 0.0.8 — 2026-09-11
 
 - **Linter: the bare `&` check from 0.0.7 has been removed.** A `&` that does not start an entity is no longer reported in attribute values or text, and the **Replace with &amp;** quick fix is gone with it. The document-structure tests for it were removed; the rest of the 0.0.7 structure checks (missing or duplicate root, stray text, nesting) are unchanged.

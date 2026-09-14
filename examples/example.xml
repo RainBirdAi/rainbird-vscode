@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rbl:kb xmlns:rbl="http://rbl.io/schema/RBLang">
+
+<concept name="Applicant" type="string"/>
+<concept name="Age" type="type"/>
+<concept name="Date Of Birth" type="date"/>
+<concept name="Eligibility" type="string" behaviour="mutually-exclusive"/>

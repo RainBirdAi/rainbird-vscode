@@ -33,8 +33,10 @@ import { registerQuickDiff } from "./quickDiff";
 import { registerCompareSource } from "./compareSource";
 import { registerPlatformSource } from "./platform";
 import { registerAuthoring } from "./authoring";
+import { registerLanguageDetection } from "./languageDetection";
 
 export function activate(context: vscode.ExtensionContext): void {
+  registerLanguageDetection(context);
   registerDiagnostics(context);
   registerPlatformDiagnostics(context);
   registerCompletions(context);

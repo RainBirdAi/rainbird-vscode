@@ -110,6 +110,7 @@ API keys are never stored in settings. Use **Rainbird: Connect** and **Rainbird:
 | Extension | Purpose |
 |---|---|
 | `.rbl`, `.rblang` | RBLang knowledge maps. Full language support. |
+| `.xml` | Recognised as RBLang when the file holds an `<rbl:kb>` map (the form the platform and Studio hand out). The language switches to RBLang on open, so everything above applies. Other XML files are untouched. |
 | `.rbird` | Studio exports. Right-click to extract RBLang or compare against the platform. |
 | `.rbtest.json` | Saved query sessions replayed by the Test Explorer. |
 | `.facts.json` | Fact fixtures that can be injected into a query. |
@@ -139,4 +140,4 @@ Development setup, test instructions and the product research behind this extens
 
 ## Licence
 
-See [LICENSE](LICENSE).
+[MIT](LICENSE). Copyright (c) 2026 Rainbird Technologies Ltd.
