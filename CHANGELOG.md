@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.10 — 2026-09-14
+
+- **Install from the Marketplace.** The extension is now listed on the Visual Studio Marketplace, and the README's getting-started steps install it from there instead of from a downloaded VSIX.
+- **Releases are built by a GitLab pipeline** that runs the tests, checks the tag against the manifest version and the changelog, packages the VSIX and publishes a GitLab Release. The GitHub Actions workflow has been removed.
+
 ## 0.0.9 — 2026-09-14
 
 - **Released under the MIT licence.** The previous LICENSE only covered internal evaluation by selected testers, which did not match Marketplace distribution. The extension is now open source under MIT, copyright Rainbird Technologies Ltd, and `package.json` declares the `MIT` SPDX identifier.
