@@ -9,12 +9,12 @@
   "icon": "media/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/juliodt-ai/rainbird-vscode.git"
+    "url": "https://github.com/RainBirdAi/rainbird-vscode.git"
   },
   "bugs": {
-    "url": "https://github.com/juliodt-ai/rainbird-vscode/issues"
+    "url": "https://github.com/RainBirdAi/rainbird-vscode/issues"
   },
-  "homepage": "https://github.com/juliodt-ai/rainbird-vscode#readme",
+  "homepage": "https://github.com/RainBirdAi/rainbird-vscode#readme",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -487,6 +487,12 @@
           "default": "claude-opus-5",
           "description": "Claude model the AI assistant uses (via your Anthropic API key)."
         }
+      }
+    },
+    "configurationDefaults": {
+      "[rblang]": {
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true
       }
     },
     "walkthroughs": [

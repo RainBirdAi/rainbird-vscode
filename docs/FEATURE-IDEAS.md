@@ -89,7 +89,7 @@ These are the highest-leverage additions because they need no platform calls and
 
 ## 4. Authoring productivity
 
-**4.1 Formatter and Organize Map.** Format-on-save with the docs' recommended order (concepts → relationships → instances → facts → rules), stable attribute order, two-space indent. Load-bearing for clean PR diffs. PLANNED 🟢 M *needs parser for comment preservation*
+**4.1 Formatter and Organize Map.** Format-on-save with the docs' recommended order (concepts → relationships → instances → facts → rules), stable attribute order, two-space indent. Load-bearing for clean PR diffs. PARTIAL 🟢 M — an indent-only formatter (re-indent from nesting, trim trailing whitespace, two-space default) shipped via `registerDocumentFormattingEditProvider`; element and attribute reordering ("Organize Map") is still open. *needs parser for comment preservation*
 
 **4.2 Bulk generators.** CSV → instances, CSV → facts, paste-a-list → instances. These were the abandoned incumbent extension's most-used commands. PLANNED 🟢 S
 

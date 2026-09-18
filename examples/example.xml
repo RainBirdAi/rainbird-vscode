@@ -5,3 +5,5 @@
 <concept name="Age" type="type"/>
 <concept name="Date Of Birth" type="date"/>
 <concept name="Eligibility" type="string" behaviour="mutually-exclusive"/>
+
+</rbl:kb>

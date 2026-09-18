@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Formatter.** RBLang now has a document and selection formatter, so **Format Document**, **Format Selection** and `editor.formatOnSave` work on `.rbl` files (and on `.xml` files recognised as RBLang). Each line is re-indented from the element nesting and trailing whitespace is trimmed. Nothing else changes: line breaks, blank lines, comments, wrapped attributes and element order stay as written, and lines that continue a wrapped tag or multi-line comment shift with their first line so hand-aligned attributes stay aligned. Lines inside a quoted attribute value or CDATA section are left alone. Half-typed documents are handled: a stray closing tag is ignored and a mismatched one closes back to its opener. RBLang files default to a two-space indent; the editor's own indentation detection still applies to files that use tabs. `npm test` gains a *formatter* suite that includes an idempotence check over the example maps.
+- **GitHub repository moved to the RainBirdAi organisation.** The repository, issues and homepage URLs in `package.json` and the README now point at `github.com/RainBirdAi/rainbird-vscode` instead of the previous personal account. The README also shows the GitLab pipeline status badge.
+
 ## 0.0.10 — 2026-09-14
 
 - **Install from the Marketplace.** The extension is now listed on the Visual Studio Marketplace, and the README's getting-started steps install it from there instead of from a downloaded VSIX.

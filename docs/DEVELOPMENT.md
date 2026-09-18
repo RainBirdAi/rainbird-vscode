@@ -35,7 +35,7 @@ Try breaking the example: rename a concept, misspell an attribute, set `cf="150"
 
 See [PROPOSAL.md](PROPOSAL.md) for the intended architecture.
 
-- The regex-based document index stands in for a proper language server (incremental XML parser, workspace-wide symbols, formatting).
+- The regex-based document index stands in for a proper language server (incremental XML parser, workspace-wide symbols). The formatter (`src/format.ts`) is indent-only for the same reason: reordering elements or attributes needs a parser that preserves comments.
 - The graph view is read-only. There is no two-way visual editing.
 - `<import>`ed maps are not resolved, so references to symbols defined in a linked map show as unknown.
 - Push exists and pull works via `GET /analysis/file` (undocumented), but there is no update-in-place or delete against the platform. `POST /maps` is create-only.

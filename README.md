@@ -1,8 +1,10 @@
 # Rainbird for VS Code
 
+[![Pipeline status](https://gitlab.com/rainbird-ai/labs/rainbird-vscode/badges/main/pipeline.svg)](https://gitlab.com/rainbird-ai/labs/rainbird-vscode/-/pipelines)
+
 Author, check, query and ship Rainbird knowledge maps without leaving your editor.
 
-> **Beta.** Commands, file formats and some platform endpoints this extension relies on may change between releases. Please report problems and ideas on [GitHub Issues](https://github.com/juliodt-ai/rainbird-vscode/issues).
+> **Beta.** Commands, file formats and some platform endpoints this extension relies on may change between releases. Please report problems and ideas on [GitHub Issues](https://github.com/RainBirdAi/rainbird-vscode/issues).
 
 Rainbird is a decision-intelligence platform. Its knowledge maps are written in **RBLang**, an XML dialect that declares concepts, relationships, facts and rules. This extension turns VS Code into a first-class RBLang editor and connects it to your Rainbird environment so you can run real queries, read the evidence behind every answer, and push maps to the platform.
 
@@ -16,6 +18,7 @@ Rainbird is a decision-intelligence platform. Its knowledge maps are written in 
 - **Completions and hovers** that know your map: child elements by context, attribute names, enum values, the concepts, relationships and instances you have declared, and every expression function with its documentation.
 - **Navigation**: go to definition, find references and rename for concepts, relationships and instances. Rename also updates quoted names inside expressions and evidence text.
 - **Outline, breadcrumbs and folding** for the structure of the map, plus a full snippet catalogue.
+- **Formatting** with **Format Document**, **Format Selection** or `editor.formatOnSave`. Each line is re-indented from the element nesting and trailing whitespace is trimmed; the file's line breaks, blank lines, comments, wrapped attributes and element order are kept as written.
 
 ### Author without memorising the syntax
 
@@ -105,6 +108,14 @@ All commands are available from the Command Palette. The most used ones:
 
 API keys are never stored in settings. Use **Rainbird: Connect** and **Rainbird: Set Anthropic API Key** to change them.
 
+RBLang files default to a two-space indent (`editor.tabSize` 2, `editor.insertSpaces` true under `[rblang]`), which is the style Rainbird's documentation uses. VS Code's indentation detection still wins for a file that already uses tabs. To format every time you save, add to your settings:
+
+```json
+"[rblang]": {
+  "editor.formatOnSave": true
+}
+```
+
 ## File types
 
 | Extension | Purpose |
@@ -136,7 +147,7 @@ See the [changelog](CHANGELOG.md).
 
 ## Contributing and background
 
-Development setup, test instructions and the product research behind this extension are in [docs/](https://github.com/juliodt-ai/rainbird-vscode/tree/main/docs).
+Development setup, test instructions and the product research behind this extension are in [docs/](https://github.com/RainBirdAi/rainbird-vscode/tree/main/docs).
 
 ## Licence
 

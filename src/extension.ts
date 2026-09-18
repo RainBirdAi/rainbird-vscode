@@ -1,7 +1,7 @@
 /**
  * Rainbird for VSCode — prototype entry point.
  *
- * Wires up: RBLang diagnostics + completions + hovers + inlay hints, the
+ * Wires up: RBLang diagnostics + completions + hovers + inlay hints + formatting, the
  * interactive query panel and graph view webviews, the Claude-powered
  * authoring assistant, push-to-platform (with quick-diff against the pushed
  * snapshot), the promotion diff, the map explorer sidebar, .rbird extraction,
@@ -34,6 +34,7 @@ import { registerCompareSource } from "./compareSource";
 import { registerPlatformSource } from "./platform";
 import { registerAuthoring } from "./authoring";
 import { registerLanguageDetection } from "./languageDetection";
+import { registerFormatting } from "./formatting";
 
 export function activate(context: vscode.ExtensionContext): void {
   registerLanguageDetection(context);
@@ -55,6 +56,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   registerLanguageFeatures(context);
   registerEditorFeatures(context);
+  registerFormatting(context);
   registerTests(context);
   registerInlayHints(context);
   registerQuickDiff(context);
