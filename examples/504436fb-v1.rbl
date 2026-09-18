@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rbl:kb xmlns:rbl="http://rbl.io/schema/RBLang">
-<concept name="person" type="string"/>
-<concept name="language" type="string"/>
-<concept name="country" type="string"/>
-<rel name="speaks" subject="person" object="language"/>
+  <concept name="person" type="string"/>
+  <concept name="language" type="string"/>
+  <concept name="country" type="string"/>
+  <rel name="speaks" subject="person" object="language"/>
   <rel name="born in" subject="person" object="country"/>
   <rel name="has national language" subject="country" object="language"/>
 </rbl:kb>
