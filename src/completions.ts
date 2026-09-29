@@ -3,11 +3,15 @@
  * completer: element completions based on the enclosing element, attribute
  * completions filtered by what's already present, enum value completions,
  * map-local name completions (concepts / relationships / instances), and
- * expression-language functions inside expression="..." attributes.
+ * expression-language functions inside expression="..." attributes. Also the
+ * hovers: element docs, expression functions and a summary of any concept,
+ * relationship or instance name under the cursor, with a reminder of how to
+ * rename it everywhere.
  */
 import * as vscode from "vscode";
 import { EXPRESSION_FUNCTIONS, SCHEMA } from "./schema";
-import { buildIndex, enclosingElement } from "./mapIndex";
+import { buildIndex, enclosingElement, instancesOf, relinstCounts } from "./mapIndex";
+import { symbolAt } from "./symbols";
 
 export function registerCompletions(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
@@ -146,6 +150,9 @@ function expressionCompletions(text: string): vscode.CompletionItem[] {
 }
 
 function provideHover(doc: vscode.TextDocument, position: vscode.Position): vscode.Hover | undefined {
+  const symbol = symbolHover(doc, position);
+  if (symbol) return symbol;
+
   const wordRange = doc.getWordRangeAtPosition(position, /[\w:-]+/);
   if (!wordRange) return undefined;
   const word = doc.getText(wordRange);
@@ -159,4 +166,44 @@ function provideHover(doc: vscode.TextDocument, position: vscode.Position): vsco
     return new vscode.Hover(new vscode.MarkdownString(`**\`<${word}>\`** — ${spec.doc}`), wordRange);
   }
   return undefined;
+}
+
+const plural = (n: number, word: string): string => `${n} ${word}${n === 1 ? "" : "s"}`;
+
+/**
+ * Hover for a concept / relationship / instance name: what it is, how much of
+ * the map uses it, and how to rename it — the rename features are otherwise
+ * easy to miss.
+ */
+function symbolHover(doc: vscode.TextDocument, position: vscode.Position): vscode.Hover | undefined {
+  const text = doc.getText();
+  const { index, hit } = symbolAt(text, doc.offsetAt(position));
+  if (!hit) return undefined;
+
+  const lines: string[] = [];
+  if (hit.kind === "concept") {
+    const concept = index.concepts.get(hit.name);
+    lines.push(`**${hit.name}** — concept${concept ? ` (${concept.type})` : ", not declared in this file"}`);
+    let rels = 0;
+    for (const rel of index.relationships.values()) if (rel.subject === hit.name || rel.object === hit.name) rels++;
+    const instances = instancesOf(index, hit.name).length;
+    lines.push(`Used by ${plural(rels, "relationship")} · ${plural(instances, "instance")}`);
+  } else if (hit.kind === "rel") {
+    const rel = index.relationships.get(hit.name);
+    lines.push(`**${hit.name}** — relationship${rel ? `: ${rel.subject} → ${rel.object}` : ", not declared in this file"}`);
+    const count = relinstCounts(index).get(hit.name);
+    lines.push(`${plural(count?.rules ?? 0, "rule")} · ${plural(count?.facts ?? 0, "fact")}`);
+  } else {
+    const concept = hit.concept ?? index.instances.get(hit.name)?.type;
+    lines.push(`**${hit.name}** — instance${concept ? ` of ${concept}` : ""}`);
+  }
+
+  lines.push(
+    hit.declaration
+      ? "Typing here renames every mention as you type. Rename from anywhere: `F2` · Find references: `Shift+F12`"
+      : "Rename everywhere: `F2` · Find references: `Shift+F12` · Edit the name in its declaration to rename live"
+  );
+
+  const range = new vscode.Range(doc.positionAt(hit.span.start), doc.positionAt(hit.span.end));
+  return new vscode.Hover(new vscode.MarkdownString(lines.join("\n\n")), range);
 }

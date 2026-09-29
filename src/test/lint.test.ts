@@ -481,6 +481,58 @@ describe("fixes clear the finding they belong to", () => {
   }
 });
 
+describe("unused relationships", () => {
+  const UNUSED = /Relationship "knows" is declared but never used/;
+  const REL = `<rel name="knows" subject="Person" object="Person"/>`;
+  const DATASOURCE = (inner: string): string =>
+    `<concept name="Person" type="string"><datasource hostname="https://example.com" path="/p">${inner}</datasource></concept>${REL}`;
+
+  test("a relationship nothing refers to is a hint with a remove fix that clears it", () => {
+    const text = wrap(`${BASE}${REL}`);
+    const hint = collectIssues(text).find((i) => UNUSED.test(i.message));
+    assert.ok(hint, "expected the unused-relationship hint");
+    assert.equal(hint!.severity, "info");
+    assert.equal(hint!.fixes?.[0].title, "Remove this declaration");
+    const fixed = applyFix(text, hint!.fixes![0]);
+    assert.ok(!fixed.includes('name="knows"'));
+    assertNone(collectIssues(fixed).map((i) => i.message), UNUSED);
+  });
+
+  test("the fix removes a multi-line relationship together with its question forms", () => {
+    const text = wrap(`${BASE}  <rel name="knows" subject="Person" object="Person">\n    <firstForm>Does %S know %O?</firstForm>\n  </rel>`);
+    const hint = collectIssues(text).find((i) => UNUSED.test(i.message))!;
+    const fixed = applyFix(text, hint.fixes![0]);
+    assert.ok(!fixed.includes("firstForm"));
+    assert.deepEqual(ofSeverity(collectIssues(fixed), "error"), []);
+  });
+
+  test("every kind of reference rename follows counts as a use", () => {
+    const uses: Record<string, string> = {
+      fact: `${BASE}${REL}<relinst type="knows" subject="Julio" object="Julio"/>`,
+      "rule head": `${BASE}${REL}<relinst type="knows" subject="%S" object="%O"><condition rel="lives in" subject="%S" object="France"/></relinst>`,
+      condition: `${BASE}${REL}<relinst type="is resident" subject="%S" object="true"><condition rel="knows" subject="%S" object="Julio"/></relinst>`,
+      "datasource input": DATASOURCE(`<input rel="knows" subject="%S"/>`),
+      "datasource action map": DATASOURCE(`<action map="knows=/Response/Name"/>`),
+      "quoted name in an expression": `${BASE}${REL}<relinst type="is resident" subject="%S" object="true"><condition expression="countRelationshipInstances(%S, 'knows', *) is greater than 0"/></relinst>`,
+      "traversal in evidence text": `${BASE}${REL}<relinst type="is resident" subject="%S" object="true" alt="{{%S}} knows {{%S.knows}}"><condition rel="lives in" subject="%S" object="France"/></relinst>`,
+    };
+    for (const [kind, body] of Object.entries(uses)) {
+      const found = infos(body);
+      assert.ok(!some(found, UNUSED), `${kind}: still reported as unused\n  got: ${JSON.stringify(found, null, 2)}`);
+    }
+  });
+
+  test("maps with imports are not checked: a linked map may use the relationship", () => {
+    assertNone(infos(`${BASE}<import km="abc123" versionNumber="1"/>${REL}`), UNUSED);
+  });
+
+  test("a relationship the reachability check reports is not reported twice", () => {
+    const issues = lint(`${BASE}<rel name="is flagged" subject="Person" object="Resident" askable="none"/>`);
+    assertHas(ofSeverity(issues, "warning"), /"is flagged" can only be satisfied by injected facts/);
+    assertNone(ofSeverity(issues, "info"), /"is flagged" is declared but never used/);
+  });
+});
+
 describe("examples/broken/diagnostics-tour.rbl", () => {
   const file = path.join(__dirname, "..", "..", "examples", "broken", "diagnostics-tour.rbl");
   const text = fs.readFileSync(file, "utf8");

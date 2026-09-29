@@ -120,7 +120,7 @@
 	<rel name="has bonus" subject="Person" object="Age"/>
 	<rel name="is in" subject="Country" object="Country"/>
 
-	<!-- OK: plumbing so the concepts above are not all reported as orphans -->
+	<!-- EXPECT info x7: Relationship "drives" (… "has bad") is declared but never used  (fix: Remove this declaration). Kept so the concepts above are not also reported as orphans -->
 	<rel name="drives" subject="Person" object="Vehicle"/>
 	<rel name="has note" subject="Person" object="Note"/>
 	<rel name="has flag" subject="Person" object="Flag"/>
@@ -128,6 +128,9 @@
 	<rel name="likes colour" subject="Person" object="Colour"/>
 	<rel name="answered" subject="Person" object="Answer"/>
 	<rel name="has bad" subject="Person" object="Bad\Name"/>
+
+	<!-- EXPECT info: Relationship "collects" is declared but never used  (fix: Remove this declaration) -->
+	<rel name="collects" subject="Person" object="Pet"/>
 
 	<!-- EXPECT error: Duplicate relationship: "lives in"  (fix: Remove this declaration) -->
 	<rel name="lives in" subject="Person" object="Country"/>

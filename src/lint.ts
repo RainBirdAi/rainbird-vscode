@@ -7,7 +7,7 @@
  * missing or empty required attributes, invalid enum values, references to
  * undeclared concepts and relationships, and a set of semantic footguns
  * (non-string subjects, cf out of range, minimum-rule-certainty above cf,
- * datasource inputs of the wrong concept, ...).
+ * datasource inputs of the wrong concept, relationships nothing refers to, ...).
  *
  * No VS Code import here: `collectIssues` runs on assistant-generated RBLang
  * before it is offered and under plain node in the unit tests. diagnostics.ts
@@ -162,7 +162,8 @@ export function collectIssues(text: string): LintIssue[] {
   checkOrphanConcepts(index, add);
   checkQuestionForms(text, index, add);
   checkEvaluationOrder(index, add);
-  checkReachability(index, add);
+  const injectOnly = checkReachability(index, add);
+  checkUnusedRelationships(text, index, add, injectOnly);
   checkCycles(index, add);
 
   return issues;
@@ -627,10 +628,11 @@ function isAskable(relTag: TagOccurrence): boolean {
  * injection by design) and for maps with <import>s (linked maps may supply
  * the missing facts or rules).
  */
-function checkReachability(index: MapIndex, add: AddIssue): void {
+function checkReachability(index: MapIndex, add: AddIssue): Set<string> {
+  const injectOnly = new Set<string>();
   const relTags = index.tags.filter((t) => !t.closing && t.name === "rel" && t.attrs.name);
-  if (!relTags.some(isAskable)) return;
-  if (index.tags.some((t) => !t.closing && t.name === "import")) return;
+  if (!relTags.some(isAskable)) return injectOnly;
+  if (index.tags.some((t) => !t.closing && t.name === "import")) return injectOnly;
 
   const hasFact = new Set<string>();
   const hasRule = new Set<string>();
@@ -645,7 +647,6 @@ function checkReachability(index: MapIndex, add: AddIssue): void {
     if (eq > 0) hasDatasource.add(tag.attrs.map.slice(0, eq).trim());
   }
 
-  const injectOnly = new Set<string>();
   for (const relTag of relTags) {
     const name = relTag.attrs.name;
     if (isAskable(relTag) || hasFact.has(name) || hasRule.has(name) || hasDatasource.has(name)) continue;
@@ -656,7 +657,7 @@ function checkReachability(index: MapIndex, add: AddIssue): void {
       "warning"
     );
   }
-  if (!injectOnly.size) return;
+  if (!injectOnly.size) return injectOnly;
 
   eachRelinst(index, (tag, conditions) => {
     if (!conditions.length) return;
@@ -671,6 +672,52 @@ function checkReachability(index: MapIndex, add: AddIssue): void {
       "warning"
     );
   });
+  return injectOnly;
+}
+
+/**
+ * Unused relationships: a <rel> that no fact, rule, condition or datasource
+ * refers to — the relationship-level twin of the orphan-concept hint. "Refers
+ * to" is the same set of places rename cascades into (symbols.ts):
+ * relinst type, condition / input rel, datasource action map targets, quoted
+ * names in expressions and {{%VAR.relationship}} traversals in evidence text.
+ *
+ * Skipped for maps with <import>s (a linked map may use it), and silent on
+ * relationships the reachability check already reported.
+ */
+function checkUnusedRelationships(text: string, index: MapIndex, add: AddIssue, alreadyReported: Set<string>): void {
+  if (index.tags.some((t) => !t.closing && t.name === "import")) return;
+
+  const used = new Set<string>();
+  for (const tag of index.tags) {
+    if (tag.closing || tag.malformed) continue;
+    if (tag.name === "relinst" && tag.attrs.type) used.add(tag.attrs.type);
+    if ((tag.name === "condition" || tag.name === "input") && tag.attrs.rel) used.add(tag.attrs.rel);
+    if (tag.name === "action" && tag.attrs.map) {
+      const eq = tag.attrs.map.indexOf("=");
+      if (eq > 0) used.add(tag.attrs.map.slice(0, eq).trim());
+    }
+    if (tag.name === "condition" || tag.name === "input") {
+      for (const attr of ["expression", "value"] as const) {
+        for (const m of (tag.attrs[attr] ?? "").matchAll(/'((?:[^'\\]|\\.)*)'/g)) used.add(m[1].replace(/\\'/g, "'"));
+      }
+    }
+    if ((tag.name === "relinst" || tag.name === "condition") && tag.attrs.alt) {
+      for (const m of tag.attrs.alt.matchAll(/\{\{\s*%[A-Za-z0-9_]+\.([^}]+?)\s*\}\}/g)) used.add(m[1].trim());
+    }
+  }
+
+  for (const tag of index.tags) {
+    if (tag.closing || tag.malformed || tag.name !== "rel" || !tag.attrs.name) continue;
+    const name = tag.attrs.name;
+    if (used.has(name) || alreadyReported.has(name)) continue;
+    add(
+      tag,
+      `Relationship "${name}" is declared but never used: no fact, rule, condition or datasource refers to it`,
+      "info",
+      [removeElementFix(text, index, tag)]
+    );
+  }
 }
 
 /**
