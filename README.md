@@ -52,7 +52,12 @@ Rainbird is a decision-intelligence platform. Its knowledge maps are written in 
 
 ### AI assistant
 
-The Rainbird sidebar includes a chat assistant powered by Claude using your own Anthropic API key. Describe the logic you want and get valid RBLang, ask it to explain a map, or ask it to fix a problem. Generated code is checked with the extension's own linter before it is offered, and the assistant can lint, query and push on your behalf. Pushing always asks for confirmation.
+The Rainbird sidebar includes a Co-author-style assistant powered by Claude, using your own Anthropic API key. It knows RBLang and the Rainbird reasoning model in depth (a bundled reference covering concepts, relationships, rules, expressions, datasources, the certainty model and Match → Infer → Ask), and it works on the map you have open:
+
+- **Ask about the map** — "which rules infer *has risk level*?", "why would this never ask about postcode?", "explain this rule" — and it answers from the map's actual content, naming rules and lines.
+- **Ask for changes** — "add a rule that applicants over 65 skip the income check", "add question wording to every askable relationship", "fix every error" — and it edits the file through validated element-level operations (insert, replace, delete, set attribute), re-lints, fixes what it broke and summarises the change. By default edits land directly in the editor, each one undoable, with a per-turn **Changes** card offering **Show diff** and **Undo this turn**; set `rainbird.ai.applyEdits` to `preview` to review a side-by-side diff and **Accept** or **Reject** instead.
+- **Start a map** from a description when no file is open.
+- **Test it live** — with a connection it can push the map (always asking first), run queries against the draft, fetch evidence trees, replay saved regression tests and compare the map with git HEAD or the last pushed snapshot.
 
 ## Requirements
 
@@ -104,7 +109,10 @@ All commands are available from the Command Palette. The most used ones:
 | `rainbird.apiUrl` | `https://api.rainbird.ai` | API base URL. Use `https://enterprise-api.rainbird.ai` for Enterprise or your private environment URL. |
 | `rainbird.knowledgeMapId` | empty | Knowledge Map ID that queries run against. The extension also remembers the ID returned by each push per file. |
 | `rainbird.useDraft` | `true` | Query the draft version of the map instead of the live version. |
-| `rainbird.ai.model` | `claude-opus-5` | Claude model used by the AI assistant. |
+| `rainbird.ai.model` | `claude-opus-5` | Claude model used by the AI assistant (`claude-opus-5`, `claude-sonnet-5`, `claude-fable-5-1`, `claude-opus-4-8`; other ids can be typed into settings.json). |
+| `rainbird.ai.effort` | `high` | Reasoning effort per turn: `low`, `medium`, `high`, `xhigh` or `max`. |
+| `rainbird.ai.showDiffAfterEdits` | `true` | Open a before ↔ after diff automatically when a turn changed the file (direct-apply mode). |
+| `rainbird.ai.applyEdits` | `immediately` | `immediately`: the assistant's edits land in the file as it works (undoable, with Show diff / Undo per turn). `preview`: edits are proposed in a diff you Accept or Reject. |
 
 API keys are never stored in settings. Use **Rainbird: Connect** and **Rainbird: Set Anthropic API Key** to change them.
 
@@ -138,7 +146,7 @@ RBLang files default to a two-space indent (`editor.tabSize` 2, `editor.insertSp
 ## Privacy
 
 - Rainbird API keys, the evidence key and the Anthropic API key are stored in VS Code's secret storage.
-- The AI assistant sends the text of the open map and your prompts to Anthropic using your own key. Nothing is sent unless you use the assistant or an AI command.
+- The AI assistant sends your prompts to Anthropic using your own key, together with a short context header (file name, size, cursor, diagnostic counts, connection state), the selection if any, small maps in full, and whatever the assistant reads or writes through its tools (map overview, line ranges, diagnostics, edits, query results). Nothing is sent unless you use the assistant or an AI command.
 - MCP endpoint URLs are self-authenticating secrets. They are written only to your workspace's `.vscode/mcp.json` and masked on input.
 
 ## Release notes

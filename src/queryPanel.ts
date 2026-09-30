@@ -23,6 +23,7 @@ import {
 import { buildIndex } from "./mapIndex";
 import { getClient, getEvidenceKey } from "./queryRunner";
 import { getAnthropicClient, streamChat } from "./anthropic";
+import { EXPLAIN_SYSTEM_PROMPT } from "./knowledge";
 import { EvidenceOverlay, GraphView } from "./graphView";
 import { saveSessionAsTest, SessionRecord } from "./tests";
 import { recordKnownMap } from "./mapsTree";
@@ -445,9 +446,13 @@ export class QueryPanel {
       const tree = await this.getTree(factId);
       const editor = vscode.window.visibleTextEditors.find((e) => e.document.languageId === "rblang");
       const source = editor ? `\n\nThe map's RBLang source for reference:\n${editor.document.getText().slice(0, 20000)}` : "";
-      const prompt = `Explain this Rainbird decision to a business user in plain English: why did the engine conclude what it did, which facts and rules contributed, and why is the certainty what it is? Be concise (a short paragraph, then a brief bullet per contributing fact — mark each as told-to-us / inferred-by-rule / from-datasource). No code blocks.\n\nEvidence tree (JSON):\n${JSON.stringify(tree).slice(0, 40000)}${source}`;
-      await streamChat(client, [{ role: "user", content: prompt }], (delta) =>
-        this.post({ type: "explainDelta", factId, text: delta })
+      const prompt = `Explain this decision.\n\nEvidence tree (JSON):\n${JSON.stringify(tree).slice(0, 40000)}${source}`;
+      await streamChat(
+        client,
+        [{ role: "user", content: prompt }],
+        (delta) => this.post({ type: "explainDelta", factId, text: delta }),
+        undefined,
+        { system: EXPLAIN_SYSTEM_PROMPT, effort: "medium" }
       );
     } catch (error) {
       this.post({ type: "explainDelta", factId, text: `\n(Explanation failed: ${(error as Error).message})` });

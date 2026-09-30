@@ -169,7 +169,7 @@ These are the highest-leverage additions because they need no platform calls and
 
 **8.4 Model provider choice.** Let the assistant run on the VSCode Language Model API (a Copilot subscription, no key) or on AWS Bedrock, which mirrors Rainbird's own EU-Bedrock choice for Co-author and matters to regulated customers. NEW 🟢 M
 
-**8.5 Assistant tool upgrades.** Add `search_docs`, `get_evidence`, `run_tests`, `semantic_diff` and workspace map reading; include the docs' 20-point validation checklist and the plain-English renderer output in the system prompt. Fix `run_query` to handle grouped questions. NEW 🔵 S–M
+**8.5 Assistant tool upgrades.** SHIPPED in 0.0.13: the assistant reads the map through `get_map_overview` / `read_map` / `get_diagnostics`, edits it through `edit_map` (element-level, atomic, re-linted) with immediate or preview application, creates maps, lints snippets in context, continues query sessions, pushes the open map, and has `semantic_diff`, `run_tests` and `get_evidence`. The system prompt carries a full RBLang reference including the docs' 20-point checklist. Remaining idea: `search_docs` against docs.rainbird.ai. ✅
 
 **8.6 AI bulk codemods with preview.** Generate question wording for askable relationships, evidence text for rules, and names for unnamed rules, each presented as a refactor preview before applying. NEW 🟢 M
 

@@ -15,7 +15,7 @@ Open the repository in VS Code and press **F5** (Run Extension). In the Extensio
 1. Open `examples/hello-world.rbl`. Highlighting, completions and diagnostics work offline. Click the graph icon in the editor title to see the map as a live graph.
 2. **Rainbird: Connect**, pick an environment and paste an API key.
 3. Click the play button, or **Rainbird: Run Query…**, set the kmID when prompted, pick a goal, answer the question cards and expand the evidence tree.
-4. Open the **Rainbird** activity-bar icon, choose **AI Assistant** and paste an Anthropic API key when prompted (or **Rainbird: Set Anthropic API Key**). Try: *"Add a rule that people also speak the languages of countries they have lived in."* Requests use `claude-opus-5` by default, configurable via `rainbird.ai.model`.
+4. Open the **Rainbird** activity-bar icon, choose **AI Assistant** and paste an Anthropic API key when prompted (or **Rainbird: Set Anthropic API Key**). Try: *"Add a rule that people also speak the languages of countries they have lived in."* — the assistant reads the map, edits it through `edit_map`, and the chat shows a Changes card with Show diff / Undo. Requests use `claude-opus-5` by default (`rainbird.ai.model`), `high` effort (`rainbird.ai.effort`), and apply edits directly (`rainbird.ai.applyEdits`; set `preview` to Accept/Reject a diff instead).
 5. **Rainbird: Push Map to Platform** uploads the buffer as a new map (create-only endpoint) and offers to query it immediately.
 
 Try breaking the example: rename a concept, misspell an attribute, set `cf="150"`, or use a custom variable in a rule header. For the full tour, open `examples/broken/diagnostics-tour.rbl`: every diagnostic the linter knows, each preceded by an `EXPECT` comment saying what should appear in the Problems panel. The unit tests check that file block by block.
@@ -25,6 +25,9 @@ Try breaking the example: rename a concept, misspell an attribute, set `cf="150"
 | Path | Purpose |
 |---|---|
 | `src/` | Extension source. `lint.ts` is the editor-agnostic linter core; `diagnostics.ts` is its VS Code adapter. |
+| `src/knowledge/` | The RBLang / Rainbird reference the assistant carries in its system prompt (hand-written topic modules + tables generated from `schema.ts`), the behaviour prompt, and the worked examples the tests lint. |
+| `src/agentLoop.ts`, `toolSchemas.ts`, `mapOverview.ts`, `assistantContext.ts`, `mapEdits.ts`, `semanticModel.ts` | VS Code-free assistant core: request shaping and tool loop, tool input validation, map overview, context header, the edit engine, the semantic model. Unit-tested. |
+| `src/anthropic.ts`, `assistantSession.ts`, `assistantTools.ts`, `editApplier.ts`, `assistantView.ts`, `media/assistant/` | VS Code glue for the assistant: key + settings, per-chat state and turn orchestration, tool bodies, immediate/preview edit application, the webview provider and its script/styles. |
 | `src/test/` | `node:test` suites run by `npm test`. |
 | `syntaxes/`, `snippets/`, `language-configuration.json` | RBLang grammar, snippet catalogue and bracket/comment rules. |
 | `examples/` | Sample maps used by the walkthrough and as the linter's error-free regression corpus. |
@@ -40,7 +43,7 @@ See [PROPOSAL.md](PROPOSAL.md) for the intended architecture.
 - `<import>`ed maps are not resolved, so references to symbols defined in a linked map show as unknown.
 - Push exists and pull works via `GET /analysis/file` (undocumented), but there is no update-in-place or delete against the platform. `POST /maps` is create-only.
 - Packaging to `.rbird` was removed: Studio's importer relies on the structured model arrays, not the `rblang` lines, so a text-only repack imports broken.
-- No chat participant or language-model tools (`@rainbird` in Copilot). The AI assistant uses the user's Anthropic key directly.
+- No chat participant or language-model tools (`@rainbird` in Copilot). The AI assistant uses the user's Anthropic key directly; its tools are not exposed to other agents.
 
 ## Releasing
 

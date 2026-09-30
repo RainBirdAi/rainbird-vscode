@@ -2,7 +2,7 @@
   "name": "rainbird",
   "displayName": "Rainbird (Beta)",
   "description": "Beta — RBLang language support, knowledge-map tooling, query running and evidence trees for the Rainbird decision-intelligence platform.",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "preview": true,
   "publisher": "RainbirdTechnologies",
   "license": "MIT",
@@ -116,7 +116,7 @@
       {
         "command": "rainbird.setAnthropicKey",
         "title": "Rainbird: Set Anthropic API Key (AI assistant)",
-        "icon": "$(gear)"
+        "icon": "$(key)"
       },
       {
         "command": "rainbird.assistantNewChat",
@@ -485,7 +485,49 @@
         "rainbird.ai.model": {
           "type": "string",
           "default": "claude-opus-5",
-          "description": "Claude model the AI assistant uses (via your Anthropic API key)."
+          "enum": [
+            "claude-opus-5",
+            "claude-sonnet-5",
+            "claude-fable-5-1",
+            "claude-opus-4-8"
+          ],
+          "enumDescriptions": [
+            "Claude Opus 5 (default) — best balance of quality and cost for authoring",
+            "Claude Sonnet 5 — faster and cheaper",
+            "Claude Fable 5.1 — most capable, slower and more expensive",
+            "Claude Opus 4.8 — previous generation"
+          ],
+          "markdownDescription": "Claude model the AI assistant uses (via your Anthropic API key). Other model ids can be typed into `settings.json`."
+        },
+        "rainbird.ai.effort": {
+          "type": "string",
+          "default": "high",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "description": "How much reasoning effort the assistant spends per turn. Higher is slower and costs more tokens; 'high' suits most authoring work."
+        },
+        "rainbird.ai.applyEdits": {
+          "type": "string",
+          "default": "immediately",
+          "enum": [
+            "immediately",
+            "preview"
+          ],
+          "enumDescriptions": [
+            "Edits land in the open file as the assistant works (each is one undo step; the chat offers Show diff and Undo per turn).",
+            "Edits accumulate in a proposal; a side-by-side diff opens and you Accept or Reject before the file changes."
+          ],
+          "description": "How the AI assistant's changes reach your RBLang file."
+        },
+        "rainbird.ai.showDiffAfterEdits": {
+          "type": "boolean",
+          "default": true,
+          "description": "When the assistant changes the open file (applyEdits: immediately), open a before ↔ after diff automatically at the end of the turn. The Changes card's Show diff button works either way."
         }
       }
     },
