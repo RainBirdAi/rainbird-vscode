@@ -4,9 +4,13 @@
 # - Every tag `vX.Y.Z`: check the tag matches package.json, package the VSIX,
 #   store it in the project's generic package registry, and create a GitLab
 #   Release whose notes are the matching section of CHANGELOG.md.
-# - Optional, manual: publish the same VSIX to the VS Code Marketplace. Needs a
-#   masked CI variable `VSCE_PAT` holding a Marketplace personal access token
-#   for the `RainbirdTechnologies` publisher.
+# - Optional, manual: publish the same VSIX to the VS Code Marketplace. No
+#   token: the job signs in to Microsoft Entra ID with GitLab's OIDC token
+#   (workload identity federation). Needs CI variables `AZURE_CLIENT_ID` and
+#   `AZURE_TENANT_ID` for an Entra app registration whose federated credential
+#   trusts this project's `v*` tags, and that app must be a Contributor on the
+#   `RainbirdTechnologies` publisher. `marketplace-identity` prints the ID to
+#   add as the publisher member (run it once).
 # - Optional, manual: publish the same VSIX to Open VSX. Needs a masked CI
 #   variable `OVSX_PAT` holding an open-vsx.org access token with publish
 #   rights on the `RainbirdTechnologies` namespace.
@@ -105,8 +109,42 @@ release:
           url: "${PACKAGE_REGISTRY_URL}/${VERSION}/${VSIX_NAME}-${VERSION}.vsix"
           link_type: package
 
-publish-marketplace:
+# Signs in to Entra ID as the publishing app with GitLab's OIDC token.
+.azure-login:
+  id_tokens:
+    AZURE_JWT:
+      aud: api://AzureADTokenExchange
+  before_script:
+    - |
+      if [ -z "$AZURE_CLIENT_ID" ] || [ -z "$AZURE_TENANT_ID" ]; then
+        echo "Set CI variables AZURE_CLIENT_ID and AZURE_TENANT_ID to publish" >&2
+        exit 1
+      fi
+    - curl -sL https://aka.ms/InstallAzureCLIDeb | bash > /dev/null
+    - >
+      az login --service-principal
+      --username "$AZURE_CLIENT_ID" --tenant "$AZURE_TENANT_ID"
+      --federated-token "$AZURE_JWT" --allow-no-subscriptions > /dev/null
+
+# Prints the `id` to add as a member of the Marketplace publisher.
+marketplace-identity:
+  extends: .azure-login
   stage: release
+  cache: []
+  needs: []
+  rules:
+    - <<: *release-tag
+      when: manual
+      allow_failure: true
+  script:
+    - >
+      az rest --uri https://app.vssps.visualstudio.com/_apis/profile/profiles/me
+      --resource 499b84ac-1321-427f-aa17-267ca6975798
+
+publish-marketplace:
+  extends: .azure-login
+  stage: release
+  cache: []
   needs:
     - job: package
       artifacts: true
@@ -115,12 +153,7 @@ publish-marketplace:
       when: manual
       allow_failure: true
   script:
-    - |
-      if [ -z "$VSCE_PAT" ]; then
-        echo "Set a masked CI variable VSCE_PAT with a Marketplace token to publish" >&2
-        exit 1
-      fi
-    - npx --yes @vscode/vsce@3 publish --packagePath "${VSIX_NAME}-${VERSION}.vsix" --pat "$VSCE_PAT"
+    - npx --yes @vscode/vsce@3 publish --packagePath "${VSIX_NAME}-${VERSION}.vsix" --azure-credential
 
 publish-openvsx:
   stage: release
