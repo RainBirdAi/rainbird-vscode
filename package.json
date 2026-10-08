@@ -2,7 +2,7 @@
   "name": "rainbird",
   "displayName": "Rainbird (Beta)",
   "description": "Beta — RBLang language support, knowledge-map tooling, query running and evidence trees for the Rainbird decision-intelligence platform.",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "preview": true,
   "publisher": "RainbirdTechnologies",
   "license": "MIT",
@@ -38,7 +38,8 @@
     "onLanguage:rblang",
     "onLanguage:xml",
     "workspaceContains:**/*.rbl",
-    "workspaceContains:**/*.rbird"
+    "workspaceContains:**/*.rbird",
+    "onStartupFinished"
   ],
   "contributes": {
     "languages": [
@@ -86,6 +87,10 @@
       }
     ],
     "commands": [
+      {
+        "command": "rainbird.getStarted",
+        "title": "Rainbird: Get Started"
+      },
       {
         "command": "rainbird.connect",
         "title": "Rainbird: Connect (set environment & API key)"
@@ -138,7 +143,7 @@
       },
       {
         "command": "rainbird.diffAgainstPushed",
-        "title": "Rainbird: Diff Against Last Pushed Snapshot"
+        "title": "Rainbird: Diff Against Last Pulled or Pushed Snapshot"
       },
       {
         "command": "rainbird.mapsRefresh",
@@ -158,6 +163,11 @@
         "command": "rainbird.mapsQuery",
         "title": "Run Query",
         "icon": "$(play)"
+      },
+      {
+        "command": "rainbird.mapsReload",
+        "title": "Reload from Studio",
+        "icon": "$(cloud-download)"
       },
       {
         "command": "rainbird.mapsCopyKmId",
@@ -189,9 +199,24 @@
         "icon": "$(diff)"
       },
       {
-        "command": "rainbird.pullMap",
-        "title": "Rainbird: Pull Map RBLang from Platform…",
+        "command": "rainbird.openMapByKmId",
+        "title": "Rainbird: Open Map by Knowledge Map ID…",
         "icon": "$(cloud-download)"
+      },
+      {
+        "command": "rainbird.pullMap",
+        "title": "Rainbird: Pull Map RBLang from Platform (read-only draft or saved version)…",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "rainbird.reloadFromPlatform",
+        "title": "Rainbird: Reload Map from Studio (replace the open file with the latest draft)",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "rainbird.bindKmId",
+        "title": "Rainbird: Bind Open File to a Knowledge Map ID…",
+        "icon": "$(link)"
       },
       {
         "command": "rainbird.diffAgainstDraft",
@@ -269,7 +294,11 @@
     "viewsWelcome": [
       {
         "view": "rainbird.mapExplorer",
-        "contents": "Open an RBLang (.rbl) file to explore its concepts, relationships and rules — or start one.\n[Open example](command:rainbird.openExample)\n[Insert into the open file…](command:rainbird.insertElement)"
+        "contents": "Open an RBLang (.rbl) file to explore its concepts, relationships and rules. No file yet? Open one of your maps by its Knowledge Map ID, try the example, or start one.\n[Open a map by Knowledge Map ID…](command:rainbird.openMapByKmId)\n[Open example](command:rainbird.openExample)\n[Insert into the open file…](command:rainbird.insertElement)\n[Getting started](command:rainbird.getStarted)"
+      },
+      {
+        "view": "rainbird.platformMaps",
+        "contents": "Maps you open, push or query from VS Code appear here. Rainbird's API has no endpoint that lists your Studio maps, so start from a map's Knowledge Map ID (on its Publish page in Studio).\n[Open Map by Knowledge Map ID…](command:rainbird.openMapByKmId)\n[Add a kmID without opening it](command:rainbird.mapsAdd)"
       }
     ],
     "menus": {
@@ -292,6 +321,10 @@
         },
         {
           "command": "rainbird.mapsOpenFile",
+          "when": "false"
+        },
+        {
+          "command": "rainbird.mapsReload",
           "when": "false"
         }
       ],
@@ -359,6 +392,16 @@
           "command": "rainbird.diffAgainstDraft",
           "when": "editorLangId == rblang",
           "group": "rainbird@7"
+        },
+        {
+          "command": "rainbird.bindKmId",
+          "when": "editorLangId == rblang",
+          "group": "rainbird@8"
+        },
+        {
+          "command": "rainbird.reloadFromPlatform",
+          "when": "editorLangId == rblang",
+          "group": "rainbird@9"
         }
       ],
       "view/title": [
@@ -373,6 +416,11 @@
           "group": "navigation@2"
         },
         {
+          "command": "rainbird.openMapByKmId",
+          "when": "view == rainbird.platformMaps",
+          "group": "navigation@0"
+        },
+        {
           "command": "rainbird.mapsAdd",
           "when": "view == rainbird.platformMaps",
           "group": "navigation@1"
@@ -385,7 +433,7 @@
         {
           "command": "rainbird.pullMap",
           "when": "view == rainbird.platformMaps",
-          "group": "navigation@0"
+          "group": "rainbird@0"
         },
         {
           "command": "rainbird.insertElement",
@@ -394,6 +442,11 @@
         }
       ],
       "view/item/context": [
+        {
+          "command": "rainbird.mapsReload",
+          "when": "view == rainbird.platformMaps && viewItem =~ /rainbirdMap/",
+          "group": "inline"
+        },
         {
           "command": "rainbird.mapsQuery",
           "when": "view == rainbird.platformMaps && viewItem =~ /rainbirdMap/",
@@ -448,6 +501,11 @@
           "command": "rainbird.addInstance",
           "when": "view == rainbird.mapExplorer && viewItem == rainbirdCategory.instances",
           "group": "inline"
+        },
+        {
+          "command": "rainbird.mapsReload",
+          "when": "view == rainbird.platformMaps && viewItem =~ /rainbirdMap/",
+          "group": "rainbird@0"
         }
       ],
       "explorer/context": [
@@ -474,13 +532,51 @@
         "rainbird.knowledgeMapId": {
           "type": "string",
           "default": "",
-          "description": "Knowledge Map ID (kmID) queries run against. Found on the map's Publish page in Rainbird Studio.",
+          "description": "Default Knowledge Map ID (kmID) for this workspace or folder, used for files that have no map of their own and for queries with no file open. Files opened by Knowledge Map ID, pulled, pushed or bound with “Rainbird: Bind Open File to a Knowledge Map ID…” keep their own map, which wins over this setting. The ID is on the map's Publish page in Rainbird Studio, or under View Knowledge Map ID in the map's menu.",
           "scope": "resource"
         },
         "rainbird.useDraft": {
           "type": "boolean",
           "default": true,
           "description": "Query the draft version of the knowledge map instead of the live version."
+        },
+        "rainbird.query.dateOrder": {
+          "type": "string",
+          "default": "day-first",
+          "enum": [
+            "day-first",
+            "month-first"
+          ],
+          "enumDescriptions": [
+            "Day first: for 01/10/1981, 1 October 1981 is offered first.",
+            "Month first: for 01/10/1981, 10 January 1981 is offered first."
+          ],
+          "description": "Which reading of an ambiguous numeric date such as 01/10/1981 is listed first. Ambiguous dates are never guessed: the query panel offers both readings to choose from and shows the YYYY-MM-DD it will send; the Quick Pick runner and the assistant's run_query ask for the date in an unambiguous form, such as 1981-10-01."
+        },
+        "rainbird.query.autoSkipPluralQuestions": {
+          "type": "string",
+          "default": "injected",
+          "enum": [
+            "injected",
+            "known",
+            "off"
+          ],
+          "enumDescriptions": [
+            "When the values a plural question asks about are already covered by facts injected in this session, answer “No more” automatically.",
+            "Answer “No more” automatically whenever the engine already knows some answers to a plural question, whatever their source: injected facts, the map, a datasource or a rule.",
+            "Always ask. In the query panel the question card still shows what the engine already knows, with a No more button."
+          ],
+          "markdownDescription": "Plural relationships are asked even when the engine already holds facts for them (by design, so more can be added). This setting decides when the query panel and the assistant's `run_query` tool answer *No more* for you instead of asking. In the panel every automatic answer appears in the transcript with an **Answer instead** action and is saved in tests like any other answer; `run_query` lists them under `autoSkipped`."
+        },
+        "rainbird.query.logQuestions": {
+          "type": "boolean",
+          "default": false,
+          "description": "Log the raw question JSON the engine sends to the query panel, and the answer payloads the panel sends back, to the Rainbird output channel. For diagnosing how questions are shown; leave off otherwise."
+        },
+        "rainbird.studioUrl": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Base URL of Rainbird Studio for **Open in Studio** and **Copy link** on evidence trees, e.g. `https://studio.example.com`. Only needed for private environments whose API host is not a `*.rainbird.ai` host the extension can map to Studio: for `api.rainbird.ai` it uses `app.rainbird.ai`, and for `<name>-api.rainbird.ai` it uses `<name>.rainbird.ai`, so this setting is not used for those hosts."
         },
         "rainbird.ai.model": {
           "type": "string",
@@ -542,12 +638,12 @@
       {
         "id": "rainbird.gettingStarted",
         "title": "Get started with Rainbird",
-        "description": "Author RBLang knowledge maps, run queries and inspect evidence without leaving VSCode. This extension is in beta — expect rough edges and please report issues on GitHub.",
+        "description": "Author RBLang knowledge maps, open your Studio maps by Knowledge Map ID, run queries and inspect evidence without leaving VS Code. This extension is in beta — expect rough edges and please report issues on GitHub.",
         "steps": [
           {
             "id": "rainbird.openExample",
             "title": "Open an example knowledge map",
-            "description": "Open a sample .rbl file to see RBLang language support in action.\n[Open example](command:rainbird.openExample)",
+            "description": "Open a sample .rbl file to see RBLang language support in action. It works offline, but it is not on your Rainbird account: push it (cloud icon) or open one of your own maps before querying.\n[Open example](command:rainbird.openExample)",
             "media": {
               "markdown": "media/walkthrough/example.md"
             }
@@ -564,14 +660,25 @@
             ]
           },
           {
+            "id": "rainbird.openMapStep",
+            "title": "Open your own map",
+            "description": "Paste a map's Knowledge Map ID, from its Publish page in Studio. The extension downloads the map's draft, saves it as a .rbl file and remembers which map it is.\n[Open Map by Knowledge Map ID…](command:rainbird.openMapByKmId)",
+            "media": {
+              "markdown": "media/walkthrough/open-map.md"
+            },
+            "completionEvents": [
+              "onCommand:rainbird.openMapByKmId"
+            ]
+          },
+          {
             "id": "rainbird.queryStep",
             "title": "Run your first query",
-            "description": "Pick a goal relationship, answer the questions the engine asks, and get a result with certainty and evidence.\n[Run Query](command:rainbird.runQuery)",
+            "description": "Start from the .rbl you opened (▶ in its title bar), so the extension knows which map to query. Pick a goal relationship, answer the questions the engine asks, and get a result with certainty and evidence.\n[Run Query](command:rainbird.openQueryPanel)",
             "media": {
               "markdown": "media/walkthrough/query.md"
             },
             "completionEvents": [
-              "onCommand:rainbird.runQuery"
+              "onCommand:rainbird.openQueryPanel"
             ]
           }
         ]
@@ -587,6 +694,7 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.90.0",
+    "happy-dom": "^20.14.5",
     "typescript": "^5.4.0",
     "vscode-oniguruma": "^2.0.1",
     "vscode-textmate": "^9.3.2"

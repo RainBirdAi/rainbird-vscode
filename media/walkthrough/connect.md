@@ -1,5 +1,5 @@
 # Connect to Rainbird
 
-Pick your environment (Community `api.rainbird.ai`, Enterprise `enterprise-api.rainbird.ai`, or a private URL) and paste your API key — it's stored encrypted in VSCode's SecretStorage, never in settings files.
+Pick your environment (Community `api.rainbird.ai`, Enterprise `enterprise-api.rainbird.ai`, or a private URL) and paste your API key — it's stored encrypted in VS Code's SecretStorage, never in settings files.
 
-You'll find your API key on your **Account** page or on any map's **Publish** page in Rainbird Studio, alongside the Knowledge Map ID.
+Your API key and the map's **Knowledge Map ID** are both on the map's **Publish** page in Rainbird Studio (the key is also on your **Account** page). You will need the ID in the next step to open the map.

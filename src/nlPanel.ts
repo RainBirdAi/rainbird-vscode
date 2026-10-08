@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import { RainbirdClient } from "./api";
 import { getClient } from "./queryRunner";
+import { activeRblangUri, resolveKmIdFor } from "./platform";
 
 export class NlPanel {
   private static current?: NlPanel;
@@ -25,6 +26,8 @@ export class NlPanel {
       NlPanel.current.panel.reveal();
       return;
     }
+    // Which file's map: read before the webview takes focus from the editor.
+    const fileUri = activeRblangUri();
     const panel = vscode.window.createWebviewPanel(
       "rainbirdNl",
       "Rainbird NL (beta)",
@@ -32,7 +35,7 @@ export class NlPanel {
       { enableScripts: true, retainContextWhenHidden: true }
     );
     NlPanel.current = new NlPanel(context, panel);
-    await NlPanel.current.init();
+    await NlPanel.current.init(fileUri);
   }
 
   private constructor(
@@ -56,17 +59,20 @@ export class NlPanel {
     void this.panel.webview.postMessage(message);
   }
 
-  private async init(): Promise<void> {
+  private async init(fileUri?: vscode.Uri): Promise<void> {
     this.client = await getClient(this.context);
     if (!this.client) {
       this.post({ type: "error", message: "Not connected — run “Rainbird: Connect” first." });
       return;
     }
-    const config = vscode.workspace.getConfiguration("rainbird");
-    this.kmId = config.get<string>("knowledgeMapId");
+    // Same precedence as Run Query: the file's own map, then the setting, then ask.
+    this.kmId = await resolveKmIdFor(this.context, { uri: fileUri, title: "Ask in Natural Language: which map?" });
     if (!this.kmId) {
-      this.kmId = await vscode.window.showInputBox({ prompt: "Knowledge Map ID for NL interaction" });
-      if (!this.kmId) return;
+      this.post({
+        type: "error",
+        message: "No map chosen. Close this panel and run “Rainbird: Ask in Natural Language (beta)…” again to pick one.",
+      });
+      return;
     }
     this.post({ type: "init", kmId: this.kmId });
   }

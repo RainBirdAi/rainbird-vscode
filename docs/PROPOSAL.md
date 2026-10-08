@@ -161,9 +161,9 @@ Each ask is individually shippable and unlocks named features:
 3. **Publish MCP endpoint docs + a stable auth story**; confirm whether classic Studio-published maps (not just RAKE projects) get served-graph endpoints. *(Graduates MCP features from "preview.")*
 4. **Resume the public changelog** — or adopt the extension's compatibility DB as its replacement. *(The LSP's engine-parity promise depends on knowing what shipped in 4.107–4.118.)*
 5. **Add a rule name/identifier to `/analysis/evidence` responses.** *(Cheap; turns evidence→source navigation and rule-coverage painting from heuristics into exact matches.)*
-6. **Enable Evidence Tree Link on the HelloWorld sandbox** (one toggle). *(Unblocks the walkthrough's marquee step.)*
+6. **Enable Evidence Tree Link on the HelloWorld sandbox** (one toggle). *(Unblocks the walkthrough's marquee step.)* *(Verified 2026-10-07: the sandbox already serves evidence without an evidence key; see [research/api.md](research/api.md).)*
 7. **CORS headers on api.rainbird.ai.** *(Unblocks web/vscode.dev connectivity.)*
-8. **Read-only map-metadata + list + export endpoints.** *(Unlocks cross-account import resolution and the maps sidebar.)*
+8. **Read-only map-metadata + list + export endpoints.** *(Unlocks cross-account import resolution and the maps sidebar.)* *(Direct user evidence, Oct 2026: a tester assumed Connect would list their maps. Since 0.0.14 the extension opens a map by its Knowledge Map ID and the Maps view's welcome text explains why there is no list.)*
 9. **Engine trace/step API** (plausibly via an `x-rainbird-engine` debug variant). *(Unlocks the true rule debugger.)*
 
 ## 8. Risks

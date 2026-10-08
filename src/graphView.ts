@@ -195,10 +195,13 @@ export function render(): string {
   body { margin: 0; overflow: hidden; font-family: var(--vscode-font-family); color: var(--vscode-foreground); }
   svg { width: 100vw; height: 100vh; cursor: grab; }
   svg.panning { cursor: grabbing; }
-  .edge { stroke: var(--vscode-editorLineNumber-foreground, #888); stroke-opacity: .55; }
+  .edge { fill: none; stroke: var(--vscode-editorLineNumber-foreground, #888); stroke-opacity: .55; }
+  #arrowhead path { fill: var(--vscode-editorLineNumber-foreground, #888); }
   .edge.instanceOf { stroke-dasharray: 3 3; stroke-opacity: .3; }
   .edgelabel { font-size: 10px; fill: var(--vscode-descriptionForeground); cursor: pointer; user-select: none; }
   .edgelabel:hover { fill: var(--vscode-textLink-foreground); }
+  /* A halo in the background colour keeps labels readable where curves cross them. */
+  .edgelabel, .counts { paint-order: stroke; stroke: var(--vscode-editor-background, #1e1e1e); stroke-width: 3px; stroke-linejoin: round; }
   .counts { font-size: 8.5px; fill: var(--vscode-descriptionForeground); opacity: .8; user-select: none; }
   .node { cursor: pointer; }
   .node text { font-size: 11px; fill: var(--vscode-foreground); user-select: none; }
@@ -209,7 +212,7 @@ export function render(): string {
   #legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
   #hint { position: fixed; top: 8px; right: 12px; font-size: 10.5px; opacity: .5; user-select: none; }
   #emptymsg { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; opacity: .6; }
-  line.hot { stroke: var(--vscode-charts-orange, #e8590c); stroke-width: 2.4; stroke-opacity: .95; }
+  .edge.hot { stroke: var(--vscode-charts-orange, #e8590c); stroke-width: 2.4; stroke-opacity: .95; }
   text.hot { fill: var(--vscode-charts-orange, #e8590c); font-weight: 600; }
   .node.hot circle { stroke: var(--vscode-charts-orange, #e8590c); stroke-width: 2.5; }
   .dimmed { opacity: .13; }
@@ -219,7 +222,7 @@ export function render(): string {
 </style>
 </head>
 <body>
-<svg id="svg"><g id="world"><g id="edges"></g><g id="nodes"></g></g></svg>
+<svg id="svg"><defs><marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z"/></marker></defs><g id="world"><g id="edges"></g><g id="nodes"></g></g></svg>
 <div id="legend">
   <span><i style="background:#4d8fd1"></i>string</span>
   <span><i style="background:#73c991"></i>number</span>
@@ -292,6 +295,7 @@ export function render(): string {
 
   function setGraph(m) {
     nodes = m.nodes; edges = m.edges;
+    assignLanes();
     document.getElementById('emptymsg').style.display = nodes.length ? 'none' : 'flex';
     const w = innerWidth, h = innerHeight;
     const seen = new Set();
@@ -307,11 +311,38 @@ export function render(): string {
     alpha = 1;
   }
 
+  // Several relationships can join the same two concepts (either way round), and a relationship can join a
+  // concept to itself. Each gets its own lane: parallel relationships fan out as curves on either side of the
+  // straight line, self-relationships become loops of growing size, so no two labels sit on top of each other.
+  function assignLanes() {
+    const groups = new Map();
+    for (const e of edges) {
+      e._lane = 0; e._loop = false; e._flip = false;
+      if (e.kind !== 'rel') continue;
+      const key = e.from === e.to ? e.from : (e.from < e.to ? e.from + '\u0000' + e.to : e.to + '\u0000' + e.from);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(e);
+    }
+    for (const list of groups.values()) {
+      // Room a label needs across the lane: the widest label of the group (about 5.6px a character at 10px).
+      const width = Math.max(...list.map(x => String(x.label || '').length)) * 5.6 + 14;
+      list.forEach((e, i) => {
+        e._groupSize = list.length;
+        e._labelWidth = width;
+        e._loop = e.from === e.to;
+        e._lane = e._loop ? i : i - (list.length - 1) / 2;
+        // Offsets are measured from one fixed direction, so a relationship running the other way still gets its own side.
+        e._flip = !e._loop && e.from > e.to;
+      });
+    }
+  }
+
   function build() {
     edgesG.innerHTML = ''; nodesG.innerHTML = '';
     for (const e of edges) {
-      const line = document.createElementNS(NS, 'line');
+      const line = document.createElementNS(NS, 'path');
       line.setAttribute('class', 'edge ' + e.kind);
+      if (e.kind === 'rel') line.setAttribute('marker-end', 'url(#arrowhead)');
       e._line = line;
       edgesG.appendChild(line);
       if (e.kind === 'rel') {
@@ -394,7 +425,8 @@ export function render(): string {
         if (!pa || !pb) continue;
         const dx = pb.x - pa.x, dy = pb.y - pa.y;
         const d = Math.sqrt(dx*dx + dy*dy) || 1;
-        const rest = e.kind === 'rel' ? 190 : 55;
+        // Concepts joined by several relationships sit further apart, leaving room for the fanned-out curves.
+        const rest = e.kind === 'rel' ? 190 + 30 * Math.max(0, (e._groupSize || 1) - 1) : 55;
         const f = (d - rest) / d * 0.02 * alpha * (e.kind === 'rel' ? 1 : 2.2);
         pa.vx += dx * f; pa.vy += dy * f;
         pb.vx -= dx * f; pb.vy -= dy * f;
@@ -410,20 +442,35 @@ export function render(): string {
     requestAnimationFrame(tick);
   }
 
+  const NODE_R = 17;
   function draw() {
     for (const e of edges) {
       const pa = pos.get(e.from), pb = pos.get(e.to);
       if (!pa || !pb) continue;
-      e._line.setAttribute('x1', pa.x); e._line.setAttribute('y1', pa.y);
-      e._line.setAttribute('x2', pb.x); e._line.setAttribute('y2', pb.y);
-      if (e._label) {
-        e._label.setAttribute('x', (pa.x + pb.x) / 2);
-        e._label.setAttribute('y', (pa.y + pb.y) / 2 - 4);
+      let lx, ly;
+      if (e._loop) {
+        const s = 32 + e._lane * 30, x = pa.x, y = pa.y - 14;
+        e._line.setAttribute('d', 'M ' + (x - 7) + ' ' + y + ' C ' + (x - 7 - s) + ' ' + (y - s * 1.7) + ' ' + (x + 7 + s) + ' ' + (y - s * 1.7) + ' ' + (x + 7) + ' ' + y);
+        lx = x; ly = y - s * 1.28 - 4;
+      } else if (e.kind !== 'rel') {
+        e._line.setAttribute('d', 'M ' + pa.x + ' ' + pa.y + ' L ' + pb.x + ' ' + pb.y);
+        continue;
+      } else {
+        const dx = pb.x - pa.x, dy = pb.y - pa.y, len = Math.sqrt(dx * dx + dy * dy) || 1;
+        let nx = -dy / len, ny = dx / len;
+        if (e._flip) { nx = -nx; ny = -ny; }
+        // Labels are horizontal: lanes across a steep edge need a label's width, across a flat one a label's height.
+        const lane = Math.max(30, Math.min(160, Math.min(e._labelWidth / Math.max(Math.abs(nx), 0.01), 28 / Math.max(Math.abs(ny), 0.01))));
+        const off = e._lane * lane, mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2;
+        const cx = mx + nx * off * 2, cy = my + ny * off * 2;
+        // End the curve at the target circle's edge so the arrowhead shows.
+        const tx = pb.x - cx, ty = pb.y - cy, tl = Math.sqrt(tx * tx + ty * ty) || 1;
+        const ex = pb.x - tx / tl * NODE_R, ey = pb.y - ty / tl * NODE_R;
+        e._line.setAttribute('d', 'M ' + pa.x + ' ' + pa.y + ' Q ' + cx + ' ' + cy + ' ' + ex + ' ' + ey);
+        lx = mx + nx * off; ly = my + ny * off - 4;
       }
-      if (e._badge) {
-        e._badge.setAttribute('x', (pa.x + pb.x) / 2);
-        e._badge.setAttribute('y', (pa.y + pb.y) / 2 + 8);
-      }
+      if (e._label) { e._label.setAttribute('x', lx); e._label.setAttribute('y', ly); }
+      if (e._badge) { e._badge.setAttribute('x', lx); e._badge.setAttribute('y', ly + 12); }
     }
     for (const n of nodes) {
       const p = pos.get(n.id);

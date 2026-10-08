@@ -116,6 +116,24 @@ export function ruleAt(index: MapIndex, offset: number): TopLevelElement | undef
   return topLevelElements(index).find((e) => e.kind === "rule" && e.start <= offset && offset <= e.end);
 }
 
+/**
+ * The relationship a query from this cursor position targets:
+ * - anywhere in a rule, its conditions included: the relationship the rule
+ *   infers (you query what the rule concludes, not the inputs it reads);
+ * - in a fact (relinst without conditions): its type;
+ * - in a <rel> declaration, question wording included: its name;
+ * - anywhere else (concepts, instances, the root tag, between elements), or
+ *   where the tag naming the relationship did not parse cleanly: undefined.
+ * The name is returned as written, declared or not.
+ */
+export function relationshipAt(index: MapIndex, offset: number): string | undefined {
+  const el = topLevelElements(index).find((e) => e.start <= offset && offset <= e.end);
+  if (!el) return undefined;
+  if (el.kind === "rel") return (!el.tag.malformed && el.tag.attrs.name) || undefined;
+  if (el.kind !== "rule" && el.kind !== "fact") return undefined;
+  return (!el.tag.malformed && el.tag.attrs.type) || undefined;
+}
+
 const VAR_RE = /%[A-Za-z][A-Za-z0-9_]*/g;
 
 /** Distinct %VARIABLES mentioned in a piece of RBLang, in order of first appearance. */

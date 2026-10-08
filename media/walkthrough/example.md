@@ -1,4 +1,4 @@
-# RBLang in VSCode
+# RBLang in VS Code
 
 Open `examples/hello-world.rbl` to see:
 
@@ -8,3 +8,5 @@ Open `examples/hello-world.rbl` to see:
 - **Hovers** on element names, expression functions and the names in your map
 - **Rename everywhere** — edit a concept, relationship or instance name where it is declared and every mention follows as you type; or press `F2` on any mention
 - **Snippets** — try `rule`, `fact`, `rel-questions`, `condition-count`
+
+The example works offline and needs no account. It is not one of your Rainbird maps, though: to query it, push it first (cloud icon in the editor title bar; every push creates a new map), or open one of your own maps in the next steps.

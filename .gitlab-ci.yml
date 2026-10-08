@@ -7,6 +7,9 @@
 # - Optional, manual: publish the same VSIX to the VS Code Marketplace. Needs a
 #   masked CI variable `VSCE_PAT` holding a Marketplace personal access token
 #   for the `RainbirdTechnologies` publisher.
+# - Optional, manual: publish the same VSIX to Open VSX. Needs a masked CI
+#   variable `OVSX_PAT` holding an open-vsx.org access token with publish
+#   rights on the `RainbirdTechnologies` namespace.
 #
 # Release flow: bump `version` in package.json, add a dated CHANGELOG entry,
 # commit, `git tag vX.Y.Z`, `git push origin main vX.Y.Z`.
@@ -118,3 +121,20 @@ publish-marketplace:
         exit 1
       fi
     - npx --yes @vscode/vsce@3 publish --packagePath "${VSIX_NAME}-${VERSION}.vsix" --pat "$VSCE_PAT"
+
+publish-openvsx:
+  stage: release
+  needs:
+    - job: package
+      artifacts: true
+  rules:
+    - <<: *release-tag
+      when: manual
+      allow_failure: true
+  script:
+    - |
+      if [ -z "$OVSX_PAT" ]; then
+        echo "Set a masked CI variable OVSX_PAT with an Open VSX token to publish" >&2
+        exit 1
+      fi
+    - npx --yes ovsx@0 publish --packagePath "${VSIX_NAME}-${VERSION}.vsix" --pat "$OVSX_PAT"

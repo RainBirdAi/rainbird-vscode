@@ -7,11 +7,10 @@
  * answer, built entirely on the documented API.
  */
 import * as vscode from "vscode";
-import { EvidenceNode, RainbirdClient, ResultItem, StartTarget, describeTarget } from "./api";
+import { ApiError, RainbirdClient, StartTarget, describeTarget } from "./api";
 import { getClient, getEvidenceKey } from "./queryRunner";
 import { loadTestFile, replay, ReplayOutcome, Scenario, SessionRecord } from "./tests";
-
-type Tree = EvidenceNode & { children?: Tree[] };
+import { ExpandedEvidence, functionCallsOf, isUnmet, normaliseSource, sourceLabel, tripleKey, walkEvidence } from "./evidenceModel";
 
 interface Side {
   target: StartTarget;
@@ -209,19 +208,26 @@ async function buildReport(
   for (const k of shared) {
     const ra = mapA.get(k)!;
     const rb = mapB.get(k)!;
-    let treeA: Tree | undefined;
-    let treeB: Tree | undefined;
+    let treeA: ExpandedEvidence;
+    let treeB: ExpandedEvidence;
     try {
+      // Both sides use the same (default) limits, so they expand to comparable trees.
       [treeA, treeB] = await Promise.all([
         client.fullEvidence(ra.factID, a.outcome!.sessionId, evidenceKey),
         client.fullEvidence(rb.factID, b.outcome!.sessionId, evidenceKey),
       ]);
     } catch (error) {
-      if (/40[13]/.test((error as Error).message)) {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
         evidenceLocked = true;
         break;
       }
       evidenceSections.push(`### ${k}`, "", `_Evidence could not be fetched: ${(error as Error).message}_`, "");
+      continue;
+    }
+    // A partial tree would report facts as removed or added when they were only not loaded.
+    const incomplete = incompleteNote(treeA, treeB);
+    if (incomplete) {
+      evidenceSections.push(`### ${k}`, "", `_${incomplete}_`, "");
       continue;
     }
     const diff = diffEvidence(flatten(treeA), flatten(treeB));
@@ -255,28 +261,54 @@ async function buildReport(
 
 interface Flat {
   facts: Map<string, { source: string; certainty: number }>;
-  conditions: Map<string, { impact?: number; salience?: number; wasMet?: boolean; certainty?: number }>;
+  /** `met` is false for an unmet condition: a false expression, or an optional condition left to a 0% synthesis placeholder. */
+  conditions: Map<string, { impact?: number; salience?: number; met: boolean; certainty?: number }>;
+  /** Facts list functions used, compared by triple and certainty only (one factID can stand for several values). */
+  inputs: Map<string, { certainty?: number }>;
 }
 
-function flatten(tree: Tree): Flat {
-  const flat: Flat = { facts: new Map(), conditions: new Map() };
-  const visit = (node: Tree) => {
-    if (node.fact) {
-      const k = `${node.fact.subject?.value} ${node.fact.relationship?.type} ${node.fact.object?.value}`;
-      flat.facts.set(k, { source: node.source, certainty: node.fact.certainty });
-      for (const c of node.rule?.conditions ?? []) {
-        const text = c.expression?.text ? `expression ${c.expression.text}` : `${c.subject} ${c.relationship} ${c.object}`;
-        flat.conditions.set(`${k} ⇐ ${text}`, {
-          impact: c.impact,
-          salience: c.salience,
-          wasMet: c.wasMet,
-          certainty: c.certainty,
-        });
+function incompleteNote(a: ExpandedEvidence, b: ExpandedEvidence): string | undefined {
+  const sides = [
+    ["A", a],
+    ["B", b],
+  ] as const;
+  const failed = sides.filter(([, tree]) => tree.meta?.errors);
+  if (failed.length) {
+    return `Evidence not compared: ${failed.map(([name, tree]) => `${tree.meta.errors} fact${tree.meta.errors === 1 ? "" : "s"} on ${name}`).join(" and ")} could not be fetched, and a partial comparison would report differences that are not there.`;
+  }
+  const cut = sides.filter(([, tree]) => tree.meta?.truncated);
+  if (cut.length) {
+    return `Evidence not compared: the tree on ${cut.map(([name]) => name).join(" and ")} is larger than the extension loads (${cut[0][1].meta.nodes} facts), and a partial comparison would report differences that are not there.`;
+  }
+  return undefined;
+}
+
+function flatten(tree: ExpandedEvidence): Flat {
+  const flat: Flat = { facts: new Map(), conditions: new Map(), inputs: new Map() };
+  walkEvidence(tree, (node) => {
+    // Header-only copies stand for a fact registered where it is expanded.
+    if (node.repeat || node.cyclic || !node.fact) return;
+    // Normalised, so "km" on one environment and "knowledgemap" on another is not a change.
+    const kind = normaliseSource(node.source);
+    // A synthesis placeholder is not a fact; its condition's entry below records the 0%.
+    if (kind === "synthesis") return;
+    const k = tripleKey(node.fact.subject?.value, node.fact.relationship?.type, node.fact.object?.value);
+    flat.facts.set(k, { source: kind === "unknown" ? String(node.source ?? kind) : kind, certainty: node.fact.certainty });
+    for (const c of node.rule?.conditions ?? []) {
+      const text = c.expression?.text ? `expression ${c.expression.text}` : `${c.subject} ${c.relationship} ${c.object}`;
+      flat.conditions.set(`${k} ⇐ ${text}`, {
+        impact: c.impact,
+        salience: c.salience,
+        met: !isUnmet(c),
+        certainty: c.certainty,
+      });
+      for (const [, call] of functionCallsOf(c)) {
+        for (const f of call.facts ?? []) {
+          if (f) flat.inputs.set(tripleKey(f.subject, f.relationship, f.object), { certainty: f.certainty });
+        }
       }
     }
-    node.children?.forEach(visit);
-  };
-  visit(tree);
+  });
   return flat;
 }
 
@@ -284,12 +316,23 @@ function diffEvidence(a: Flat, b: Flat): string[] {
   const out: string[] = [];
   for (const [k, va] of a.facts) {
     const vb = b.facts.get(k);
-    if (!vb) out.push(`- － fact only in A: ${k} (${va.source}, ${va.certainty}%)`);
-    else if (va.certainty !== vb.certainty) out.push(`- ~ ${k}: ${va.certainty}% → ${vb.certainty}% (${vb.source})`);
-    else if (va.source !== vb.source) out.push(`- ~ ${k}: source ${va.source} → ${vb.source}`);
+    if (!vb) out.push(`- － fact only in A: ${k} (${sourceLabel(va.source)}, ${va.certainty}%)`);
+    else if (va.certainty !== vb.certainty) out.push(`- ~ ${k}: ${va.certainty}% → ${vb.certainty}% (${sourceLabel(vb.source)})`);
+    else if (va.source !== vb.source) out.push(`- ~ ${k}: source ${sourceLabel(va.source)} → ${sourceLabel(vb.source)}`);
   }
   for (const [k, vb] of b.facts) {
-    if (!a.facts.has(k)) out.push(`- ＋ fact only in B: ${k} (${vb.source}, ${vb.certainty}%)`);
+    if (!a.facts.has(k)) out.push(`- ＋ fact only in B: ${k} (${sourceLabel(vb.source)}, ${vb.certainty}%)`);
+  }
+  // List-function inputs not already reported as facts above.
+  const covered = (k: string) => a.facts.has(k) || b.facts.has(k);
+  for (const [k, ia] of a.inputs) {
+    if (covered(k)) continue;
+    const ib = b.inputs.get(k);
+    if (!ib) out.push(`- － list-function input only in A: ${k} (${ia.certainty ?? "–"}%)`);
+    else if (ia.certainty !== ib.certainty) out.push(`- ~ list-function input ${k}: ${ia.certainty ?? "–"}% → ${ib.certainty ?? "–"}%`);
+  }
+  for (const [k, ib] of b.inputs) {
+    if (!covered(k) && !a.inputs.has(k)) out.push(`- ＋ list-function input only in B: ${k} (${ib.certainty ?? "–"}%)`);
   }
   for (const [k, ca] of a.conditions) {
     const cb = b.conditions.get(k);
@@ -298,7 +341,7 @@ function diffEvidence(a: Flat, b: Flat): string[] {
       continue;
     }
     const changes: string[] = [];
-    if (ca.wasMet !== cb.wasMet) changes.push(`met ${ca.wasMet ?? "?"} → ${cb.wasMet ?? "?"}`);
+    if (ca.met !== cb.met) changes.push(`${ca.met ? "met" : "not met"} → ${cb.met ? "met" : "not met"}`);
     if (ca.impact !== cb.impact) changes.push(`impact ${ca.impact ?? "–"} → ${cb.impact ?? "–"}`);
     if (ca.salience !== cb.salience) changes.push(`salience ${ca.salience ?? "–"} → ${cb.salience ?? "–"}`);
     if (ca.certainty !== cb.certainty) changes.push(`certainty ${ca.certainty ?? "–"} → ${cb.certainty ?? "–"}`);

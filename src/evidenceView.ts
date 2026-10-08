@@ -1,121 +1,97 @@
 /**
- * Evidence tree webview: renders the recursive derivation of a fact with the
- * same source colour-coding Rainbird's docs define (rule / answer / injection
- * / datasource / knowledge map / synthesis) plus per-condition impact and
- * salience. Read-only prototype; the production version adds the salience
- * chart and deep links back into the RBLang source of the firing rule.
+ * Standalone evidence view: one editor tab per evidence tree, drawn by the
+ * shared Studio-style renderer (src/evidenceRender.ts) so it matches the query
+ * panel's inline tree, with Expand all / Collapse all, Open in Studio and Copy
+ * link. Used by "Rainbird: Show Evidence Tree for Fact…", the Quick Pick query
+ * runner and the query panel's "Open in panel".
  */
+import { randomBytes } from "crypto";
 import * as vscode from "vscode";
-import { EvidenceNode, RainbirdClient } from "./api";
+import { ApiError, RainbirdClient } from "./api";
+import { ExpandedEvidence } from "./evidenceModel";
+import { renderEvidencePage, tripleText } from "./evidenceRender";
+import { currentApiUrl, openOrCopyEvidenceLink } from "./evidenceLinks";
 
-type EvidenceTree = EvidenceNode & { children?: EvidenceTree[] };
+/** The evidence key, or a function that reads the current one (needed to retry after "Set evidence key…"). */
+export type EvidenceKeySource = string | (() => Promise<string | undefined>);
 
-const SOURCE_COLOURS: Record<string, string> = {
-  rule: "#3b5bdb",
-  answer: "#e03131",
-  injection: "#8ce99a",
-  datasource: "#2b8a3e",
-  knowledgemap: "#e8590c",
-  synthesis: "#74c0fc",
-};
+const SET_KEY = "Set evidence key…";
+const LOCKED =
+  "Evidence is locked for this map. Enable Evidence Tree Link in Studio (Publish → API Management → Access Control), or enter the map's evidence key.";
 
+/**
+ * Fetch (unless `prefetched` is given) and show the evidence tree for a fact.
+ * A locked tree (401/403) offers "Set evidence key…" and retries only when the
+ * key actually changed; that needs `evidenceKey` as a function — with a plain
+ * string the user is asked to open the tree again.
+ */
 export async function showEvidenceTree(
   client: RainbirdClient,
   sessionId: string,
   factId: string,
-  evidenceKey?: string
+  evidenceKey?: EvidenceKeySource,
+  prefetched?: ExpandedEvidence
 ): Promise<void> {
-  let tree: EvidenceTree;
-  try {
-    tree = await client.fullEvidence(factId, sessionId, evidenceKey);
-  } catch (error) {
-    const message = (error as Error).message;
-    if (message.includes("401") || message.includes("403")) {
-      const action = await vscode.window.showErrorMessage(
-        "Evidence is locked for this map. Enable the Evidence Tree Link in Studio (Publish → API Management → Access Control) or provide an x-evidence-key.",
-        "Set evidence key…"
+  const apiUrl = currentApiUrl();
+  const readKey = async () => (typeof evidenceKey === "function" ? await evidenceKey() : evidenceKey) || undefined;
+  let key = await readKey();
+  let tree = prefetched;
+
+  while (!tree) {
+    try {
+      const usedKey = key;
+      tree = await vscode.window.withProgress(
+        { location: vscode.ProgressLocation.Window, title: "Rainbird: loading the evidence tree…" },
+        () => client.fullEvidence(factId, sessionId, usedKey)
       );
-      if (action) await vscode.commands.executeCommand("rainbird.setEvidenceKey");
-      return;
+    } catch (error) {
+      if (!(error instanceof ApiError && (error.status === 401 || error.status === 403))) {
+        vscode.window.showErrorMessage(`Could not fetch evidence: ${(error as Error).message}`);
+        return;
+      }
+      const choice = await vscode.window.showErrorMessage(LOCKED, SET_KEY);
+      if (choice !== SET_KEY) return;
+      await vscode.commands.executeCommand("rainbird.setEvidenceKey");
+      if (typeof evidenceKey !== "function") {
+        vscode.window.showInformationMessage("If you entered a new evidence key, open the evidence tree again to use it.");
+        return;
+      }
+      const next = await readKey();
+      if (next === key) return; // cancelled or unchanged: retrying would hit the same lock
+      key = next;
     }
-    vscode.window.showErrorMessage(`Could not fetch evidence: ${message}`);
-    return;
   }
 
-  const panel = vscode.window.createWebviewPanel(
-    "rainbirdEvidence",
-    `Evidence: ${factId}`,
-    vscode.ViewColumn.Beside,
-    { enableScripts: false }
-  );
-  panel.webview.html = render(tree);
+  const loaded = tree;
+  const fact = loaded.fact;
+  // Formatted like the tree itself, so a date result reads 2025-07-01 in the tab title too.
+  const triple = fact ? tripleText(fact.subject?.value, fact.relationship?.type, fact.object?.value, fact.object?.dataType) : factId;
+  const panel = vscode.window.createWebviewPanel("rainbirdEvidence", shorten(`Evidence: ${triple}`, 60), vscode.ViewColumn.Beside, {
+    enableScripts: true,
+    retainContextWhenHidden: true,
+    localResourceRoots: [],
+  });
+  panel.webview.html = renderEvidencePage(loaded, {
+    nonce: randomBytes(16).toString("base64"),
+    heading: `Evidence: ${triple}`,
+    subheading: `Session ${sessionId} · fact ${loaded.factID || factId}`,
+    render: { collapseDepth: 2, toolbar: { studio: true, copyLink: true } },
+  });
+
+  const usedEvidenceKey = !!key;
+  const listener = panel.webview.onDidReceiveMessage(async (message: { type?: unknown; action?: unknown; factId?: unknown }) => {
+    if (message?.type !== "evidenceAction") return;
+    if (message.action !== "openStudio" && message.action !== "copyLink") return; // "openPanel": already in a panel
+    await openOrCopyEvidenceLink(message.action === "openStudio" ? "open" : "copy", {
+      apiUrl,
+      factId: typeof message.factId === "string" && message.factId ? message.factId : loaded.factID || factId,
+      sessionId,
+      usedEvidenceKey,
+    });
+  });
+  panel.onDidDispose(() => listener.dispose());
 }
 
-function render(tree: EvidenceTree): string {
-  return /* html */ `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
-<style>
-  body { font-family: var(--vscode-font-family); color: var(--vscode-foreground); padding: 1rem; }
-  details { margin-left: 1.25rem; border-left: 2px solid var(--vscode-panel-border); padding-left: .75rem; }
-  summary { cursor: pointer; margin: .35rem 0; list-style: none; }
-  summary::before { content: "▸ "; }
-  details[open] > summary::before { content: "▾ "; }
-  .fact { font-weight: 600; }
-  .badge { display: inline-block; border-radius: 3px; padding: 0 .45em; font-size: .8em; color: #fff; margin-right: .5em; }
-  .certainty { opacity: .75; font-size: .85em; margin-left: .5em; }
-  .condition { opacity: .85; font-size: .9em; margin: .15rem 0 .15rem 1.25rem; }
-  .impact { opacity: .6; }
-  .legend { margin-bottom: 1rem; font-size: .85em; }
-</style>
-</head>
-<body>
-<div class="legend">
-  ${Object.entries(SOURCE_COLOURS)
-    .map(([source, colour]) => `<span class="badge" style="background:${colour}">${source}</span>`)
-    .join(" ")}
-</div>
-${renderNode(tree)}
-</body>
-</html>`;
-}
-
-function renderNode(node: EvidenceTree): string {
-  const colour = SOURCE_COLOURS[node.source] ?? "#868e96";
-  const fact = node.fact
-    ? `${escapeHtml(node.fact.subject?.value)} <em>${escapeHtml(node.fact.relationship?.type)}</em> ${escapeHtml(node.fact.object?.value)}`
-    : escapeHtml(node.factID);
-  const certainty = node.fact ? `<span class="certainty">${node.fact.certainty}%</span>` : "";
-
-  const conditions = (node.rule?.conditions ?? [])
-    .filter((c) => !c.factID) // expression conditions and unexpanded leaves
-    .map((c) => {
-      const text = c.expression?.text
-        ? `expr: ${escapeHtml(c.expression.text)} → ${escapeHtml(String(c.expression.value ?? ""))}`
-        : `${escapeHtml(c.subject)} ${escapeHtml(c.relationship)} ${escapeHtml(c.object)}`;
-      const met = c.wasMet === false ? " (not met)" : "";
-      return `<div class="condition">• ${text}${met} <span class="impact">impact ${c.impact ?? "–"} / salience ${c.salience ?? "–"}</span></div>`;
-    })
-    .join("");
-
-  const children = (node.children ?? []).map(renderNode).join("");
-  const body = conditions + children;
-
-  if (!body) {
-    return `<div><span class="badge" style="background:${colour}">${node.source}</span><span class="fact">${fact}</span>${certainty}</div>`;
-  }
-  return `<details open>
-  <summary><span class="badge" style="background:${colour}">${node.source}</span><span class="fact">${fact}</span>${certainty}</summary>
-  ${body}
-</details>`;
-}
-
-function escapeHtml(value: unknown): string {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+function shorten(text: string, max: number): string {
+  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
 }

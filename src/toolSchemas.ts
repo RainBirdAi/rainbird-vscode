@@ -57,12 +57,18 @@ const OPERATION: JsonSchema = obj(
 );
 
 const ANSWER_ITEM: JsonSchema = obj({
-  relationship: str("Relationship of the question being answered"),
-  subject: str("Subject of the question being answered"),
-  object: { type: ["string", "number", "boolean"], description: "Answer value (second-form questions)" },
+  relationship: str("Relationship of the question being answered — answers are matched to the pending questions by relationship, then subject/object"),
+  subject: str("Subject of the question being answered; for a second-form subject question, the answer itself (an instance name)"),
+  object: {
+    type: ["string", "number", "boolean"],
+    description:
+      "For a second-form object question, the answer: an instance name, a plain number, true/false for a truth question, or a date as YYYY-MM-DD (see the question's `expected`). For first-form and subject questions, the question's object.",
+  },
   answer: { type: "string", enum: ["yes", "no"], description: "Answer to a first-form question" },
   certainty: num("Certainty 1-100 attached to the answer"),
-  unanswered: bool("true to skip the question (allowUnknown relationships)"),
+  unanswered: bool(
+    "true to skip the question. Accepted only when the question has allowUnknown or knownAnswers (its canSkip); with knownAnswers it means \"no more\" and the known answers are kept. Send the triple that identifies the question (relationship plus subject for an object question, object for a subject question) and no value — the question's skipHint shows it."
+  ),
 });
 
 const FACT_ITEM: JsonSchema = obj(
@@ -70,7 +76,7 @@ const FACT_ITEM: JsonSchema = obj(
     subject: str("Subject instance"),
     relationship: str("Relationship name"),
     object: { type: ["string", "number", "boolean"], description: "Object value" },
-    certainty: num("Certainty 0-100 (default 100)"),
+    certainty: num("Certainty 1-100 (default 100)"),
   },
   ["subject", "relationship", "object"]
 );
@@ -107,14 +113,18 @@ export const TOOL_SCHEMAS: Record<string, JsonSchema> = {
   ),
   run_query: obj(
     {
-      kmId: str("Knowledge map ID. Omit to use the workspace's configured or last-pushed map."),
+      kmId: str("Knowledge map ID. Omit to use the map this file is bound to (opened, pulled, pushed or bound by Knowledge Map ID), else rainbird.knowledgeMapId."),
       relationship: str("Goal relationship to query"),
-      subject: str("Optional goal subject"),
-      object: str("Optional goal object (with subject: ask how certain that exact fact is)"),
+      subject: str("Goal subject (give a subject, an object or both)"),
+      object: str("Goal object (give a subject, an object or both; with a subject it asks how certain that exact fact is)"),
       version: num("Published version number to run against instead of the draft"),
       sessionId: str("Continue an existing session: skip start/inject/query and feed answers to its pending question(s)"),
       facts: { type: "array", items: FACT_ITEM, description: "Facts to inject before querying" },
-      answers: { type: "array", items: ANSWER_ITEM, description: "Answers fed one per engine question, in order" },
+      answers: {
+        type: "array",
+        items: ANSWER_ITEM,
+        description: "Answers for the engine's questions, matched to each question by relationship (and subject/object); a question group is answered together, a plural question takes one entry per value",
+      },
     },
     ["relationship"]
   ),
@@ -128,7 +138,12 @@ export const TOOL_SCHEMAS: Record<string, JsonSchema> = {
   ),
   semantic_diff: obj(
     {
-      against: { type: "string", enum: ["turn-start", "git-head", "pushed-snapshot", "text"], description: "What to compare the open map with" },
+      against: {
+        type: "string",
+        enum: ["turn-start", "git-head", "pushed-snapshot", "text"],
+        description:
+          "What to compare the open map with: turn-start (as it was when this turn began), git-head (the last commit), pushed-snapshot (the snapshot taken when this file was last pulled or pushed) or text (an RBLang document you pass)",
+      },
       text: str("against=text: the other RBLang document"),
     },
     ["against"]

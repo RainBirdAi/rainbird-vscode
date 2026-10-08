@@ -1,0 +1,571 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rbl:kb xmlns:rbl="http://rbl.io/schema/RBLang">
+
+<!-- ================================================================== -->
+<!-- IT INCIDENT TRIAGE AND ESCALATION                                  -->
+<!-- .                                                                   -->
+<!-- Purpose: a compact but complete decision model used as the live     -->
+<!-- exercise target for the Rainbird Python SDK test pack. Every SDK    -->
+<!-- surface has a deliberate hook in this graph:                        -->
+<!-- .                                                                   -->
+<!--   inject / inject_fact   systems-of-record layer, askable none      -->
+<!--   query                  escalation action, has severity,           -->
+<!--                          has risk score, has triage note            -->
+<!--   answer_second_form     impact scope, workaround, duplicate        -->
+<!--   answer_question list   has reported symptom (plural, canAdd)      -->
+<!--   answer_first_form      affects users in region (firstForm)        -->
+<!--   response unanswered    every askable carries allowUnknown         -->
+<!--   explain / evidence     alt text on every expression condition     -->
+<!--   query by object        is owning team for (secondFormSubject)     -->
+<!-- .                                                                   -->
+<!-- Architecture (patterns.md sections 1, 4, 5, 6, 10):                 -->
+<!--   reference tables as facts  ..  weights and thresholds are data    -->
+<!--   additive scoring layer     ..  components defaulted two-sided     -->
+<!--   graded severity candidates ..  plural, per band, own certainty    -->
+<!--   precedence ladder          ..  exactly one severity               -->
+<!--   escalation ladder          ..  exactly one action                 -->
+<!--   evidence layer             ..  notes gated on what they narrate   -->
+<!-- .                                                                   -->
+<!-- Requirement traceability: rule names carry the requirement ID       -->
+<!-- (R1..R8) documented in docs/incident-triage-blueprint.md.           -->
+<!-- ================================================================== -->
+
+  <!-- ============================ concepts ========================== -->
+  <concept name="Incident" type="string"/>
+  <concept name="Service" type="string"/>
+  <concept name="Team" type="string"/>
+  <concept name="Service Tier" type="string"/>
+  <concept name="Symptom" type="string"/>
+  <concept name="Impact Scope" type="string"/>
+  <concept name="Region" type="string"/>
+  <concept name="Severity" type="string"/>
+  <concept name="Escalation Action" type="string"/>
+  <concept name="Escalation Factor" type="string"/>
+  <concept name="Triage Note" type="string"/>
+  <concept name="Triage Policy" type="string"/>
+  <concept name="Risk Score" type="number"/>
+  <concept name="User Count" type="number"/>
+  <concept name="Alert Count" type="number"/>
+  <concept name="Elapsed Minutes" type="number"/>
+  <concept name="Timestamp" type="date"/>
+  <concept name="Workaround Flag" type="truth"/>
+  <concept name="Customer Facing Flag" type="truth"/>
+  <concept name="Change Freeze Flag" type="truth"/>
+  <concept name="Breach Flag" type="truth"/>
+  <concept name="Multi Region Flag" type="truth"/>
+  <concept name="Duplicate Flag" type="truth"/>
+
+  <!-- ===================== askable relationships ==================== -->
+  <!-- R2. Only facts a human triager could genuinely answer are        -->
+  <!-- askable. All carry allowUnknown so an API consumer can skip.     -->
+
+  <!-- Plural Second Form: answered with one value or many in a single  -->
+  <!-- response call. canAdd lets a triager name an unlisted symptom.   -->
+  <rel name="has reported symptom" subject="Incident" object="Symptom" plural="true" askable="secondFormObject" allowUnknown="true" canAdd="all" group="Incident triage">
+    <secondFormObject>Which symptom has been reported for %S?</secondFormObject>
+  </rel>
+
+  <!-- Singular Second Form over a closed instance set.                 -->
+  <rel name="has impact scope" subject="Incident" object="Impact Scope" askable="secondFormObject" allowUnknown="true" group="Incident triage">
+    <secondFormObject>How widely is %S being felt?</secondFormObject>
+  </rel>
+
+  <!-- Singular Second Form over a truth object: answered true or false. -->
+  <rel name="has workaround" subject="Incident" object="Workaround Flag" askable="secondFormObject" allowUnknown="true" group="Incident triage">
+    <secondFormObject>Is a workaround available for %S?</secondFormObject>
+  </rel>
+
+  <!-- First Form: askable all plus a firstForm question makes the      -->
+  <!-- engine ask one yes or no question per region named in a rule.    -->
+  <rel name="affects users in region" subject="Incident" object="Region" plural="true" askable="all" allowUnknown="true">
+    <firstForm>Is %S affecting users in %O?</firstForm>
+  </rel>
+
+  <!-- Duplicate check. The inert instance No Known Duplicate lets a    -->
+  <!-- consumer inject a negative answer and suppress the question.     -->
+  <rel name="is duplicate of" subject="Incident" object="Incident" askable="secondFormObject" allowUnknown="true" group="Incident triage">
+    <secondFormObject>Which existing incident is %S a duplicate of? Answer No Known Duplicate if it is new.</secondFormObject>
+  </rel>
+
+  <!-- Second Form SUBJECT: the engine knows the service and asks which -->
+  <!-- team owns it, so the unknown side is the subject.                -->
+  <rel name="is owning team for" subject="Team" object="Service" askable="secondFormSubject" allowUnknown="true">
+    <secondFormSubject>Which team owns %O?</secondFormSubject>
+  </rel>
+
+  <!-- ============== systems-of-record relationships ================= -->
+  <!-- R1. CMDB and monitoring data. Normally injected or fetched from  -->
+  <!-- a datasource, but askable too so a conversational session can be -->
+  <!-- driven end to end: numbers, dates, truth values and groups.      -->
+  <rel name="affects service" subject="Incident" object="Service" askable="secondFormObject" allowUnknown="true" canAdd="all">
+    <secondFormObject>Which service does %S affect?</secondFormObject>
+  </rel>
+  <rel name="has service tier" subject="Service" object="Service Tier" askable="secondFormObject" allowUnknown="true" group="Service record">
+    <secondFormObject>Which service tier is %S?</secondFormObject>
+  </rel>
+  <rel name="is customer facing" subject="Service" object="Customer Facing Flag" askable="secondFormObject" allowUnknown="true" group="Service record">
+    <secondFormObject>Is %S a customer facing service?</secondFormObject>
+  </rel>
+  <rel name="has affected user count" subject="Incident" object="User Count" askable="secondFormObject" allowUnknown="true" group="Incident scale">
+    <secondFormObject>How many users are affected by %S?</secondFormObject>
+  </rel>
+  <rel name="has monitoring alert count" subject="Incident" object="Alert Count" askable="secondFormObject" allowUnknown="true" group="Incident scale">
+    <secondFormObject>How many monitoring alerts have fired for %S?</secondFormObject>
+  </rel>
+  <rel name="started at" subject="Incident" object="Timestamp" askable="secondFormObject" allowUnknown="true" group="Incident triage">
+    <secondFormObject>On what date did %S start?</secondFormObject>
+  </rel>
+  <rel name="has acknowledgement deadline" subject="Incident" object="Timestamp" askable="secondFormObject" allowUnknown="true" group="Incident triage">
+    <secondFormObject>By what date must %S be acknowledged?</secondFormObject>
+  </rel>
+  <rel name="is within change freeze" subject="Incident" object="Change Freeze Flag" askable="secondFormObject" allowUnknown="true" group="Incident triage">
+    <secondFormObject>Is %S inside a change freeze window?</secondFormObject>
+  </rel>
+
+  <!-- ================== reference data as facts ===================== -->
+  <!-- R3. Weight and threshold tables live as facts, so the scoring    -->
+  <!-- rules stay generic and a policy change is a one-line fact edit.  -->
+  <rel name="tier risk weight" subject="Service Tier" object="Risk Score" askable="none"/>
+  <rel name="symptom risk weight" subject="Symptom" object="Risk Score" askable="none"/>
+  <rel name="scope risk weight" subject="Impact Scope" object="Risk Score" askable="none"/>
+  <rel name="escalation bonus points" subject="Escalation Factor" object="Risk Score" askable="none"/>
+  <rel name="mitigation credit points" subject="Escalation Factor" object="Risk Score" askable="none"/>
+  <rel name="mass impact user threshold" subject="Triage Policy" object="User Count" askable="none"/>
+  <rel name="alert storm threshold" subject="Triage Policy" object="Alert Count" askable="none"/>
+  <rel name="page immediately score floor" subject="Triage Policy" object="Risk Score" askable="none"/>
+  <rel name="service owner score floor" subject="Triage Policy" object="Risk Score" askable="none"/>
+  <rel name="next day score floor" subject="Triage Policy" object="Risk Score" askable="none"/>
+
+  <!-- ==================== derived relationships ===================== -->
+  <rel name="has incident tier" subject="Incident" object="Service Tier" askable="none"/>
+  <rel name="has tier weight" subject="Incident" object="Risk Score" askable="none"/>
+  <rel name="has symptom weight" subject="Incident" object="Risk Score" plural="true" askable="none"/>
+  <rel name="has symptom weight total" subject="Incident" object="Risk Score" askable="none"/>
+  <rel name="has dominant symptom weight" subject="Incident" object="Risk Score" askable="none"/>
+  <rel name="has scope weight" subject="Incident" object="Risk Score" askable="none"/>
+  <rel name="has affected region mark" subject="Incident" object="Region" plural="true" askable="none"/>
+  <rel name="is multi region incident" subject="Incident" object="Multi Region Flag" askable="none"/>
+  <rel name="has escalation bonus" subject="Incident" object="Risk Score" plural="true" askable="none"/>
+  <rel name="has escalation bonus total" subject="Incident" object="Risk Score" askable="none"/>
+  <rel name="has mitigation total" subject="Incident" object="Risk Score" askable="none"/>
+  <rel name="has risk score" subject="Incident" object="Risk Score" askable="none"/>
+  <rel name="has elapsed minutes" subject="Incident" object="Elapsed Minutes" askable="none"/>
+  <rel name="is past acknowledgement deadline" subject="Incident" object="Breach Flag" askable="none"/>
+  <rel name="is under change freeze" subject="Incident" object="Change Freeze Flag" askable="none"/>
+  <rel name="has real duplicate" subject="Incident" object="Duplicate Flag" askable="none"/>
+  <rel name="has severity candidate" subject="Incident" object="Severity" plural="true" askable="none"/>
+  <rel name="has severity" subject="Incident" object="Severity" askable="none"/>
+  <rel name="escalation action" subject="Incident" object="Escalation Action" askable="none"/>
+  <rel name="has triage note" subject="Incident" object="Triage Note" plural="true" askable="none"/>
+
+  <!-- ====================== concept instances ======================= -->
+  <concinst name="Tier 1" type="Service Tier"/>
+  <concinst name="Tier 2" type="Service Tier"/>
+  <concinst name="Tier 3" type="Service Tier"/>
+
+  <concinst name="Total Outage" type="Symptom"/>
+  <concinst name="Login Failure" type="Symptom"/>
+  <concinst name="Data Error" type="Symptom"/>
+  <concinst name="Degraded Performance" type="Symptom"/>
+  <concinst name="Cosmetic Defect" type="Symptom"/>
+
+  <concinst name="All Customers" type="Impact Scope"/>
+  <concinst name="Whole Site" type="Impact Scope"/>
+  <concinst name="Single Team" type="Impact Scope"/>
+  <concinst name="Single User" type="Impact Scope"/>
+
+  <concinst name="EMEA" type="Region"/>
+  <concinst name="Americas" type="Region"/>
+  <concinst name="APAC" type="Region"/>
+
+  <concinst name="P1" type="Severity"/>
+  <concinst name="P2" type="Severity"/>
+  <concinst name="P3" type="Severity"/>
+  <concinst name="P4" type="Severity"/>
+
+  <concinst name="Page On Call Immediately" type="Escalation Action"/>
+  <concinst name="Engage Service Owner" type="Escalation Action"/>
+  <concinst name="Queue For Next Business Day" type="Escalation Action"/>
+  <concinst name="Close As Cosmetic" type="Escalation Action"/>
+  <concinst name="Link To Parent Incident And Close" type="Escalation Action"/>
+
+  <concinst name="Alert Storm" type="Escalation Factor"/>
+  <concinst name="Mass User Impact" type="Escalation Factor"/>
+  <concinst name="Multi Region Spread" type="Escalation Factor"/>
+  <concinst name="Customer Facing Service" type="Escalation Factor"/>
+  <concinst name="Workaround Available" type="Escalation Factor"/>
+
+  <concinst name="Standard Triage Policy" type="Triage Policy"/>
+
+  <!-- Inert filler so a consumer can state that nothing is a duplicate -->
+  <!-- and suppress the duplicate question on a fully injected run.     -->
+  <concinst name="No Known Duplicate" type="Incident"/>
+
+  <!-- ===================== reference data facts ===================== -->
+  <relinst type="tier risk weight" subject="Tier 1" object="40"/>
+  <relinst type="tier risk weight" subject="Tier 2" object="25"/>
+  <relinst type="tier risk weight" subject="Tier 3" object="10"/>
+
+  <relinst type="symptom risk weight" subject="Total Outage" object="40"/>
+  <relinst type="symptom risk weight" subject="Login Failure" object="30"/>
+  <relinst type="symptom risk weight" subject="Data Error" object="25"/>
+  <relinst type="symptom risk weight" subject="Degraded Performance" object="15"/>
+  <relinst type="symptom risk weight" subject="Cosmetic Defect" object="0"/>
+
+  <relinst type="scope risk weight" subject="All Customers" object="30"/>
+  <relinst type="scope risk weight" subject="Whole Site" object="20"/>
+  <relinst type="scope risk weight" subject="Single Team" object="10"/>
+  <relinst type="scope risk weight" subject="Single User" object="0"/>
+
+  <relinst type="escalation bonus points" subject="Alert Storm" object="15"/>
+  <relinst type="escalation bonus points" subject="Mass User Impact" object="20"/>
+  <relinst type="escalation bonus points" subject="Multi Region Spread" object="10"/>
+  <relinst type="escalation bonus points" subject="Customer Facing Service" object="10"/>
+
+  <relinst type="mitigation credit points" subject="Workaround Available" object="15"/>
+
+  <relinst type="mass impact user threshold" subject="Standard Triage Policy" object="500"/>
+  <relinst type="alert storm threshold" subject="Standard Triage Policy" object="25"/>
+  <relinst type="page immediately score floor" subject="Standard Triage Policy" object="70"/>
+  <relinst type="service owner score floor" subject="Standard Triage Policy" object="65"/>
+  <relinst type="next day score floor" subject="Standard Triage Policy" object="35"/>
+
+  <!-- ================================================================== -->
+  <!-- R3. SCORING LAYER                                                  -->
+  <!-- Every component relationship is two-sided, so an unknown input      -->
+  <!-- yields an explicit zero rather than a missing fact that would kill   -->
+  <!-- the risk score rule.                                                -->
+  <!-- ================================================================== -->
+
+  <relinst type="has incident tier" cf="100" name="R3.1 Project the affected service tier onto the incident">
+    <condition rel="affects service" subject="%S" object="%SVC"/>
+    <condition rel="has service tier" subject="%SVC" object="%O"/>
+  </relinst>
+
+  <relinst type="has tier weight" cf="100" name="R3.2 Tier weight comes from the tier risk table">
+    <condition rel="has incident tier" subject="%S" object="%TIER"/>
+    <condition rel="tier risk weight" subject="%TIER" object="%O"/>
+  </relinst>
+  <relinst type="has tier weight" object="0" cf="100" name="R3.2 An unknown service tier scores zero">
+    <condition expression="countRelationshipInstances(%S,'has incident tier',*) is equal to 0" alt="No service tier is known for the affected service, so the tier component scores zero"/>
+  </relinst>
+
+  <relinst type="has symptom weight" cf="100" name="R3.3 Each reported symptom contributes its table weight">
+    <condition rel="has reported symptom" subject="%S" object="%SYM"/>
+    <condition rel="symptom risk weight" subject="%SYM" object="%O"/>
+  </relinst>
+
+  <relinst type="has symptom weight total" cf="100" name="R3.4 The symptom component sums the reported symptom weights">
+    <condition expression="countRelationshipInstances(%S,'has symptom weight',*) is greater than or equal to 1" alt="At least one reported symptom carries a weight"/>
+    <condition expression="sumObjects(%S,'has symptom weight',*)" value="%O" alt="The reported symptom weights sum to {{%O}}"/>
+  </relinst>
+  <relinst type="has symptom weight total" object="0" cf="100" name="R3.4 No weighted symptom scores zero">
+    <condition expression="countRelationshipInstances(%S,'has symptom weight',*) is equal to 0" alt="No weighted symptom has been reported, so the symptom component scores zero"/>
+  </relinst>
+
+  <!-- Guarded maxObjects: an unguarded max over an empty set asserts a -->
+  <!-- NULL that compares like positive infinity downstream.            -->
+  <relinst type="has dominant symptom weight" cf="100" name="R3.5 The most serious reported symptom sets the dominant weight">
+    <condition expression="countRelationshipInstances(%S,'has symptom weight',*) is greater than or equal to 1" alt="At least one reported symptom carries a weight"/>
+    <condition expression="maxObjects(%S,'has symptom weight',*)" value="%O" alt="The most serious reported symptom carries a weight of {{%O}}"/>
+  </relinst>
+
+  <relinst type="has scope weight" cf="100" name="R3.6 Scope weight comes from the impact scope table">
+    <condition rel="has impact scope" subject="%S" object="%SCOPE"/>
+    <condition rel="scope risk weight" subject="%SCOPE" object="%O"/>
+  </relinst>
+  <relinst type="has scope weight" object="0" cf="100" name="R3.6 An unknown impact scope scores zero">
+    <condition expression="countRelationshipInstances(%S,'has impact scope',*) is equal to 0" alt="The breadth of impact has not been established, so the scope component scores zero"/>
+  </relinst>
+
+  <!-- Region marks name each region literally, which is what makes the -->
+  <!-- engine raise one First Form question per region.                 -->
+  <relinst type="has affected region mark" object="EMEA" cf="100" name="R3.7 Mark EMEA as an affected region">
+    <condition rel="affects users in region" subject="%S" object="EMEA"/>
+  </relinst>
+  <relinst type="has affected region mark" object="Americas" cf="100" name="R3.7 Mark the Americas as an affected region">
+    <condition rel="affects users in region" subject="%S" object="Americas"/>
+  </relinst>
+  <relinst type="has affected region mark" object="APAC" cf="100" name="R3.7 Mark APAC as an affected region">
+    <condition rel="affects users in region" subject="%S" object="APAC"/>
+  </relinst>
+
+  <relinst type="is multi region incident" object="true" cf="100" name="R3.7 Two or more affected regions make the incident multi region">
+    <condition expression="countRelationshipInstances(%S,'has affected region mark',*)" value="%RC" alt="Users are reported affected in {{%RC}} regions"/>
+    <condition expression="%RC is greater than or equal to 2" alt="Two or more regions are affected"/>
+  </relinst>
+  <relinst type="is multi region incident" object="false" cf="100" name="R3.7 One region or fewer is not multi region">
+    <condition expression="countRelationshipInstances(%S,'has affected region mark',*)" value="%RC" alt="Users are reported affected in {{%RC}} regions"/>
+    <condition expression="%RC is less than or equal to 1" alt="The incident is confined to a single region at most"/>
+  </relinst>
+
+  <relinst type="has escalation bonus" cf="100" name="R3.8 An alert storm adds escalation points">
+    <condition rel="has monitoring alert count" subject="%S" object="%ALERTS"/>
+    <condition rel="alert storm threshold" subject="Standard Triage Policy" object="%THRESHOLD"/>
+    <condition expression="%ALERTS is greater than or equal to %THRESHOLD" alt="The {{%ALERTS}} monitoring alerts reach the alert storm threshold of {{%THRESHOLD}}"/>
+    <condition rel="escalation bonus points" subject="Alert Storm" object="%O"/>
+  </relinst>
+  <relinst type="has escalation bonus" cf="100" name="R3.8 Mass user impact adds escalation points">
+    <condition rel="has affected user count" subject="%S" object="%USERS"/>
+    <condition rel="mass impact user threshold" subject="Standard Triage Policy" object="%THRESHOLD"/>
+    <condition expression="%USERS is greater than or equal to %THRESHOLD" alt="The {{%USERS}} affected users reach the mass impact threshold of {{%THRESHOLD}}"/>
+    <condition rel="escalation bonus points" subject="Mass User Impact" object="%O"/>
+  </relinst>
+  <relinst type="has escalation bonus" cf="100" name="R3.8 Multi region spread adds escalation points">
+    <condition rel="is multi region incident" subject="%S" object="true"/>
+    <condition rel="escalation bonus points" subject="Multi Region Spread" object="%O"/>
+  </relinst>
+  <relinst type="has escalation bonus" cf="100" name="R3.8 A customer facing service adds escalation points">
+    <condition rel="affects service" subject="%S" object="%SVC"/>
+    <condition rel="is customer facing" subject="%SVC" object="true"/>
+    <condition rel="escalation bonus points" subject="Customer Facing Service" object="%O"/>
+  </relinst>
+
+  <relinst type="has escalation bonus total" cf="100" name="R3.9 The escalation component sums the applicable bonus points">
+    <condition expression="countRelationshipInstances(%S,'has escalation bonus',*) is greater than or equal to 1" alt="At least one escalation factor applies"/>
+    <condition expression="sumObjects(%S,'has escalation bonus',*)" value="%O" alt="The escalation factors add {{%O}} points"/>
+  </relinst>
+  <relinst type="has escalation bonus total" object="0" cf="100" name="R3.9 No escalation factor adds no points">
+    <condition expression="countRelationshipInstances(%S,'has escalation bonus',*) is equal to 0" alt="No escalation factor applies to the incident"/>
+  </relinst>
+
+  <relinst type="has mitigation total" cf="100" name="R3.10 A confirmed workaround earns the mitigation credit">
+    <condition rel="has workaround" subject="%S" object="true"/>
+    <condition rel="mitigation credit points" subject="Workaround Available" object="%O"/>
+  </relinst>
+  <relinst type="has mitigation total" object="0" cf="100" name="R3.10 A stated absence of a workaround earns no credit">
+    <condition rel="has workaround" subject="%S" object="false"/>
+  </relinst>
+  <relinst type="has mitigation total" object="0" cf="100" name="R3.10 An unknown workaround status earns no credit">
+    <condition expression="countRelationshipInstances(%S,'has workaround',*) is equal to 0" alt="Nothing is known about a workaround, so no mitigation credit applies"/>
+  </relinst>
+
+  <relinst type="has risk score" cf="100" name="R3.11 The risk score combines every component and is floored at zero">
+    <condition rel="has tier weight" subject="%S" object="%TW"/>
+    <condition rel="has symptom weight total" subject="%S" object="%ST"/>
+    <condition rel="has scope weight" subject="%S" object="%SC"/>
+    <condition rel="has escalation bonus total" subject="%S" object="%BO"/>
+    <condition rel="has mitigation total" subject="%S" object="%MI"/>
+    <condition expression="%TW + %ST + %SC + %BO - %MI" value="%RAW" alt="Tier {{%TW}} plus symptoms {{%ST}} plus scope {{%SC}} plus escalation factors {{%BO}} less mitigation {{%MI}} gives {{%RAW}}"/>
+    <condition expression="max(%RAW,0)" value="%O" alt="The risk score is floored at zero, giving {{%O}}"/>
+  </relinst>
+
+  <!-- ================================================================== -->
+  <!-- R4 and R5. SEVERITY                                                -->
+  <!-- Graded candidates carry their own certainty; the ladder below      -->
+  <!-- resolves them to exactly one severity, tightening by one band      -->
+  <!-- when the acknowledgement deadline has already passed.              -->
+  <!-- ================================================================== -->
+
+  <relinst type="has severity candidate" object="P1" cf="100" name="R4.1 A tier one total outage for all customers is always P1">
+    <condition rel="has incident tier" subject="%S" object="Tier 1"/>
+    <condition rel="has reported symptom" subject="%S" object="Total Outage"/>
+    <condition rel="has impact scope" subject="%S" object="All Customers"/>
+  </relinst>
+  <relinst type="has severity candidate" object="P1" cf="95" name="R4.2 A risk score at or above the page floor is P1">
+    <condition rel="has risk score" subject="%S" object="%R"/>
+    <condition rel="page immediately score floor" subject="Standard Triage Policy" object="%FLOOR" weight="1"/>
+    <condition expression="%R is greater than or equal to %FLOOR" weight="1" alt="The risk score {{%R}} reaches the immediate page floor of {{%FLOOR}}"/>
+  </relinst>
+  <relinst type="has severity candidate" object="P2" cf="90" name="R4.3 A risk score in the service owner band is P2">
+    <condition rel="has risk score" subject="%S" object="%R"/>
+    <condition rel="service owner score floor" subject="Standard Triage Policy" object="%FLOOR" weight="1"/>
+    <condition rel="page immediately score floor" subject="Standard Triage Policy" object="%CEILING" weight="1"/>
+    <condition expression="%R is greater than or equal to %FLOOR" weight="1" alt="The risk score {{%R}} reaches the service owner floor of {{%FLOOR}}"/>
+    <condition expression="%R is less than %CEILING" weight="1" alt="The risk score {{%R}} stays below the immediate page floor of {{%CEILING}}"/>
+  </relinst>
+  <relinst type="has severity candidate" object="P3" cf="85" name="R4.4 A risk score in the next business day band is P3">
+    <condition rel="has risk score" subject="%S" object="%R"/>
+    <condition rel="next day score floor" subject="Standard Triage Policy" object="%FLOOR" weight="1"/>
+    <condition rel="service owner score floor" subject="Standard Triage Policy" object="%CEILING" weight="1"/>
+    <condition expression="%R is greater than or equal to %FLOOR" weight="1" alt="The risk score {{%R}} reaches the next business day floor of {{%FLOOR}}"/>
+    <condition expression="%R is less than %CEILING" weight="1" alt="The risk score {{%R}} stays below the service owner floor of {{%CEILING}}"/>
+  </relinst>
+  <relinst type="has severity candidate" object="P4" cf="90" name="R4.5 A risk score below the next business day floor is P4">
+    <condition rel="has risk score" subject="%S" object="%R"/>
+    <condition rel="next day score floor" subject="Standard Triage Policy" object="%FLOOR" weight="1"/>
+    <condition expression="%R is less than %FLOOR" weight="1" alt="The risk score {{%R}} stays below the next business day floor of {{%FLOOR}}"/>
+  </relinst>
+
+  <!-- R5. Acknowledgement deadline. The third rule makes an unknown    -->
+  <!-- deadline explicitly not a breach, so the ladder rules that need   -->
+  <!-- a false value still bind on thin data.                           -->
+  <relinst type="is past acknowledgement deadline" object="true" cf="100" name="R5.1 The acknowledgement deadline has passed">
+    <condition rel="has acknowledgement deadline" subject="%S" object="%DEADLINE"/>
+    <condition expression="now()" value="%NOW" alt="The current time is {{%NOW}}"/>
+    <condition expression="isAfterDate(%NOW,%DEADLINE)" alt="The current time is after the acknowledgement deadline of {{%DEADLINE}}"/>
+  </relinst>
+  <relinst type="is past acknowledgement deadline" object="false" cf="100" name="R5.1 The acknowledgement deadline has not passed">
+    <condition rel="has acknowledgement deadline" subject="%S" object="%DEADLINE"/>
+    <condition expression="now()" value="%NOW" alt="The current time is {{%NOW}}"/>
+    <condition expression="isAfterDate(%NOW,%DEADLINE) is equal to false" alt="The acknowledgement deadline of {{%DEADLINE}} has not yet passed"/>
+  </relinst>
+  <relinst type="is past acknowledgement deadline" object="false" cf="100" name="R5.1 An unrecorded acknowledgement deadline is not a breach">
+    <condition expression="countRelationshipInstances(%S,'has acknowledgement deadline',*) is equal to 0" alt="No acknowledgement deadline is recorded, so no breach is assumed"/>
+  </relinst>
+
+  <relinst type="has elapsed minutes" cf="100" name="R5.4 Minutes elapsed since the incident started">
+    <condition rel="started at" subject="%S" object="%START"/>
+    <condition expression="now()" value="%NOW" alt="The current time is {{%NOW}}"/>
+    <condition expression="minutesBetween(%START,%NOW)" value="%RAW" alt="The incident started at {{%START}}, which is {{%RAW}} minutes ago"/>
+    <condition expression="round(%RAW,0)" value="%O" alt="The elapsed time rounds to {{%O}} minutes"/>
+  </relinst>
+
+  <!-- Severity ladder. Each rule carries the candidate fact at full    -->
+  <!-- weight and every gate at weight 1, so the resolved severity      -->
+  <!-- certainty tracks the candidate that produced it.                 -->
+  <relinst type="has severity" object="P1" cf="100" name="R4.6 A P1 candidate resolves to P1">
+    <condition rel="has severity candidate" subject="%S" object="P1"/>
+  </relinst>
+  <relinst type="has severity" object="P1" cf="100" name="R5.2 A breached deadline lifts a P2 candidate to P1">
+    <condition rel="has severity candidate" subject="%S" object="P2"/>
+    <condition rel="is past acknowledgement deadline" subject="%S" object="true" weight="1"/>
+    <condition expression="countRelationshipInstances(%S,'has severity candidate','P1') is equal to 0" weight="1" alt="No rule placed the incident in the P1 band on its own merits"/>
+  </relinst>
+  <relinst type="has severity" object="P2" cf="100" name="R4.7 A P2 candidate inside its deadline resolves to P2">
+    <condition rel="has severity candidate" subject="%S" object="P2"/>
+    <condition rel="is past acknowledgement deadline" subject="%S" object="false" weight="1"/>
+    <condition expression="countRelationshipInstances(%S,'has severity candidate','P1') is equal to 0" weight="1" alt="No rule placed the incident in the P1 band"/>
+  </relinst>
+  <relinst type="has severity" object="P2" cf="100" name="R5.3 A breached deadline lifts a P3 candidate to P2">
+    <condition rel="has severity candidate" subject="%S" object="P3"/>
+    <condition rel="is past acknowledgement deadline" subject="%S" object="true" weight="1"/>
+    <condition expression="countRelationshipInstances(%S,'has severity candidate','P1') is equal to 0" weight="1" alt="No rule placed the incident in the P1 band"/>
+    <condition expression="countRelationshipInstances(%S,'has severity candidate','P2') is equal to 0" weight="1" alt="No rule placed the incident in the P2 band"/>
+  </relinst>
+  <relinst type="has severity" object="P3" cf="100" name="R4.8 A P3 candidate inside its deadline resolves to P3">
+    <condition rel="has severity candidate" subject="%S" object="P3"/>
+    <condition rel="is past acknowledgement deadline" subject="%S" object="false" weight="1"/>
+    <condition expression="countRelationshipInstances(%S,'has severity candidate','P1') is equal to 0" weight="1" alt="No rule placed the incident in the P1 band"/>
+    <condition expression="countRelationshipInstances(%S,'has severity candidate','P2') is equal to 0" weight="1" alt="No rule placed the incident in the P2 band"/>
+  </relinst>
+  <relinst type="has severity" object="P4" cf="100" name="R4.9 A P4 candidate with no higher band resolves to P4">
+    <condition rel="has severity candidate" subject="%S" object="P4"/>
+    <condition expression="countRelationshipInstances(%S,'has severity candidate','P1') is equal to 0" weight="1" alt="No rule placed the incident in the P1 band"/>
+    <condition expression="countRelationshipInstances(%S,'has severity candidate','P2') is equal to 0" weight="1" alt="No rule placed the incident in the P2 band"/>
+    <condition expression="countRelationshipInstances(%S,'has severity candidate','P3') is equal to 0" weight="1" alt="No rule placed the incident in the P3 band"/>
+  </relinst>
+
+  <!-- ================================================================== -->
+  <!-- R6. ESCALATION                                                     -->
+  <!-- The duplicate rule is written first so that, in an interactive      -->
+  <!-- session, the duplicate question is asked first and a duplicate can  -->
+  <!-- be closed in a single question.                                     -->
+  <!-- ================================================================== -->
+
+  <relinst type="is under change freeze" cf="100" name="R6.1 Take the change freeze state from the incident record">
+    <condition rel="is within change freeze" subject="%S" object="%O"/>
+  </relinst>
+  <relinst type="is under change freeze" object="false" cf="100" name="R6.1 No change freeze record means no change freeze">
+    <condition expression="countRelationshipInstances(%S,'is within change freeze',*) is equal to 0" alt="No change freeze is recorded against the incident"/>
+  </relinst>
+
+  <relinst type="has real duplicate" object="true" cf="100" name="R6.2 A named parent incident is a real duplicate">
+    <condition rel="is duplicate of" subject="%S" object="%DUP"/>
+    <condition expression="%DUP is not equal to 'No Known Duplicate'" alt="The incident is recorded as a duplicate of {{%DUP}}"/>
+  </relinst>
+  <relinst type="has real duplicate" object="false" cf="100" name="R6.2 A confirmed absence of a parent incident is not a duplicate">
+    <condition rel="is duplicate of" subject="%S" object="No Known Duplicate"/>
+  </relinst>
+  <relinst type="has real duplicate" object="false" cf="100" name="R6.2 No duplicate information means the incident stands on its own">
+    <condition expression="countRelationshipInstances(%S,'is duplicate of',*) is equal to 0" alt="No parent incident has been identified, so the incident is triaged on its own merits"/>
+  </relinst>
+
+  <relinst type="escalation action" object="Link To Parent Incident And Close" cf="100" name="R6.3 A duplicate is linked to its parent and closed">
+    <condition rel="has real duplicate" subject="%S" object="true"/>
+  </relinst>
+  <relinst type="escalation action" object="Page On Call Immediately" cf="100" name="R6.4 A P1 pages the on call engineer">
+    <condition rel="has severity" subject="%S" object="P1"/>
+    <condition rel="has real duplicate" subject="%S" object="false" weight="1"/>
+  </relinst>
+  <relinst type="escalation action" object="Page On Call Immediately" cf="100" name="R6.5 A P2 inside a change freeze pages the on call engineer">
+    <condition rel="has severity" subject="%S" object="P2"/>
+    <condition rel="is under change freeze" subject="%S" object="true" weight="1"/>
+    <condition rel="has real duplicate" subject="%S" object="false" weight="1"/>
+  </relinst>
+  <relinst type="escalation action" object="Engage Service Owner" cf="100" name="R6.6 A P2 outside a change freeze engages the service owner">
+    <condition rel="has severity" subject="%S" object="P2"/>
+    <condition rel="is under change freeze" subject="%S" object="false" weight="1"/>
+    <condition rel="has real duplicate" subject="%S" object="false" weight="1"/>
+  </relinst>
+  <relinst type="escalation action" object="Queue For Next Business Day" cf="100" name="R6.7 A P3 is queued for the next business day">
+    <condition rel="has severity" subject="%S" object="P3"/>
+    <condition rel="has real duplicate" subject="%S" object="false" weight="1"/>
+  </relinst>
+  <relinst type="escalation action" object="Close As Cosmetic" cf="100" name="R6.8 A P4 whose only symptom is cosmetic is closed as cosmetic">
+    <condition rel="has severity" subject="%S" object="P4"/>
+    <condition rel="has real duplicate" subject="%S" object="false" weight="1"/>
+    <condition expression="countRelationshipInstances(%S,'has reported symptom','Cosmetic Defect')" value="%COSMETIC" weight="1" alt="{{%COSMETIC}} cosmetic defects have been reported"/>
+    <condition expression="countRelationshipInstances(%S,'has reported symptom',*)" value="%SYMPTOMS" weight="1" alt="{{%SYMPTOMS}} symptoms have been reported in total"/>
+    <condition expression="%COSMETIC is greater than or equal to 1" weight="1" alt="A cosmetic defect has been reported"/>
+    <condition expression="%SYMPTOMS is equal to 1" weight="1" alt="The cosmetic defect is the only reported symptom"/>
+  </relinst>
+  <relinst type="escalation action" object="Queue For Next Business Day" cf="100" name="R6.9 Any other P4 is queued for the next business day">
+    <condition rel="has severity" subject="%S" object="P4"/>
+    <condition rel="has real duplicate" subject="%S" object="false" weight="1"/>
+    <condition expression="countRelationshipInstances(%S,'has reported symptom','Cosmetic Defect')" value="%COSMETIC" weight="1" alt="{{%COSMETIC}} cosmetic defects have been reported"/>
+    <condition expression="countRelationshipInstances(%S,'has reported symptom',*)" value="%SYMPTOMS" weight="1" alt="{{%SYMPTOMS}} symptoms have been reported in total"/>
+    <condition expression="(%COSMETIC is equal to 0) or (%SYMPTOMS is not equal to 1)" weight="1" alt="The incident is more than a lone cosmetic defect"/>
+  </relinst>
+
+  <!-- ================================================================== -->
+  <!-- R7. EVIDENCE LAYER                                                 -->
+  <!-- Each note repeats every guard of the outcome it narrates, so no     -->
+  <!-- note can fire on an outcome that was not reached.                   -->
+  <!-- ================================================================== -->
+
+  <relinst type="has triage note" cf="100" name="R7.1 Note narrating an immediate page">
+    <condition rel="has severity" subject="%S" object="P1"/>
+    <condition rel="has real duplicate" subject="%S" object="false" weight="1"/>
+    <condition rel="has risk score" subject="%S" object="%R" weight="1"/>
+    <condition expression="'Paged the on call engineer: the incident scored ' + %R + ' and resolved to severity P1'" value="%O"/>
+  </relinst>
+  <relinst type="has triage note" cf="100" name="R7.2 Note narrating a change freeze escalation">
+    <condition rel="has severity" subject="%S" object="P2"/>
+    <condition rel="is under change freeze" subject="%S" object="true" weight="1"/>
+    <condition rel="has real duplicate" subject="%S" object="false" weight="1"/>
+    <condition expression="'Escalated a P2 to an immediate page because the service is inside a change freeze'" value="%O"/>
+  </relinst>
+  <relinst type="has triage note" cf="100" name="R7.3 Note narrating a duplicate closure">
+    <condition rel="has real duplicate" subject="%S" object="true"/>
+    <condition rel="is duplicate of" subject="%S" object="%DUP" weight="1"/>
+    <condition expression="'Closed as a duplicate of incident ' + %DUP" value="%O"/>
+  </relinst>
+  <relinst type="has triage note" cf="100" name="R7.4 Note listing the reported symptoms">
+    <condition expression="countRelationshipInstances(%S,'has reported symptom',*) is greater than or equal to 1" weight="1" alt="At least one symptom has been reported"/>
+    <condition expression="joinObjects(%S,'has reported symptom',*)" value="%LIST" alt="The symptoms reported so far are {{%LIST}}"/>
+    <condition expression="'Reported symptoms: ' + %LIST" value="%O"/>
+  </relinst>
+  <relinst type="has triage note" cf="100" name="R7.5 Note narrating mass user impact">
+    <condition rel="has affected user count" subject="%S" object="%USERS"/>
+    <condition rel="mass impact user threshold" subject="Standard Triage Policy" object="%THRESHOLD" weight="1"/>
+    <condition expression="%USERS is greater than or equal to %THRESHOLD" weight="1" alt="The {{%USERS}} affected users reach the mass impact threshold of {{%THRESHOLD}}"/>
+    <condition expression="'Mass user impact: ' + %USERS + ' users affected against a threshold of ' + %THRESHOLD" value="%O"/>
+  </relinst>
+  <relinst type="has triage note" cf="100" name="R7.6 Note recording that no escalation factor applied">
+    <condition expression="countRelationshipInstances(%S,'has escalation bonus',*) is equal to 0" alt="No escalation factor applies to the incident"/>
+    <condition expression="'No escalation factor applied: no alert storm, mass impact, multi region spread or customer facing service'" value="%O"/>
+  </relinst>
+  <relinst type="has triage note" cf="100" name="R7.7 Note recording the workaround mitigation">
+    <condition rel="has workaround" subject="%S" object="true"/>
+    <condition rel="mitigation credit points" subject="Workaround Available" object="%CREDIT" weight="1"/>
+    <condition expression="'A workaround is available, reducing the risk score by ' + %CREDIT" value="%O"/>
+  </relinst>
+  <relinst type="has triage note" cf="100" name="R7.8 Note naming the team that owns the affected service">
+    <condition rel="affects service" subject="%S" object="%SVC"/>
+    <condition rel="is owning team for" subject="%TEAM" object="%SVC"/>
+    <condition expression="'Service ' + %SVC + ' is owned by team ' + %TEAM" value="%O"/>
+  </relinst>
+  <relinst type="has triage note" cf="100" name="R7.9 Note narrating an acknowledgement deadline breach">
+    <condition rel="is past acknowledgement deadline" subject="%S" object="true"/>
+    <condition rel="has elapsed minutes" subject="%S" object="%MINUTES" weight="1"/>
+    <condition expression="'The acknowledgement deadline has passed: the incident has been open for ' + %MINUTES + ' minutes'" value="%O"/>
+  </relinst>
+  <relinst type="has triage note" cf="100" name="R7.10 Note naming the most serious reported symptom weight">
+    <condition rel="has dominant symptom weight" subject="%S" object="%DOMINANT"/>
+    <condition rel="has risk score" subject="%S" object="%R" weight="1"/>
+    <condition expression="'The most serious reported symptom carries a weight of ' + %DOMINANT + ' within a total risk score of ' + %R" value="%O"/>
+  </relinst>
+
+</rbl:kb>
+

@@ -56,6 +56,22 @@ describe("tool schemas", () => {
     assert.match(validateToolInput("read_map", "x")!, /must be an object/);
   });
 
+  test("run_query answers teach the real skip rule, value formats and matching", () => {
+    const answers = TOOL_SCHEMAS.run_query.properties!.answers;
+    const item = answers.items!.properties!;
+    assert.match(item.unanswered.description!, /accepted only when the question has allowUnknown or knownAnswers/i);
+    assert.match(item.unanswered.description!, /"no more" and the known answers are kept/);
+    assert.doesNotMatch(item.unanswered.description!, /\(allowUnknown relationships\)/, "the old, wrong rule");
+    assert.match(item.object.description!, /YYYY-MM-DD/);
+    assert.match(answers.description!, /matched to each question by relationship/);
+    // A skip is the identifying triple without a value.
+    assert.equal(validateToolInput("run_query", { relationship: "speaks", sessionId: "s", answers: [{ relationship: "speaks", subject: "Tom", unanswered: true }] }), undefined);
+  });
+
+  test("semantic_diff calls pushed-snapshot the last pulled or pushed snapshot", () => {
+    assert.match(TOOL_SCHEMAS.semantic_diff.properties!.against.description!, /pushed-snapshot \(the snapshot taken when this file was last pulled or pushed\)/);
+  });
+
   test("validator handles union types and nested arrays", () => {
     const schema: JsonSchema = { type: "object", properties: { v: { type: ["string", "null"] }, xs: { type: "array", items: { type: "integer" } } }, additionalProperties: false };
     assert.equal(validateAgainstSchema({ v: null, xs: [1, 2] }, schema), undefined);

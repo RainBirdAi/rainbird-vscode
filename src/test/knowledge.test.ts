@@ -79,6 +79,17 @@ describe("knowledge reference", () => {
     }
   });
 
+  test("teaches the real skip rule and why plural questions are asked after injection", () => {
+    assert.match(text, /only when it has `allowUnknown` or non-empty `knownAnswers`; skipping a question that has known answers keeps them/);
+    assert.match(text, /asks a plural question even when facts for it already exist/);
+    assert.match(text, /Facts injected below 100% certainty may also be asked again for confirmation, even on a singular relationship/);
+    assert.match(text, /`askable="none"` is the modelling choice .* but only when every session injects it/);
+    assert.match(BEHAVIOUR_PROMPT, /unanswered: true is accepted only when a question has allowUnknown or knownAnswers/);
+    assert.match(BEHAVIOUR_PROMPT, /autoSkipped/);
+    assert.match(BEHAVIOUR_PROMPT, /When a question lists alreadyKnown values, skip it yourself only when the user's injected facts cover it/);
+    assert.match(BEHAVIOUR_PROMPT, /Send a don't-know skip \(allowUnknown\) only when the user says they don't know/);
+  });
+
   test("behaviour and explain prompts are non-empty and mention the tools they rely on", () => {
     for (const tool of ["get_map_overview", "read_map", "get_diagnostics", "edit_map", "create_map", "lint_rblang", "run_query", "push_map"]) {
       assert.ok(BEHAVIOUR_PROMPT.includes(tool), `behaviour prompt should mention ${tool}`);

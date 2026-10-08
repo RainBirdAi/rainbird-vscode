@@ -66,7 +66,14 @@ export async function extractRbird(uri?: vscode.Uri): Promise<void> {
     await vscode.workspace.fs.writeFile(output, Buffer.from(rblang, "utf8"));
     const doc = await vscode.workspace.openTextDocument(output);
     await vscode.window.showTextDocument(doc);
-    vscode.window.showInformationMessage(`Extracted RBLang to ${vscode.workspace.asRelativePath(output)}`);
+    // An export carries no Knowledge Map ID (studioData holds layout, errors and
+    // version only), so offer to bind the file the way Open Map by ID does.
+    const bind = await vscode.window.showInformationMessage(
+      `Extracted RBLang to ${vscode.workspace.asRelativePath(output)}. Bind it to its Knowledge Map ID so Run Query and the diffs know which map it is?`,
+      "Bind to kmID…",
+      "Later"
+    );
+    if (bind === "Bind to kmID…") await vscode.commands.executeCommand("rainbird.bindKmId", output);
   } catch (error) {
     vscode.window.showErrorMessage(`Could not extract .rbird file: ${(error as Error).message}`);
   }

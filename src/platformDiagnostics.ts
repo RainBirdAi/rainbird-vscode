@@ -59,3 +59,14 @@ export function showPlatformErrors(doc: vscode.TextDocument, messages: string[],
 export function showPlatformOutput(): void {
   channel?.show(true);
 }
+
+/**
+ * Append a titled block to the Rainbird output channel, e.g. the raw question
+ * JSON logged by `rainbird.query.logQuestions`. A no-op before activation.
+ */
+export function appendRainbirdLog(title: string, lines: string[] = []): void {
+  if (!channel) return;
+  channel.appendLine(`[${new Date().toLocaleTimeString()}] ${title}`);
+  for (const line of lines) channel.appendLine(`  ${line}`);
+  channel.appendLine("");
+}

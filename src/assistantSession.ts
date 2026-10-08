@@ -122,7 +122,7 @@ export class AssistantSession {
   kmInfo(): { kmId?: string; source?: string } {
     const doc = this.target();
     const pushed = doc ? this.context.workspaceState.get<string>(`rainbird.pushedKm.${doc.uri.toString()}`) : undefined;
-    if (pushed) return { kmId: pushed, source: "last push of this file" };
+    if (pushed) return { kmId: pushed, source: "this file's map (opened, pulled, pushed or bound by Knowledge Map ID)" };
     const setting = vscode.workspace.getConfiguration("rainbird", doc?.uri).get<string>("knowledgeMapId");
     if (setting) return { kmId: setting, source: "workspace setting" };
     return {};

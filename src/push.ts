@@ -12,6 +12,7 @@ import { getClient } from "./queryRunner";
 import { collectIssues } from "./diagnostics";
 import { QueryPanel } from "./queryPanel";
 import { recordKnownMap } from "./mapsTree";
+import { bindFileKmId, rememberKmId } from "./platform";
 import { ApiError } from "./api";
 import { clearPlatformErrors, showPlatformErrors, showPlatformOutput } from "./platformDiagnostics";
 
@@ -72,8 +73,9 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
       return;
     }
 
-    await context.workspaceState.update(`rainbird.pushedKm.${doc.uri.toString()}`, kmId);
-    recordKnownMap(context, {
+    // The pushed text is the new map's snapshot, so the file is no copy of a saved version.
+    await bindFileKmId(context, doc.uri, kmId, { version: null });
+    void recordKnownMap(context, {
       kmId,
       name,
       source: "pushed",
@@ -92,11 +94,13 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
         "Copy kmID"
       );
     } else {
+      // An empty window has no settings file to hold a workspace kmID; the file binding still applies.
+      const actions = vscode.workspace.workspaceFolders?.length
+        ? ["Run query", "Copy kmID", "Use as workspace kmID"]
+        : ["Run query", "Copy kmID"];
       action = await vscode.window.showInformationMessage(
         `Pushed to Rainbird — new map "${name}" (kmID ${kmId}). Remember: pushes are create-only; delete old scratch maps in Studio.`,
-        "Run query",
-        "Copy kmID",
-        "Use as workspace kmID"
+        ...actions
       );
     }
     if (action === "Show Problems") {
@@ -106,9 +110,11 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
     } else if (action === "Copy kmID") {
       await vscode.env.clipboard.writeText(kmId);
     } else if (action === "Use as workspace kmID") {
-      await vscode.workspace
-        .getConfiguration("rainbird", doc.uri)
-        .update("knowledgeMapId", kmId, vscode.ConfigurationTarget.Workspace);
+      if (await rememberKmId(doc.uri, kmId)) {
+        vscode.window.setStatusBarMessage(`rainbird.knowledgeMapId is now ${kmId} for files with no map of their own.`, 5000);
+      } else {
+        vscode.window.showWarningMessage("Could not save rainbird.knowledgeMapId; this file is still bound to the new map.");
+      }
     }
   } catch (error) {
     const validation = error instanceof ApiError ? error.errMessages() : undefined;

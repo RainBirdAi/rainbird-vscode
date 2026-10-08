@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rbl:kb xmlns:rbl="http://rbl.io/schema/RBLang">
+
+  <!-- Concepts -->
+  <concept name="Support Case" type="string"/>
+  <concept name="Customer" type="string">
+    <!-- DATASOURCE: the customer's support tier is looked up in the CRM mid-inference.
+         postman-echo.com is a public echo service: it returns the query string under args, so tier comes back as Premium.
+         Replace hostname and path with your real CRM endpoint and adjust the response path. -->
+    <datasource hostname="https://postman-echo.com" path="/get?tier=Premium&amp;customer={{%S}}" method="GET" name="CRM tier lookup">
+      <action map="has support tier=/args/tier"/>
+    </datasource>
+  </concept>
+  <concept name="Severity" type="string"/>
+  <concept name="Support Tier" type="string"/>
+  <concept name="Escalation Outcome" type="string"/>
+  <concept name="Reopened" type="truth"/>
+  <concept name="Premium Case" type="truth"/>
+  <concept name="Needs Review" type="truth"/>
+
+  <!-- Relationships -->
+  <rel name="belongs to" subject="Support Case" object="Customer" askable="none"/>
+  <!-- ANSWER: severity is asked of the user -->
+  <rel name="has severity" subject="Support Case" object="Severity" askable="secondFormObject" allowUnknown="true">
+    <secondFormObject>What is the severity of %S?</secondFormObject>
+  </rel>
+  <rel name="has support tier" subject="Customer" object="Support Tier" askable="none"/>
+  <!-- INJECTION: the ticketing system injects this via the API; it is never asked -->
+  <rel name="has been reopened" subject="Support Case" object="Reopened" askable="none"/>
+  <rel name="is premium customer case" subject="Support Case" object="Premium Case" askable="none"/>
+  <rel name="has escalation outcome" subject="Support Case" object="Escalation Outcome" askable="none"/>
+  <rel name="needs priority review" subject="Support Case" object="Needs Review" askable="none"/>
+
+  <!-- Instances -->
+  <concinst name="Critical" type="Severity"/>
+  <concinst name="High" type="Severity"/>
+  <concinst name="Normal" type="Severity"/>
+  <concinst name="Premium" type="Support Tier"/>
+  <concinst name="Standard" type="Support Tier"/>
+  <concinst name="Escalate" type="Escalation Outcome"/>
+  <concinst name="Standard Queue" type="Escalation Outcome"/>
+  <concinst name="Acme Corp" type="Customer"/>
+  <concinst name="CASE-001" type="Support Case"/>
+
+  <!-- KNOWLEDGE MAP FACT: stored directly in the map -->
+  <relinst type="belongs to" subject="CASE-001" object="Acme Corp"/>
+
+  <!-- Escalation rules -->
+  <relinst type="has escalation outcome" object="Escalate" cf="100" name="Critical support cases are escalated">
+    <condition rel="has severity" subject="%S" object="Critical"/>
+  </relinst>
+
+  <relinst type="has escalation outcome" object="Escalate" cf="100" name="High severity Premium customer cases are escalated">
+    <condition rel="has severity" subject="%S" object="High"/>
+    <condition rel="belongs to" subject="%S" object="%CUSTOMER"/>
+    <condition rel="has support tier" subject="%CUSTOMER" object="Premium"/>
+  </relinst>
+
+  <relinst type="has escalation outcome" object="Standard Queue" cf="100" name="High severity Standard customer cases go to Standard Queue">
+    <condition rel="has severity" subject="%S" object="High"/>
+    <condition rel="belongs to" subject="%S" object="%CUSTOMER"/>
+    <condition rel="has support tier" subject="%CUSTOMER" object="Standard"/>
+  </relinst>
+
+  <relinst type="has escalation outcome" object="Standard Queue" cf="100" name="Normal severity cases go to Standard Queue">
+    <condition rel="has severity" subject="%S" object="Normal"/>
+  </relinst>
+
+  <!-- INTERMEDIATE RULE: combines a knowledge-map fact (belongs to) with a datasource fact (has support tier) -->
+  <relinst type="is premium customer case" object="true" cf="100" name="Cases belonging to Premium customers are premium cases"
+           alt="{{%S}} is a premium case because {{%CUSTOMER}} is on the Premium tier">
+    <condition rel="belongs to" subject="%S" object="%CUSTOMER"/>
+    <condition rel="has support tier" subject="%CUSTOMER" object="Premium"/>
+  </relinst>
+
+  <!-- MAIN RULE: certainty, weights and an optional condition.
+       cf 70                            : heuristic rule, certainty capped at 70
+       weight 1 on the premium check    : plumbing-style gate, kept from inflating the result
+       optional condition, weight 50    : a reopened case strengthens the conclusion but is not required
+       Reopened = true  -> 70 x 151/151 = 70
+       Reopened absent  -> 70 x 101/151 = 47 -->
+  <relinst type="needs priority review" object="true" cf="70" name="Normal severity Premium cases probably need priority review"
+           alt="{{%S}} probably needs a priority review">
+    <condition rel="has severity" subject="%S" object="Normal"/>
+    <condition rel="is premium customer case" subject="%S" object="true" weight="1"/>
+    <condition rel="has been reopened" subject="%S" object="true" behaviour="optional" weight="50"/>
+  </relinst>
+
+</rbl:kb>
+

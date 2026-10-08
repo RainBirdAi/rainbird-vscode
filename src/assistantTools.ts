@@ -12,15 +12,19 @@ import type { AssistantSession } from "./assistantSession";
 import { collectIssues } from "./lint";
 import { buildIndex } from "./mapIndex";
 import { buildOverview, readRange, formatDiagnostics, lineAt, summariseIssues } from "./mapOverview";
-import { applyOperations, describeEdit, lintSnippet, resolveSelector, Operation, Selector, modelChanges, EditError } from "./mapEdits";
+import { applyOperations, describeEdit, lintSnippet, resolveSelector, Operation, Selector, EditError } from "./mapEdits";
 import { getClientSilent, getEvidenceKey } from "./queryRunner";
-import { Answer, ApiError, CreateMapResult, EvidenceNode, Fact, RainbirdClient } from "./api";
+import { Answer, ApiError, CreateMapResult, describeTarget, Fact, RainbirdClient } from "./api";
 import { recordKnownMap, snapshotUri } from "./mapsTree";
 import { showPlatformErrors } from "./platformDiagnostics";
 import { gitHeadSide } from "./semanticDiff";
 import { buildModel, diffReportDetailed } from "./semanticModel";
 import { loadTestFile, replay, TestFile } from "./tests";
-import { describeTarget } from "./api";
+import type { EngineResponse } from "./api";
+import { readDateOrder } from "./answers";
+import { answerQuestions, pendingQuestionMessage, queryToolReply, QuestionSession, readAutoSkipMode } from "./questionSkip";
+import { describeEvidence } from "./evidenceRender";
+import type { ExpandedEvidence } from "./evidenceModel";
 
 const NO_MAP = "No RBLang file is open. Ask the user to open a .rbl file, or use create_map to start one.";
 const NOT_CONNECTED = "Not connected to Rainbird — ask the user to run “Rainbird: Connect” (environment + API key) first.";
@@ -177,52 +181,56 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
 
     tool(
       "run_query",
-      "Run a live query against a Rainbird knowledge map on the platform (the draft by default; `version` pins a published version). Without sessionId each call starts a fresh session, injects `facts`, queries `relationship` (+ optional subject/object) and feeds `answers` in order to the questions the engine asks (grouped questions arrive together and take one answer each). If questions remain they are returned with the sessionId — call again with that sessionId and the answers appended, or ask the user. Returns results with certainty and fact IDs (usable with get_evidence). Needs a kmID: from the workspace setting, a previous push, or `kmId`.",
+      [
+        "Run a live query against a Rainbird knowledge map on the platform (the draft by default; `version` pins a published version). Without sessionId each call starts a fresh session, injects `facts`, queries `relationship` with a subject, an object or both and answers the engine's questions with `answers`, matched to each question by relationship (and subject/object) — a question group is sent in one response, a plural question takes one entry per value.",
+        "Answers are checked before sending: dates as YYYY-MM-DD (an ambiguous date such as 01/10/1981 is refused), numbers as numbers, truth questions true/false; problems come back under `rejected` without reaching the engine.",
+        "If questions remain they are returned with the sessionId and, per question, `expected` (the value format), de-duplicated `options`, `alreadyKnown` (facts the engine already holds) and `canSkip` with a `skipHint` — call again with that sessionId and answers for the whole group, or ask the user.",
+        "`unanswered: true` is accepted only when a question has allowUnknown or known answers; with known answers it means \"no more\" and keeps them. Plural questions are asked even when facts were injected: the tool answers \"no more\" itself when the injected facts cover the question (setting rainbird.query.autoSkipPluralQuestions) unless you supplied an answer for it, and lists those in `autoSkipped`.",
+        "Returns results with certainty and fact IDs (usable with get_evidence). Needs a kmID: the map this file is bound to (opened, pulled, pushed or bound by Knowledge Map ID), the rainbird.knowledgeMapId setting, or `kmId`.",
+      ].join(" "),
       async (input) => {
         const client = await getClientSilent(context);
         if (!client) return NOT_CONNECTED;
         const kmId = resolveKm(input.kmId as string | undefined);
-        if (!kmId) return "No knowledge map ID — pass kmId, push the map first (push_map), or ask the user to set rainbird.knowledgeMapId.";
-        recordKnownMap(context, { kmId, source: "queried" });
-        const answers = [...((input.answers as Answer[] | undefined) ?? [])];
+        if (!kmId) return "No knowledge map ID — pass kmId, push the map first (push_map), or ask the user to run “Rainbird: Open Map by Knowledge Map ID…” or “Rainbird: Bind Open File to a Knowledge Map ID…”.";
+        const queue = [...((input.answers as Answer[] | undefined) ?? [])];
+        const settings = vscode.workspace.getConfiguration("rainbird");
+        const autoSkipMode = readAutoSkipMode(settings.get("query.autoSkipPluralQuestions"));
+        const dateOrder = readDateOrder(settings.get("query.dateOrder"));
         let sessionId = input.sessionId as string | undefined;
-        let response;
+        let session: QuestionSession;
+        let response: EngineResponse;
         if (sessionId) {
-          if (!answers.length) return "sessionId given but no answers — append answers for the pending question(s).";
-          response = await client.respond(sessionId, answers.splice(0, answers.length));
+          if (!queue.length) return "sessionId given but no answers — append answers for the pending question(s).";
+          const known = querySessions.get(sessionId);
+          if (known && !known.pending.length) return "This session has no pending question — its query has finished. Start a new query (omit sessionId).";
+          if (known) {
+            session = known;
+            response = { kind: "question", question: known.pending[0], extraQuestions: known.pending.slice(1) };
+          } else {
+            // A session this tool did not start (or one from before a reload): there are
+            // no pending questions to check the answers against, so they go as given.
+            response = await client.respond(sessionId, queue.splice(0, queue.length));
+            session = rememberQuerySession(sessionId, []);
+          }
         } else {
+          // Verified live: /query with neither answers 400 "Please provide a string or numeric subject." (and object).
+          if (!input.subject && !input.object) return "Give a subject, an object or both: the engine rejects a query with neither.";
           const version = typeof input.version === "number" ? input.version : undefined;
           sessionId = await client.start(kmId, version ? { version } : { useDraft: true });
+          // Listed under Maps only once the engine accepted the ID (an unknown one fails at /start).
+          recordKnownMap(context, { kmId, source: "queried" });
           const facts = (input.facts as Fact[] | undefined) ?? [];
           if (facts.length) await client.inject(sessionId, facts);
+          session = rememberQuerySession(sessionId, facts);
           response = await client.query(sessionId, {
             relationship: String(input.relationship),
             ...(input.subject ? { subject: String(input.subject) } : {}),
             ...(input.object ? { object: String(input.object) } : {}),
           });
-          while (response.kind === "question") {
-            const groupSize = 1 + (response.extraQuestions?.length ?? 0);
-            if (answers.length < groupSize) break;
-            response = await client.respond(sessionId, answers.splice(0, groupSize));
-          }
         }
-        if (response.kind === "question") {
-          const questions = [response.question, ...(response.extraQuestions ?? [])];
-          return JSON.stringify(
-            {
-              status: "question",
-              sessionId,
-              questions,
-              note:
-                questions.length > 1
-                  ? `These ${questions.length} questions are a group: call again with this sessionId and one answer per question, in this order.`
-                  : "Call again with this sessionId and one answer for this question (or ask the user).",
-            },
-            null,
-            2
-          );
-        }
-        return JSON.stringify({ status: "result", sessionId, kmId, results: response.result }, null, 2);
+        const outcome = await answerQuestions(client, sessionId, response, queue, session, { mode: autoSkipMode, dateOrder });
+        return queryToolReply(outcome, { sessionId, kmId });
       },
       { label: (input) => `Running query: ${input.relationship}${input.sessionId ? " (continuing)" : ""}` }
     ),
@@ -271,7 +279,7 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
 
     tool(
       "semantic_diff",
-      "Model-level differences (concepts, relationships, instances, facts, rules — not XML line noise) between the open map and a base: 'turn-start' (as it was when this turn began), 'git-head' (last commit), 'pushed-snapshot' (what was last pushed to the platform for this file) or 'text' (an RBLang document you pass).",
+      "Model-level differences (concepts, relationships, instances, facts, rules — not XML line noise) between the open map and a base: 'turn-start' (as it was when this turn began), 'git-head' (last commit), 'pushed-snapshot' (the last pulled or pushed snapshot of the platform map this file is bound to) or 'text' (an RBLang document you pass).",
       async (input) => {
         const { text, fileName } = requireText();
         const doc = session.target()!;
@@ -289,9 +297,21 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
           }
           case "pushed-snapshot": {
             const kmId = context.workspaceState.get<string>(`rainbird.pushedKm.${doc.uri.toString()}`);
-            if (!kmId) return "This file has not been pushed from this workspace, so there is no pushed snapshot.";
-            const raw = await vscode.workspace.fs.readFile(snapshotUri(context, kmId));
-            base = { label: `pushed snapshot (kmID ${kmId})`, text: Buffer.from(raw).toString("utf8") };
+            if (!kmId) {
+              return "This file is not bound to a platform map (it was not opened by Knowledge Map ID, pulled, pushed or bound in this workspace), so there is no last pulled or pushed snapshot.";
+            }
+            // Same rule as quick diff (platform.ts fileKmVersion): a copy of a saved version has no snapshot of its own.
+            const pulled = context.workspaceState.get<{ kmId?: string; version?: number }>(`rainbird.pulledVersion.${doc.uri.toString()}`);
+            if (typeof pulled?.version === "number" && pulled.kmId?.toLowerCase() === kmId.toLowerCase()) {
+              return `This file is a copy of version ${pulled.version} of ${kmId}. The last pulled or pushed snapshot records the draft, so it is not this file's starting point; compare against 'text' (e.g. RBLang the user pastes) instead.`;
+            }
+            let raw: Uint8Array;
+            try {
+              raw = await vscode.workspace.fs.readFile(snapshotUri(context, kmId));
+            } catch {
+              return `There is no last pulled or pushed snapshot of ${kmId} yet: one is recorded when its draft is pulled into a file or the map is pushed from VS Code.`;
+            }
+            base = { label: `last pulled or pushed snapshot (kmID ${kmId})`, text: Buffer.from(raw).toString("utf8") };
             break;
           }
           case "text":
@@ -330,24 +350,41 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
 
     tool(
       "get_evidence",
-      "The evidence tree for a fact inferred in a query session: every contributing fact with its certainty and provenance (rule, answer, injection, datasource, knowledge map), rule conditions with impact, and evidence text. Use the sessionId and a factID from a run_query result.",
+      "The evidence tree for a fact inferred in a query session, as an indented outline: the fact with its certainty and source (rule, answer, injected, datasource, knowledge map), then the rule's conditions in the order the engine reports them, each with the fact that satisfied it, its impact against the maximum possible impact and its weight, plus evidence text. List-function conditions include the function result and every contributing fact; unmet optional and zero-salience conditions are marked; the outline ends with the inputs used by the result. Use the sessionId and a factID from a run_query result.",
       async (input) => {
         const client = await getClientSilent(context);
         if (!client) return NOT_CONNECTED;
-        const tree = await client.fullEvidence(String(input.factId), String(input.sessionId), await getEvidenceKey(context));
-        return renderEvidence(tree as EvidenceNode & { children?: EvidenceNode[] });
+        try {
+          const tree = await client.fullEvidence(String(input.factId), String(input.sessionId), await getEvidenceKey(context));
+          return renderEvidence(tree);
+        } catch (error) {
+          if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+            throw new Error(
+              "Evidence is locked for this map. Ask the user to enable Evidence Tree Link in Studio (Publish → API Management → Access Control) or to run “Rainbird: Set Evidence Key”, then try again."
+            );
+          }
+          throw error;
+        }
       },
       { label: () => "Fetching evidence" }
     ),
   ];
 }
 
+/** Sessions run_query started, by sessionId, oldest first (process lifetime), so a later call can continue one. */
+const querySessions = new Map<string, QuestionSession>();
+
+function rememberQuerySession(sessionId: string, facts: Fact[]): QuestionSession {
+  const session: QuestionSession = { facts, noAutoSkip: new Set(), pending: [] };
+  querySessions.set(sessionId, session);
+  // Sessions are continued within one conversation; keep only the most recent ones.
+  while (querySessions.size > 50) querySessions.delete(querySessions.keys().next().value as string);
+  return session;
+}
+
 async function runTest(client: RainbirdClient, test: TestFile): Promise<string[]> {
   const outcome = await replay(client, test, test.target ?? { kind: "draft" });
-  if (outcome.pendingQuestion) {
-    const q = outcome.pendingQuestion;
-    return [`The engine asked an unrecorded question: ${q.subject ?? "?"} ${q.relationship} ? — the question flow changed.`];
-  }
+  if (outcome.pendingQuestion) return [pendingQuestionMessage(outcome.pendingQuestion)];
   const actual = outcome.results ?? [];
   const failures: string[] = [];
   for (const expected of test.expected) {
@@ -359,17 +396,7 @@ async function runTest(client: RainbirdClient, test: TestFile): Promise<string[]
   return failures;
 }
 
-function renderEvidence(node: EvidenceNode & { children?: EvidenceNode[] }, depth = 0): string {
-  const pad = "  ".repeat(depth);
-  const f = node.fact;
-  const source: Record<string, string> = { knowledgemap: "hard-coded in map", rule: "inferred by rule", answer: "user answer", injection: "injected", datasource: "datasource", synthesis: "synthetic (unmet optional)" };
-  const lines = [`${pad}${f.subject.value} ${f.relationship.type} ${f.object.value} — ${f.certainty}% [${source[node.source] ?? node.source}] (${node.factID})`];
-  if (node.rule?.conditions?.length) {
-    for (const c of node.rule.conditions) {
-      const what = c.expression ? `expression ${c.expression.text ?? ""}${c.expression.value !== undefined ? ` = ${JSON.stringify(c.expression.value)}` : ""}` : `${c.subject ?? "?"} ${c.relationship ?? "?"} ${c.object ?? "?"}`;
-      lines.push(`${pad}  · ${what}${c.certainty !== undefined ? ` · ${c.certainty}%` : ""}${c.impact !== undefined ? ` · impact ${c.impact}` : ""}${c.wasMet === false ? " · NOT MET" : ""}${c.alt ? ` · "${c.alt}"` : ""}`);
-    }
-  }
-  for (const child of node.children ?? []) lines.push(renderEvidence(child as EvidenceNode & { children?: EvidenceNode[] }, depth + 1));
-  return lines.join("\n");
+/** The evidence tree as the outline the model reads (shared with other callers via describeEvidence). */
+function renderEvidence(tree: ExpandedEvidence): string {
+  return describeEvidence(tree, { maxChars: 30000 });
 }

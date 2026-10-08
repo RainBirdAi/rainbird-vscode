@@ -7,6 +7,7 @@
  */
 
 import { normaliseErrMessages } from "./platformErrors";
+import { expandEvidence, ExpandOptions, ExpandedEvidence } from "./evidenceModel";
 
 export interface Question {
   relationship: string;
@@ -18,9 +19,44 @@ export interface Question {
   plural: boolean;
   allowCF: boolean;
   allowUnknown: boolean;
-  canAdd: string;
-  knownAnswers?: unknown[];
-  concepts?: { name: string; value?: string }[];
+  /**
+   * Whether the user may type a value that is not offered. A boolean on the
+   * wire (OpenAPI, and `true` live); the RBLang string form (all | subject |
+   * object | subject,object | none) is tolerated — read it with canAddHere().
+   */
+  canAdd: boolean | string;
+  /**
+   * Facts the engine already holds for this question (injected, from the map, a
+   * datasource or a rule). Verified live: populated from injected facts, and a
+   * question that has them may be skipped with `unanswered: true` even when
+   * allowUnknown is false. Read it with readKnownAnswers().
+   */
+  knownAnswers?: KnownAnswer[];
+  /** Values to offer: instances for string objects, known values for number/date objects (possibly repeated, dates as epoch milliseconds). */
+  concepts?: QuestionConcept[];
+}
+
+/**
+ * One entry of `Question.knownAnswers` as the live API sends it, e.g.
+ * {"subject":"Tom","relationship":{"name":"lives in","plural":false,…},"object":"France","cf":90}.
+ */
+export interface KnownAnswer {
+  subject?: string;
+  /** The relationship object ({name, plural, askable, …}) live; a bare name is tolerated. */
+  relationship?: string | { name?: string; [field: string]: unknown };
+  object?: string | number | boolean;
+  /** Certainty as sent live. */
+  cf?: number;
+  /** Certainty under its documented name, tolerated as an alias of cf. */
+  certainty?: number;
+}
+
+export interface QuestionConcept {
+  conceptType?: string;
+  name: string;
+  type?: string;
+  value?: string | number | boolean;
+  invalidResponse?: boolean;
 }
 
 export interface ResultItem {
@@ -42,8 +78,20 @@ export interface Fact {
   certainty?: number;
 }
 
+/**
+ * One answer in a POST /response batch. A question group (question +
+ * extraQuestions) is answered in ONE batch; a plural question takes one entry
+ * per value. Build them with answerFor() / skipAnswer().
+ */
 export interface Answer extends Partial<Fact> {
   answer?: "yes" | "no";
+  /**
+   * Skip the question. Accepted only when it has allowUnknown or non-empty
+   * knownAnswers (verified live; otherwise 400 "Please provide an expected
+   * boolean value for unanswered."). Send the triple that identifies the
+   * question, omit the asked value, and send no certainty. With knownAnswers
+   * the skip means "no more": the known facts are kept.
+   */
   unanswered?: true;
   /** Engine-accepted alias for certainty — mutually exclusive with it. */
   cf?: number;
@@ -65,30 +113,110 @@ export function describeTarget(target: StartTarget | undefined): string {
   return `version ${target.version}`;
 }
 
+/**
+ * Where an evidence fact came from. The live API sends "km" for knowledge-map
+ * facts although the OpenAPI enum says "knowledgemap" (verified on the public
+ * sandbox, 2026-10-07), so compare through normaliseSource() in evidenceModel.ts.
+ */
+export type EvidenceSource = "rule" | "answer" | "injection" | "datasource" | "knowledgemap" | "km" | "synthesis";
+
+/** One fact a list function used: an entry of expression.functions[call].facts. */
+export interface EvidenceFunctionFact {
+  subject?: string;
+  relationship?: string;
+  object?: string | number | boolean;
+  certainty?: number;
+  factID?: string;
+  factKey?: string;
+  /** The value's data type: string, number, date (epoch ms) or truth. */
+  objectType?: string;
+}
+
+/** One list-function call, keyed by the call as evaluated, e.g. "sumObjects( 'Tom', 'has income', *)". */
+export interface EvidenceFunctionCall {
+  facts?: EvidenceFunctionFact[];
+  /** null when the function had nothing to work on (minObjects / maxObjects over an empty list). */
+  result?: { type?: string; value?: string | number | boolean | null };
+}
+
+export interface EvidenceExpression {
+  /** The expression as written in the rule, e.g. "sumObjects(%S, 'has income', *)" or "%TOTAL > 3000". */
+  text?: string;
+  /**
+   * The variable the expression's result was stored in ("%RELS", "%O"), NOT the
+   * result: the OpenAPI example sends value "%O" for the test "%RELS is less
+   * than 10". Never display it as a value.
+   */
+  value?: unknown;
+  /** List functions used by the expression, with their result and contributing facts. */
+  functions?: Record<string, EvidenceFunctionCall>;
+}
+
+/** A rule condition: a relationship condition (subject/relationship/object + factID) or an expression. */
+export interface EvidenceCondition {
+  subject?: string;
+  relationship?: string;
+  object?: string | number | boolean;
+  /** The value's data type: string, number, date (epoch ms) or truth. */
+  objectType?: string;
+  /** Certainty of the fact that satisfied the condition (0 for an unmet optional condition). */
+  certainty?: number;
+  /** Contribution to the inferred fact's certainty, in percentage points (two decimals). */
+  impact?: number;
+  /** The condition's weight (0 = "zero salience": no effect on the certainty). */
+  salience?: number;
+  /**
+   * The fact that satisfied the condition. "WA:XX" marks the engine's 0%
+   * stand-in for an unmet optional condition: it is never stored, so GET
+   * /analysis/evidence answers 404 for it (see isSynthesisFactId).
+   */
+  factID?: string;
+  factKey?: string;
+  /** Evidence text for the condition. The engine fills its {{%VAR}} placeholders before sending it. */
+  alt?: string;
+  expression?: EvidenceExpression;
+  /** Expressions only: whether the test was true (always true when assigned to a variable). */
+  wasMet?: boolean;
+}
+
+/**
+ * A rule variable's value: plain for untyped variables, {value, type} for
+ * typed ones (e.g. {"value": 5, "type": "number"} from sumObjects, or
+ * {"value": 655516800000, "type": "date"}). Read it through bindingValue() or
+ * bindingText() in evidenceModel.ts.
+ */
+export type EvidenceBinding = string | number | boolean | null | { value?: unknown; type?: string };
+
+export interface EvidenceRule {
+  bindings?: Record<string, EvidenceBinding>;
+  /**
+   * In the order the engine reports them: it walks the rule's conditions in
+   * order. An optional condition it skipped (its object was never bound) is left out.
+   */
+  conditions?: EvidenceCondition[];
+  /**
+   * The rule's cf. A condition's maximum possible impact is ruleMaxCertainty ×
+   * its weight ÷ the total weight of all the rule's conditions, expressions
+   * included (see impactScale in evidenceModel.ts).
+   */
+  ruleMaxCertainty?: number;
+  /** Rule-level evidence text (the rule's alt attribute), already filled in by the engine. */
+  alt?: string;
+}
+
+/** One node as returned by GET /analysis/evidence/{factID}/{sessionID}. */
 export interface EvidenceNode {
   factID: string;
-  source: "knowledgemap" | "rule" | "answer" | "injection" | "datasource" | "synthesis";
+  source: EvidenceSource;
+  /** Creation time, epoch ms. */
+  time?: number;
   fact: {
-    subject: { value: string };
+    subject: { value: string; type?: string; dataType?: string };
     relationship: { type: string };
-    object: { value: string };
+    object: { value: string | number | boolean; type?: string; dataType?: string };
     certainty: number;
   };
-  rule?: {
-    bindings?: Record<string, string>;
-    conditions?: Array<{
-      factID?: string;
-      subject?: string;
-      relationship?: string;
-      object?: string;
-      certainty?: number;
-      impact?: number;
-      salience?: number;
-      expression?: { text?: string; value?: unknown };
-      wasMet?: boolean;
-      alt?: string;
-    }>;
-  };
+  rule?: EvidenceRule;
 }
 
 /** A map as served by GET /analysis/file: RBLang plus Studio's structured model. */
@@ -119,6 +247,15 @@ export class ApiError extends Error {
       return undefined;
     }
   }
+}
+
+/**
+ * Why a map cannot be found: the Knowledge Map ID is unknown, malformed, or
+ * belongs to another environment than the API key. Shared by the panel, the
+ * runners and Open Map / Pull, so the copy lives in one place.
+ */
+export function unknownMapMessage(kmId: string, apiUrl: string): string {
+  return `No map with Knowledge Map ID ${kmId} is visible to this API key on ${apiUrl}. Check the ID on the map's Publish page in Studio, and that the key belongs to the same environment.`;
 }
 
 export interface CreateMapResult {
@@ -165,16 +302,29 @@ export class RainbirdClient {
     return (await response.json()) as T;
   }
 
-  /** GET /start/{kmID} — the only call that needs the API key; the session ID is the credential afterwards. */
+  /**
+   * GET /start/{kmID} — the only call that needs the API key; the session ID is the credential afterwards.
+   * Verified live: an unknown or malformed kmID, or one from another environment, answers a bare
+   * `400 Bad request!` on draft and live alike, so that 400 is reported as an unknown map. A 400 with
+   * {"err": [...]} and every other failure (such as the 404 for a missing live version or version) are
+   * rethrown as they are.
+   */
   async start(kmId: string, opts?: { useDraft?: boolean; version?: number }): Promise<string> {
     const params = new URLSearchParams();
     if (opts?.version !== undefined) params.set("version", String(opts.version));
     else if (opts?.useDraft) params.set("useDraft", "true");
     const query = params.size ? `?${params}` : "";
-    const data = await this.request<{ id: string }>(`/start/${kmId}${query}`, {
-      headers: { "X-API-Key": this.apiKey },
-    });
-    return data.id;
+    try {
+      const data = await this.request<{ id: string }>(`/start/${kmId}${query}`, {
+        headers: { "X-API-Key": this.apiKey },
+      });
+      return data.id;
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 400 && !error.errMessages()) {
+        throw new ApiError(unknownMapMessage(kmId, this.baseUrl), 400, error.body);
+      }
+      throw error;
+    }
   }
 
   async inject(sessionId: string, facts: Fact[]): Promise<void> {
@@ -191,9 +341,11 @@ export class RainbirdClient {
     return normalise(await this.request(`/${sessionId}/query`, { method: "POST", body: JSON.stringify(goal) }));
   }
 
+  /** POST /{sid}/response — one call per question group; a 400 leaves the session on the same question. */
   async respond(sessionId: string, answers: Answer[]): Promise<EngineResponse> {
     // Verified live: certainty is REQUIRED on answered questions (400 without
-    // it), and 'cf'/'certainty' are exclusive aliases — never send both.
+    // it), and 'cf'/'certainty' are exclusive aliases — never send both. A skip
+    // (unanswered: true) goes without certainty.
     const normalised = answers.map((a) =>
       a.unanswered || a.certainty !== undefined || a.cf !== undefined ? a : { ...a, certainty: 100 }
     );
@@ -335,25 +487,18 @@ export class RainbirdClient {
     return lo;
   }
 
-  /** Recursively expand an evidence tree by following condition factIDs. */
-  async fullEvidence(
-    factId: string,
-    sessionId: string,
-    evidenceKey?: string,
-    depth = 0
-  ): Promise<EvidenceNode & { children: EvidenceNode[] }> {
-    const node = (await this.evidence(factId, sessionId, evidenceKey)) as EvidenceNode & {
-      children: (EvidenceNode & { children: EvidenceNode[] })[];
-    };
-    node.children = [];
-    if (depth < 10 && node.rule?.conditions) {
-      for (const condition of node.rule.conditions) {
-        if (condition.factID) {
-          node.children.push(await this.fullEvidence(condition.factID, sessionId, evidenceKey, depth + 1));
-        }
-      }
-    }
-    return node;
+  /**
+   * The whole evidence tree for a fact: each relationship condition carries the
+   * fact that satisfied it (`evidence`), list-function facts carry theirs, and
+   * the root carries `meta` ({nodes, truncated, errors}). Child GETs run in
+   * parallel under a node budget; a failed child becomes `fetchError` on its
+   * condition, while a failed root GET rejects with the original ApiError so
+   * callers can branch on `status` (401/403 = evidence locked). An unmet
+   * optional condition ("WA:XX", never stored) gets a local synthesis node
+   * instead of a GET. See expandEvidence in evidenceModel.ts.
+   */
+  async fullEvidence(factId: string, sessionId: string, evidenceKey?: string, opts?: ExpandOptions): Promise<ExpandedEvidence> {
+    return expandEvidence((id) => this.evidence(id, sessionId, evidenceKey), factId, opts);
   }
 }
 
