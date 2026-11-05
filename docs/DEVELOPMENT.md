@@ -50,7 +50,7 @@ See [PROPOSAL.md](PROPOSAL.md) for the intended architecture.
 1. Bump `version` in `package.json` and add a dated `## <version> — <date>` entry to `CHANGELOG.md`.
 2. Commit, then tag `v<version>` and push the branch and the tag: `git push origin main v<version>`.
 3. The GitLab pipeline in `.gitlab-ci.yml` runs the tests, checks the tag matches the manifest version and that the changelog has a section for it, packages the VSIX with `vsce`, uploads it to the project's package registry, and creates a GitLab Release whose notes are that changelog section.
-4. To publish to the VS Code Marketplace, run the manual **publish-marketplace** job on the tag pipeline. It needs a masked CI/CD variable `VSCE_PAT` holding a Marketplace personal access token for the `RainbirdTechnologies` publisher.
+4. To publish to the VS Code Marketplace, run the manual **publish-marketplace** job on the tag pipeline. It uses no Marketplace token: it signs in to Microsoft Entra ID with GitLab's OIDC token (workload identity federation). That needs CI/CD variables `AZURE_CLIENT_ID` and `AZURE_TENANT_ID` for an Entra app registration whose federated credential trusts this project's `v*` tags, and the app must be a Contributor on the `RainbirdTechnologies` publisher; the manual **marketplace-identity** job prints the ID to add as a publisher member (run it once). To publish to Open VSX, run the manual **publish-openvsx** job, which needs a masked CI/CD variable `OVSX_PAT` with publish rights on the `RainbirdTechnologies` namespace.
 
 To check what will ship before tagging:
 
