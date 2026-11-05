@@ -273,8 +273,8 @@ export function refusedNote(
   const rels = [...new Set(skipped.map((q) => q.relationship))];
   const advice =
     rels.length === 1
-      ? `If "${rels[0]}" should only ever be fed by injected facts, set askable="none" on it in the map`
-      : `If ${listOf(rels, '"', '"')} should only ever be fed by injected facts, set askable="none" on them in the map`;
+      ? `If "${rels[0]}" should only ever be fed by injected facts, set askable="none" on it in the model`
+      : `If ${listOf(rels, '"', '"')} should only ever be fed by injected facts, set askable="none" on them in the model`;
   return (
     intro +
     `The engine would not let ${automatic ? "them" : "these questions"} be skipped${detail ? ` (${detail})` : ""}. ${action} ` +
@@ -306,7 +306,7 @@ export function autoSkipItems(group: Question[], plan: readonly AutoSkipDecision
 export function injectOnlyPrompt(relationship: string, file: string): string {
   return (
     `Set askable="none" on “${relationship}” in ${file}? Do this only if every session injects these facts; otherwise rules that need them get no result. ` +
-    "Push creates a new map (new kmID), or paste the change into Studio and re-publish."
+    "Push creates a new model (new kmID), or paste the change into Studio and re-publish."
   );
 }
 
@@ -612,7 +612,7 @@ export class QuestionFlow {
     if (!relationship) return;
     const map = this.mapDeclaring(relationship);
     if (!map) {
-      this.host.notify("warning", `Open the RBLang file that declares “${relationship}” beside the query panel, then try again.`);
+      this.host.notify("warning", `Open the Raelog file that declares “${relationship}” beside the query panel, then try again.`);
       return;
     }
     if (!(await this.host.confirm(injectOnlyPrompt(relationship, map.name), INJECT_ONLY_ACTION))) return;

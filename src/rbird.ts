@@ -38,7 +38,7 @@ export async function readRblang(uri: vscode.Uri): Promise<string> {
   const raw = Buffer.from(await vscode.workspace.fs.readFile(uri));
   if (/\.rbird$/i.test(uri.path) || (raw[0] === 0x1f && raw[1] === 0x8b)) {
     const rblang = decodeRbird(raw);
-    if (!rblang) throw new Error(`${uri.path.split("/").pop()} contains no RBLang source.`);
+    if (!rblang) throw new Error(`${uri.path.split("/").pop()} contains no Raelog source.`);
     return rblang;
   }
   return raw.toString("utf8");
@@ -58,7 +58,7 @@ export async function extractRbird(uri?: vscode.Uri): Promise<void> {
   try {
     const rblang = decodeRbird(Buffer.from(await vscode.workspace.fs.readFile(target)));
     if (!rblang) {
-      vscode.window.showErrorMessage("No RBLang source found in this .rbird file.");
+      vscode.window.showErrorMessage("No Raelog source found in this .rbird file.");
       return;
     }
 
@@ -69,7 +69,7 @@ export async function extractRbird(uri?: vscode.Uri): Promise<void> {
     // An export carries no Knowledge Map ID (studioData holds layout, errors and
     // version only), so offer to bind the file the way Open Map by ID does.
     const bind = await vscode.window.showInformationMessage(
-      `Extracted RBLang to ${vscode.workspace.asRelativePath(output)}. Bind it to its Knowledge Map ID so Run Query and the diffs know which map it is?`,
+      `Extracted Raelog to ${vscode.workspace.asRelativePath(output)}. Bind it to its Knowledge Map ID so Run Query and the diffs know which model it is?`,
       "Bind to kmID…",
       "Later"
     );

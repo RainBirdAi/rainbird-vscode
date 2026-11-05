@@ -64,7 +64,7 @@ export async function openOrCopyEvidenceLink(
   if (args.usedEvidenceKey && !warnedAboutKey.has(args.sessionId)) {
     warnedAboutKey.add(args.sessionId);
     void vscode.window.showWarningMessage(
-      "An evidence key is set, and a Studio link cannot carry it. If this map needs the key, the link only opens once Evidence Tree Link is enabled for the map in Studio (Publish → API Management → Access Control)."
+      "An evidence key is set, and a Studio link cannot carry it. If this model needs the key, the link only opens once Evidence Tree Link is enabled for the model in Studio (Publish → API Management → Access Control)."
     );
   }
   return true;

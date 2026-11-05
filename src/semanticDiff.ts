@@ -45,7 +45,7 @@ export async function showReport(markdown: string): Promise<void> {
 export async function semanticDiff(): Promise<void> {
   const editor = vscode.window.activeTextEditor;
   if (!editor || editor.document.languageId !== "rblang") {
-    vscode.window.showInformationMessage("Open the RBLang (.rbl) file you want to diff first.");
+    vscode.window.showInformationMessage("Open the Raelog (.rbl) file you want to diff first.");
     return;
   }
   const doc = editor.document;
@@ -78,7 +78,7 @@ async function baseContent(doc: vscode.TextDocument): Promise<DiffSide | undefin
   if (fromGit) return fromGit;
   const picked = await vscode.window.showOpenDialog({
     title: "No git history for this file — pick the base version to compare against (.rbl or a Studio .rbird export)",
-    filters: { "RBLang or Studio export": ["rbl", "rblang", "xml", "rbird"] },
+    filters: { "Raelog or Studio export": ["rbl", "rblang", "xml", "rbird"] },
     canSelectMany: false,
   });
   if (!picked?.[0]) return undefined;

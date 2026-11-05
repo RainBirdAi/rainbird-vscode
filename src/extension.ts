@@ -123,7 +123,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand("rainbird.setAnthropicKey", () => setAnthropicKey(context)),
     vscode.commands.registerCommand("rainbird.assistantNewChat", () => assistant.newChat()),
     vscode.commands.registerCommand("rainbird.explainSelection", () =>
-      assistant.ask("Explain the selected RBLang: what it means for the map's reasoning, which rules fire when, what the engine will ask, and how certainty flows.")
+      assistant.ask("Explain the selected Raelog: what it means for the model's reasoning, which rules fire when, what the engine will ask, and how certainty flows.")
     ),
     vscode.commands.registerCommand("rainbird.mapsRefresh", () => platformMaps.refresh()),
     vscode.commands.registerCommand("rainbird.mapsAdd", () => platformMaps.addManual()),

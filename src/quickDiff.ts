@@ -52,25 +52,25 @@ export function registerQuickDiff(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand("rainbird.diffAgainstPushed", async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor || editor.document.languageId !== "rblang") {
-        vscode.window.showInformationMessage("Open the RBLang (.rbl) file you want to compare first.");
+        vscode.window.showInformationMessage("Open the Raelog (.rbl) file you want to compare first.");
         return;
       }
       const uri = editor.document.uri;
       const kmId = fileKmId(context, uri);
       if (!kmId) {
         const action = await vscode.window.showInformationMessage(
-          "This file is not bound to a platform map, so there is no snapshot to compare it with. Snapshots are recorded when you open a map by its Knowledge Map ID (or pull its draft into a file) and when you push. If this file is a copy of a map, bind it and compare with the platform draft; pushing creates a new map.",
+          "This file is not bound to a platform model, so there is no snapshot to compare it with. Snapshots are recorded when you open a model by its Knowledge Map ID (or pull its draft into a file) and when you push. If this file is a copy of a model, bind it and compare with the platform draft; pushing creates a new model.",
           "Bind to a Knowledge Map ID…",
-          "Push as a new map"
+          "Push as a new model"
         );
         if (action === "Bind to a Knowledge Map ID…") await vscode.commands.executeCommand("rainbird.bindKmId", uri);
-        else if (action === "Push as a new map") await vscode.commands.executeCommand("rainbird.pushMap");
+        else if (action === "Push as a new model") await vscode.commands.executeCommand("rainbird.pushMap");
         return;
       }
       const version = fileKmVersion(context, uri);
       if (version !== undefined) {
         const action = await vscode.window.showInformationMessage(
-          `This file is a copy of version ${version} of ${kmId}. The map's snapshot records its draft as last pulled into a file, or what was pushed, so it is not where this file started. Compare with the current platform draft instead?`,
+          `This file is a copy of version ${version} of ${kmId}. The model's snapshot records its draft as last pulled into a file, or what was pushed, so it is not where this file started. Compare with the current platform draft instead?`,
           "Diff Against Platform Draft"
         );
         if (action) await vscode.commands.executeCommand("rainbird.diffAgainstDraft");
@@ -85,7 +85,7 @@ export function registerQuickDiff(context: vscode.ExtensionContext): void {
         if (action) await vscode.commands.executeCommand("rainbird.diffAgainstDraft");
         return;
       }
-      const name = uri.path.split("/").pop() ?? "map.rbl";
+      const name = uri.path.split("/").pop() ?? "model.rbl";
       await vscode.commands.executeCommand(
         "vscode.diff",
         snapshot,

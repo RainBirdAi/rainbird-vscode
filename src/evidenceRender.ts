@@ -61,7 +61,7 @@ export const SOURCE_STYLE: Record<BadgeKind, BadgeStyle> = {
   injection: { bg: "#8ce99a", fg: "#1b1b1b", label: SOURCE_LABELS.injection, description: "Injected into the session" },
   answer: { bg: "#c92a2a", fg: "#ffffff", label: SOURCE_LABELS.answer, description: "Answered in this session" },
   datasource: { bg: "#237032", fg: "#ffffff", label: SOURCE_LABELS.datasource, description: "Fetched from a datasource" },
-  knowledgemap: { bg: "#f76707", fg: "#1b1b1b", label: SOURCE_LABELS.knowledgemap, description: "Stored in the knowledge map" },
+  knowledgemap: { bg: "#f76707", fg: "#1b1b1b", label: SOURCE_LABELS.knowledgemap, description: "Stored in the model" },
   synthesis: {
     bg: "#adb5bd",
     fg: "#1b1b1b",
@@ -77,7 +77,7 @@ const COUNT_LABELS: Record<SourceKind, string> = {
   answer: "answered",
   injection: "injected",
   datasource: "from datasources",
-  knowledgemap: "from the knowledge map",
+  knowledgemap: "from the model",
   unknown: "not loaded",
   rule: "inferred",
   synthesis: "not met",
@@ -679,12 +679,12 @@ function toolbarHtml(factId: string, toolbar: RenderOptions["toolbar"]): string 
   ];
   if (toolbar?.studio) {
     buttons.push(
-      `<button type="button" data-evt-act="openStudio" data-fact="${fact}" title="Open this evidence tree in Rainbird Studio. Works while the session is live and the map's Evidence Tree Link is enabled (Publish → API Management → Access Control).">Open in Studio</button>`
+      `<button type="button" data-evt-act="openStudio" data-fact="${fact}" title="Open this evidence tree in Rainbird Studio. Works while the session is live and the model's Evidence Tree Link is enabled (Publish → API Management → Access Control).">Open in Studio</button>`
     );
   }
   if (toolbar?.copyLink) {
     buttons.push(
-      `<button type="button" data-evt-act="copyLink" data-fact="${fact}" title="Copy a Studio link to this evidence tree to share. Needs the map's Evidence Tree Link enabled; sessions expire, so share it soon.">Copy link</button>`
+      `<button type="button" data-evt-act="copyLink" data-fact="${fact}" title="Copy a Studio link to this evidence tree to share. Needs the model's Evidence Tree Link enabled; sessions expire, so share it soon.">Copy link</button>`
     );
   }
   if (toolbar?.openPanel) {
@@ -770,7 +770,7 @@ function textSource(source: unknown): string {
     case "datasource":
       return "from a datasource";
     case "knowledgemap":
-      return "built into the map";
+      return "built into the model";
     case "synthesis":
       return "synthesised 0% placeholder: optional condition not met";
     default:

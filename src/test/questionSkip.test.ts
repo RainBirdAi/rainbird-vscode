@@ -346,7 +346,7 @@ describe("copy and summaries", () => {
   test("skipRejectedNote is the plan's copy", () => {
     assert.equal(
       skipRejectedNote("Please provide an expected boolean value for unanswered.", { relationship: "speaks" }),
-      'The engine would not let this question be skipped (Please provide an expected boolean value for unanswered.). Pick an answer below. If "speaks" should only ever be fed by injected facts, set askable="none" on it in the map — only if every session injects those facts; otherwise rules that need them get no result.'
+      'The engine would not let this question be skipped (Please provide an expected boolean value for unanswered.). Pick an answer below. If "speaks" should only ever be fed by injected facts, set askable="none" on it in the model — only if every session injects those facts; otherwise rules that need them get no result.'
     );
     assert.match(skipRejectedNote("x", { relationship: "speaks" }, "Pick an answer instead."), /\(x\)\. Pick an answer instead\. If "speaks"/);
   });
@@ -354,7 +354,7 @@ describe("copy and summaries", () => {
   test("replay messages", () => {
     assert.equal(
       pendingQuestionMessage(LIVE_QUESTION),
-      'The engine asked an unrecorded question: "Where does Tom live?" (Tom lives in ?) — the map\'s question flow changed. If that is intended, re-record the test from the query panel.'
+      'The engine asked an unrecorded question: "Where does Tom live?" (Tom lives in ?) — the model\'s question flow changed. If that is intended, re-record the test from the query panel.'
     );
     const batch: Answer[] = [{ relationship: "speaks", subject: "Fred", unanswered: true }];
     assert.match(replaySkipRefused(batch, "Please provide an expected boolean value for unanswered."), /^The engine refused to skip "speaks" \(Please provide .*\): this test answers it with unanswered: true/);

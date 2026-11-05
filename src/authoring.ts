@@ -60,7 +60,7 @@ async function targetEditor(uri?: vscode.Uri): Promise<vscode.TextEditor | undef
   if (active?.document.languageId === "rblang") return active;
   const visible = vscode.window.visibleTextEditors.find((e) => e.document.languageId === "rblang");
   if (visible) return visible;
-  vscode.window.showInformationMessage("Open the RBLang (.rbl) file you want to edit first.");
+  vscode.window.showInformationMessage("Open the Raelog (.rbl) file you want to edit first.");
   return undefined;
 }
 
@@ -140,7 +140,7 @@ const CONCEPT_TYPES: Item<string>[] = [
 export async function addConcept(uri?: vscode.Uri): Promise<string | undefined> {
   const editor = await targetEditor(uri);
   if (!editor) return undefined;
-  const name = await inputName("Concept name — a type of thing the map reasons about", "e.g. Person, Country, Age", indexOf(editor).concepts.keys(), "concept");
+  const name = await inputName("Concept name — a type of thing the model reasons about", "e.g. Person, Country, Age", indexOf(editor).concepts.keys(), "concept");
   if (!name) return undefined;
   const type = await pick(CONCEPT_TYPES, `Concept "${name}" — what kind of values does it hold?`);
   if (!type) return undefined;
@@ -171,7 +171,7 @@ async function pickConcept(
     .map(([name, c]) => ({ label: name, description: c.type, value: name }));
   if (options.allowNew) items.push({ label: `${NEW}New concept…`, description: "declare it first, then come back here", value: NEW });
   if (!items.length) {
-    vscode.window.showInformationMessage(options.stringOnly ? "The map has no string concepts yet — add a concept first." : "The map has no concepts yet — add a concept first.");
+    vscode.window.showInformationMessage(options.stringOnly ? "The model has no string concepts yet — add a concept first." : "The model has no concepts yet — add a concept first.");
     return undefined;
   }
   const picked = await pick(items, title, options.stringOnly ? "String concepts only — they are the only ones that can have instances or be subjects" : undefined);
@@ -222,7 +222,7 @@ async function pickRelationship(editor: vscode.TextEditor, title: string, allowN
   }));
   if (allowNew) items.push({ label: `${NEW}New relationship…`, value: NEW });
   if (!items.length) {
-    vscode.window.showInformationMessage("The map has no relationships yet — add a relationship first.");
+    vscode.window.showInformationMessage("The model has no relationships yet — add a relationship first.");
     return undefined;
   }
   const picked = await pick(items, title);
@@ -538,7 +538,7 @@ export async function insertMenu(): Promise<void> {
     { label: "$(law) Rule", description: "infers a relationship when conditions hold: IF … THEN Person speaks Language", value: () => addRule(editor.document.uri) },
   ];
   if (inRule) items.unshift({ label: "$(list-tree) Condition", description: "add to the rule at the cursor", value: () => addCondition(editor.document.uri) });
-  const flow = await pick(items, "Insert into the knowledge map", "Each choice asks a few questions, then inserts the RBLang in the right place");
+  const flow = await pick(items, "Insert into the model", "Each choice asks a few questions, then inserts the Raelog in the right place");
   if (flow) await flow();
 }
 

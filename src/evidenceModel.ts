@@ -481,12 +481,12 @@ export const SOURCE_LABELS: Record<SourceKind, string> = {
   answer: "answer",
   injection: "injected",
   datasource: "datasource",
-  knowledgemap: "knowledge map",
+  knowledgemap: "model",
   synthesis: "not met",
   unknown: "fact",
 };
 
-/** Short label for a source as the API sent it ("km" → "knowledge map"); an unrecognised string is shown as sent. */
+/** Short label for a source as the API sent it ("km" → "model"); an unrecognised string is shown as sent. */
 export function sourceLabel(source: unknown): string {
   const kind = normaliseSource(source);
   if (kind !== "unknown") return SOURCE_LABELS[kind];

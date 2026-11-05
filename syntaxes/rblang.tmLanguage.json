@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-  "name": "RBLang",
+  "name": "Raelog",
   "scopeName": "text.xml.rblang",
   "patterns": [
     { "include": "#prolog" },

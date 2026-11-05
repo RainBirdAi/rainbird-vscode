@@ -17,7 +17,7 @@ export type EvidenceKeySource = string | (() => Promise<string | undefined>);
 
 const SET_KEY = "Set evidence key…";
 const LOCKED =
-  "Evidence is locked for this map. Enable Evidence Tree Link in Studio (Publish → API Management → Access Control), or enter the map's evidence key.";
+  "Evidence is locked for this model. Enable Evidence Tree Link in Studio (Publish → API Management → Access Control), or enter the model's evidence key.";
 
 /**
  * Fetch (unless `prefetched` is given) and show the evidence tree for a fact.

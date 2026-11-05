@@ -199,7 +199,7 @@ export async function promptKmId(
   context: vscode.ExtensionContext,
   opts: PromptKmIdOptions = {}
 ): Promise<string | undefined> {
-  const title = opts.title ?? "Which map?";
+  const title = opts.title ?? "Which model?";
   // Started now, awaited only where needed, so the prompt does not wait for the secret store.
   const keys = storedKeys(context);
   const known = opts.includeKnown === false ? [] : knownMaps(context);
@@ -215,15 +215,15 @@ export async function promptKmId(
       kmId: clipboard,
     });
   }
-  rows.push({ label: "$(edit) Enter a Knowledge Map ID…", description: "from the map's Publish page in Studio", alwaysShow: true, enter: true });
+  rows.push({ label: "$(edit) Enter a Knowledge Map ID…", description: "from the model's Publish page in Studio", alwaysShow: true, enter: true });
   if (known.length) {
-    rows.push({ label: "Maps", kind: vscode.QuickPickItemKind.Separator });
+    rows.push({ label: "Models", kind: vscode.QuickPickItemKind.Separator });
     rows.push(...known.map((map) => knownMapRow(map, opts.current)));
   }
 
   const picker = vscode.window.createQuickPick<KmIdRow>();
   picker.title = title;
-  picker.placeholder = "Paste a Knowledge Map ID or a Studio link, or pick a map you have used";
+  picker.placeholder = "Paste a Knowledge Map ID or a Studio link, or pick a model you have used";
   picker.matchOnDescription = true;
   // The ID is usually copied from Studio in a browser; leaving VS Code must not close the picker.
   picker.ignoreFocusOut = true;
@@ -294,7 +294,7 @@ async function inputKmId(title: string, value: string | undefined, keys: Promise
     title,
     prompt: "Knowledge Map ID (kmID)",
     placeHolder:
-      "e.g. 504436fb-7fbb-44ea-b36c-bfd977aea8c8 — from the map's Publish page in Studio (or View Knowledge Map ID in the map menu)",
+      "e.g. 504436fb-7fbb-44ea-b36c-bfd977aea8c8 — from the model's Publish page in Studio (or View Knowledge Map ID in the model's menu)",
     value,
     ignoreFocusOut: true,
     // Warnings and infos only: Enter always accepts what was typed.
@@ -311,13 +311,13 @@ async function inputKmId(title: string, value: string | undefined, keys: Promise
       // The Publish page shows the API key next to the kmID, and both are GUIDs.
       if ((await keys).some((key) => sameKmId(key, id))) {
         return {
-          message: "That is the API key (or evidence key) stored for this environment, not a Knowledge Map ID. Copy the Knowledge Map ID from the map's Publish page in Studio.",
+          message: "That is the API key (or evidence key) stored for this environment, not a Knowledge Map ID. Copy the Knowledge Map ID from the model's Publish page in Studio.",
           severity: vscode.InputBoxValidationSeverity.Warning,
         };
       }
       if (!extractKmId(trimmed, { allowOther: false })) {
         return {
-          message: `${id} is marked as a session ID or a key in the pasted text, not a Knowledge Map ID. The Knowledge Map ID is on the map's Publish page in Studio.`,
+          message: `${id} is marked as a session ID or a key in the pasted text, not a Knowledge Map ID. The Knowledge Map ID is on the model's Publish page in Studio.`,
           severity: vscode.InputBoxValidationSeverity.Warning,
         };
       }
@@ -398,7 +398,7 @@ export async function resolveKmIdFor(
   const configured = vscode.workspace.getConfiguration("rainbird", opts.uri).get<string>("knowledgeMapId")?.trim();
   if (configured) return extractKmId(configured) ?? configured;
   if (opts.prompt === false) return undefined;
-  const typed = await promptKmId(context, { title: opts.title ?? "Which map?" });
+  const typed = await promptKmId(context, { title: opts.title ?? "Which model?" });
   if (typed) await rememberKmId(opts.uri, typed);
   return typed;
 }
@@ -412,13 +412,13 @@ export function resolveKmId(context: vscode.ExtensionContext): Promise<string | 
 export async function bindKmId(context: vscode.ExtensionContext, uri?: vscode.Uri): Promise<void> {
   const target = uri ?? activeRblangUri();
   if (!target) {
-    vscode.window.showInformationMessage("Open (or click into) the RBLang (.rbl) file you want to bind to a Knowledge Map ID first.");
+    vscode.window.showInformationMessage("Open (or click into) the Raelog (.rbl) file you want to bind to a Knowledge Map ID first.");
     return;
   }
   const embedded = embeddedKmId(target);
   if (embedded) {
     vscode.window.showInformationMessage(
-      `This read-only document is map ${embedded} itself. Run “Rainbird: Open Map by Knowledge Map ID…” to get an editable file bound to it.`
+      `This read-only document is model ${embedded} itself. Run “Rainbird: Open Model by Knowledge Map ID…” to get an editable file bound to it.`
     );
     return;
   }
@@ -437,7 +437,7 @@ export async function bindKmId(context: vscode.ExtensionContext, uri?: vscode.Ur
     fallbackName: name.replace(/\.(rbl|rblang)$/i, ""),
     ...(target.scheme === "file" ? { file: target.fsPath } : {}),
   });
-  vscode.window.setStatusBarMessage(`Bound ${name} to ${kmId}: Run Query, the diffs and the assistant now use this map for it.`, 6000);
+  vscode.window.setStatusBarMessage(`Bound ${name} to ${kmId}: Run Query, the diffs and the assistant now use this model for it.`, 6000);
 }
 
 // ── Reading maps from the platform ──
@@ -488,7 +488,7 @@ async function reportMapError(
   const env = apiUrl();
   if (error instanceof ApiError) {
     if (error.status === 404 && ref.kind === "version" && /version/i.test(error.body)) {
-      vscode.window.showErrorMessage(`Map ${kmId} has no version ${ref.version}. Its saved versions are listed on the map's Versions page in Studio.`);
+      vscode.window.showErrorMessage(`Model ${kmId} has no version ${ref.version}. Its saved versions are listed on the model's Versions page in Studio.`);
       return;
     }
     if (error.status === 404) {
@@ -530,7 +530,7 @@ export interface SaveRblangOptions {
 
 /**
  * Save platform RBLang as an editable .rbl (Save As dialog, default
- * map-<kmid8>-draft.rbl or -v<N>.rbl in the workspace folder), bind the new
+ * model-<kmid8>-draft.rbl or -v<N>.rbl in the workspace folder), bind the new
  * file to the map and record it in Maps as "pulled". A draft is also written
  * as the map's snapshot, so gutter bars and "Diff Against Last Pulled or
  * Pushed Snapshot" show what changed since the pull. A version is not, because
@@ -545,8 +545,8 @@ export async function saveRblangAs(context: vscode.ExtensionContext, opts: SaveR
       opts.ref === "draft"
         ? `Save the draft of ${opts.kmId} as an editable .rbl`
         : `Save version ${opts.ref} of ${opts.kmId} as an editable .rbl`,
-    saveLabel: "Save map",
-    filters: { RBLang: ["rbl"] },
+    saveLabel: "Save model",
+    filters: { Raelog: ["rbl"] },
     defaultUri: vscode.Uri.joinPath(defaultSaveFolder(), defaultFileName(opts.kmId, opts.ref)),
   });
   if (!target) return undefined;
@@ -572,7 +572,7 @@ export async function openMapByKmId(context: vscode.ExtensionContext, kmId?: str
   const client = await getClient(context);
   if (!client) return;
   const given = kmId?.trim();
-  const id = given ? extractKmId(given) ?? given : await promptKmId(context, { title: "Open Map by Knowledge Map ID" });
+  const id = given ? extractKmId(given) ?? given : await promptKmId(context, { title: "Open Model by Knowledge Map ID" });
   if (!id) return;
 
   let rblang: string;
@@ -582,7 +582,7 @@ export async function openMapByKmId(context: vscode.ExtensionContext, kmId?: str
       () => fetchPlatformText(client, id, { kind: "draft" })
     );
   } catch (error) {
-    await reportMapError(error, id, { kind: "draft" }, "Could not open the map", () => openMapByKmId(context, id));
+    await reportMapError(error, id, { kind: "draft" }, "Could not open the model", () => openMapByKmId(context, id));
     return;
   }
 
@@ -590,7 +590,7 @@ export async function openMapByKmId(context: vscode.ExtensionContext, kmId?: str
   try {
     target = await saveRblangAs(context, { kmId: id, rblang, ref: "draft" });
   } catch (error) {
-    vscode.window.showErrorMessage(`Could not save the map: ${(error as Error).message}`);
+    vscode.window.showErrorMessage(`Could not save the model: ${(error as Error).message}`);
     return;
   }
   if (!target) {
@@ -601,11 +601,11 @@ export async function openMapByKmId(context: vscode.ExtensionContext, kmId?: str
     try {
       await showPlatformDocument(draft, { preview: false });
     } catch (error) {
-      await reportMapError(error, id, { kind: "draft" }, "Could not open the map");
+      await reportMapError(error, id, { kind: "draft" }, "Could not open the model");
       return;
     }
     vscode.window.showInformationMessage(
-      `Opened the platform draft of ${id} read-only. Run “Rainbird: Open Map by Knowledge Map ID…” again and choose a location to get an editable copy.`
+      `Opened the platform draft of ${id} read-only. Run “Rainbird: Open Model by Knowledge Map ID…” again and choose a location to get an editable copy.`
     );
     return;
   }
@@ -613,7 +613,7 @@ export async function openMapByKmId(context: vscode.ExtensionContext, kmId?: str
   await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(target), { preview: false });
   void vscode.window
     .showInformationMessage(
-      `Opened ${fileName(target)} (draft of ${id}). The play button queries this map; Push creates a new map rather than updating it.`,
+      `Opened ${fileName(target)} (draft of ${id}). The play button queries this model; Push creates a new model rather than updating it.`,
       "Run query",
       "Copy kmID"
     )
@@ -662,7 +662,7 @@ export async function pickPlatformRef(
       () => client.latestVersion(kmId)
     );
     if (latest === undefined) {
-      vscode.window.showInformationMessage("This map has no saved versions yet — create one in Studio (Versions → Create version).");
+      vscode.window.showInformationMessage("This model has no saved versions yet — create one in Studio (Versions → Create version).");
       return undefined;
     }
     return { ref: { kind: "version", version: latest }, label: `version ${latest} (latest)` };
@@ -673,14 +673,14 @@ export async function pickPlatformRef(
     const info = await client.sessionInfo(sessionId);
     const km = (info.km ?? {}) as Record<string, unknown>;
     if (km.versionStatus === "Draft" || typeof km.versionNumber !== "number") {
-      vscode.window.showInformationMessage("This map has no live version — the engine is serving the draft. Set a version live in Studio first.");
+      vscode.window.showInformationMessage("This model has no live version — the engine is serving the draft. Set a version live in Studio first.");
       return undefined;
     }
     return { ref: { kind: "version", version: km.versionNumber }, label: `version ${km.versionNumber} (live)` };
   }
 
   const raw = await vscode.window.showInputBox({
-    prompt: "Version number (from the map's Versions page in Studio)",
+    prompt: "Version number (from the model's Versions page in Studio)",
     validateInput: (v) => (/^\d+$/.test(v.trim()) && Number(v) > 0 ? undefined : "Enter a positive whole number"),
   });
   if (!raw) return undefined;
@@ -740,12 +740,12 @@ async function reloadFromPlatform(context: vscode.ExtensionContext, uri?: vscode
         () => fetchPlatformText(client, platform.kmId, platform.ref)
       );
     } catch (error) {
-      await reportMapError(error, platform.kmId, platform.ref, "Could not reload the map");
+      await reportMapError(error, platform.kmId, platform.ref, "Could not reload the model");
     }
     return;
   }
   if (target.scheme === SNAPSHOT_SCHEME) {
-    vscode.window.showInformationMessage("This tab is the snapshot of what was last pulled or pushed. Reload the .rbl file bound to the map instead.");
+    vscode.window.showInformationMessage("This tab is the snapshot of what was last pulled or pushed. Reload the .rbl file bound to the model instead.");
     return;
   }
 
@@ -754,7 +754,7 @@ async function reloadFromPlatform(context: vscode.ExtensionContext, uri?: vscode
   const kmId = fileKmId(context, doc.uri);
   if (!kmId) {
     const action = await vscode.window.showInformationMessage(
-      `${name} is not bound to a Knowledge Map ID, so there is no Studio map to reload it from.`,
+      `${name} is not bound to a Knowledge Map ID, so there is no model in Studio to reload it from.`,
       "Bind to a Knowledge Map ID…"
     );
     if (action) await vscode.commands.executeCommand("rainbird.bindKmId", doc.uri);
@@ -763,7 +763,7 @@ async function reloadFromPlatform(context: vscode.ExtensionContext, uri?: vscode
   const version = fileKmVersion(context, doc.uri);
   if (version !== undefined) {
     vscode.window.showInformationMessage(
-      `${name} is a copy of saved version ${version} of ${kmId}, and saved versions never change. To get the latest Studio edits, open the draft with “Rainbird: Open Map by Knowledge Map ID…”.`
+      `${name} is a copy of saved version ${version} of ${kmId}, and saved versions never change. To get the latest Studio edits, open the draft with “Rainbird: Open Model by Knowledge Map ID…”.`
     );
     return;
   }
@@ -775,7 +775,7 @@ async function reloadFromPlatform(context: vscode.ExtensionContext, uri?: vscode
       () => fetchPlatformText(client, kmId, { kind: "draft" })
     );
   } catch (error) {
-    await reportMapError(error, kmId, { kind: "draft" }, "Could not reload the map", () => reloadFromPlatform(context, doc.uri));
+    await reportMapError(error, kmId, { kind: "draft" }, "Could not reload the model", () => reloadFromPlatform(context, doc.uri));
     return;
   }
 
@@ -833,7 +833,7 @@ async function pullMap(context: vscode.ExtensionContext): Promise<void> {
     kmId = await resolveKmId(context);
     if (!kmId) return;
     const id = kmId;
-    const pick = await pickPlatformRef(client, id, `Pull which state of map ${id}?`, "draft");
+    const pick = await pickPlatformRef(client, id, `Pull which state of model ${id}?`, "draft");
     if (!pick) return;
     const pulled = pick.ref;
     ref = pulled;
@@ -843,7 +843,7 @@ async function pullMap(context: vscode.ExtensionContext): Promise<void> {
     );
     await showPlatformDocument(platformUri(id, pulled), { preview: false });
     const action = await vscode.window.showInformationMessage(
-      `Read-only RBLang of the platform ${pick.label} for ${id}. Save a local copy to edit it.`,
+      `Read-only Raelog of the platform ${pick.label} for ${id}. Save a local copy to edit it.`,
       "Save as .rbl…"
     );
     if (action) {
@@ -854,14 +854,14 @@ async function pullMap(context: vscode.ExtensionContext): Promise<void> {
         vscode.window.setStatusBarMessage(
           pulled.kind === "draft"
             ? `Saved ${fileName(target)}, bound to ${id}.`
-            : `Saved ${fileName(target)}, bound to ${id}. No change bars for this copy of version ${pulled.version}: the map's snapshot records its draft.`,
+            : `Saved ${fileName(target)}, bound to ${id}. No change bars for this copy of version ${pulled.version}: the model's snapshot records its draft.`,
           8000
         );
       }
     }
   } catch (error) {
-    if (kmId) await reportMapError(error, kmId, ref, "Could not pull the map");
-    else vscode.window.showErrorMessage(`Could not pull the map: ${(error as Error).message}`);
+    if (kmId) await reportMapError(error, kmId, ref, "Could not pull the model");
+    else vscode.window.showErrorMessage(`Could not pull the model: ${(error as Error).message}`);
   }
 }
 
@@ -869,7 +869,7 @@ async function pullMap(context: vscode.ExtensionContext): Promise<void> {
 async function diffAgainstDraft(context: vscode.ExtensionContext): Promise<void> {
   const editor = vscode.window.activeTextEditor;
   if (!editor || editor.document.languageId !== "rblang") {
-    vscode.window.showInformationMessage("Open the RBLang (.rbl) file you want to compare first.");
+    vscode.window.showInformationMessage("Open the Raelog (.rbl) file you want to compare first.");
     return;
   }
   const client = await getClient(context);

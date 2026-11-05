@@ -137,7 +137,7 @@ function attrMatches(sel: Selector, tag: TagOccurrence, kind: ElementKind | "oth
 function candidatesHint(text: string, index: MapIndex, sel: Selector): string {
   const els = topLevelElements(index);
   const wanted = els.filter((e) => kindMatches(sel.kind, e.kind) && e.kind !== "other");
-  if (!wanted.length) return sel.kind && sel.kind !== "any" ? `The map has no ${kindNoun[sel.kind]}s.` : "The map has no elements.";
+  if (!wanted.length) return sel.kind && sel.kind !== "any" ? `The model has no ${kindNoun[sel.kind]}s.` : "The model has no elements.";
   const shown = wanted.slice(0, 12).map((e) => describeTag(text, index, e.tag, e.kind, e.end));
   return `Available: ${shown.join("; ")}${wanted.length > 12 ? `; … ${wanted.length - 12} more (use get_map_overview)` : ""}.`;
 }

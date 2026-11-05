@@ -71,7 +71,7 @@ export function buildOverview(text: string, extra: OverviewExtra): string {
   lines.push(`File ${extra.fileName} · ${plural(countLines(text), "line")} · ${summariseIssues(issues)} · ${km} · ${platform}`);
 
   const hasRoot = index.tags.some((t) => t.name === "rbl:kb" && !t.closing);
-  if (!hasRoot) lines.push("No <rbl:kb> root element — the document is empty or not RBLang.");
+  if (!hasRoot) lines.push("No <rbl:kb> root element — the document is empty or not Raelog.");
 
   const concepts = els.filter((e) => e.kind === "concept");
   lines.push(`\nConcepts (${concepts.length})`);
@@ -122,7 +122,7 @@ export function buildOverview(text: string, extra: OverviewExtra): string {
   const compounds = els.filter((e) => e.tag.name === "compound");
   const others = els.filter((e) => e.kind === "other" && e.tag.name !== "import" && e.tag.name !== "compound");
   const extras: string[] = [];
-  if (imports.length) extras.push(`Imports (${imports.length}): ${imports.map((i) => `${i.tag.attrs.km}@${i.tag.attrs.versionNumber}`).join(", ")} — names from linked maps show as unknown here`);
+  if (imports.length) extras.push(`Imports (${imports.length}): ${imports.map((i) => `${i.tag.attrs.km}@${i.tag.attrs.versionNumber}`).join(", ")} — names from linked models show as unknown here`);
   if (compounds.length) extras.push(`Compounds (${compounds.length}) — legacy, semantics undocumented`);
   if (others.length) extras.push(`Other top-level elements: ${others.map((o) => `<${o.tag.name}> L${lineAt(text, o.start)}`).join(", ")}`);
   if (extras.length) lines.push("", ...extras);
@@ -161,7 +161,7 @@ export function numberLines(lines: string[], first = 1): string {
 /** Diagnostics for the model: grouped by severity with fix titles. */
 export function formatDiagnostics(issues: LintIssue[], severity: "error" | "warning" | "all" = "all"): string {
   const wanted = severity === "all" ? issues : issues.filter((i) => i.severity === severity);
-  if (!issues.length) return "No diagnostics — the map passes the linter.";
+  if (!issues.length) return "No diagnostics — the model passes the linter.";
   if (!wanted.length) return `No ${severity}s. Overall: ${summariseIssues(issues)}.`;
   const order: LintIssue["severity"][] = ["error", "warning", "info"];
   const out = [`${summariseIssues(issues)}.`];

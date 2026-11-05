@@ -19,7 +19,7 @@ import { clearPlatformErrors, showPlatformErrors, showPlatformOutput } from "./p
 export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
   const editor = vscode.window.activeTextEditor;
   if (!editor || editor.document.languageId !== "rblang") {
-    vscode.window.showInformationMessage("Open the RBLang (.rbl) file you want to push first.");
+    vscode.window.showInformationMessage("Open the Raelog (.rbl) file you want to push first.");
     return;
   }
   const doc = editor.document;
@@ -28,7 +28,7 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
   const errors = collectIssues(rblang).filter((i) => i.severity === "error");
   if (errors.length > 0) {
     const proceed = await vscode.window.showWarningMessage(
-      `This map has ${errors.length} lint error${errors.length > 1 ? "s" : ""} — the platform will likely reject it. Push anyway?`,
+      `This model has ${errors.length} lint error${errors.length > 1 ? "s" : ""} — the platform will likely reject it. Push anyway?`,
       { modal: true },
       "Push anyway"
     );
@@ -38,10 +38,10 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
   const client = await getClient(context);
   if (!client) return;
 
-  const fileName = doc.uri.path.split("/").pop()?.replace(/\.(rbl|rblang)$/, "") ?? "map";
+  const fileName = doc.uri.path.split("/").pop()?.replace(/\.(rbl|rblang)$/, "") ?? "model";
   const stamp = new Date().toISOString().slice(0, 16).replace("T", " ").replace(":", "");
   const name = await vscode.window.showInputBox({
-    prompt: "Name for the new map on the platform (every push creates a new map)",
+    prompt: "Name for the new model on the platform (every push creates a new model)",
     value: `${fileName} ${stamp}`,
     ignoreFocusOut: true,
   });
@@ -63,7 +63,7 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
 
     if (!kmId) {
       const show = await vscode.window.showWarningMessage(
-        "The map was uploaded but the response had no recognisable kmID field.",
+        "The model was uploaded but the response had no recognisable kmID field.",
         "Show response"
       );
       if (show) {
@@ -99,7 +99,7 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
         ? ["Run query", "Copy kmID", "Use as workspace kmID"]
         : ["Run query", "Copy kmID"];
       action = await vscode.window.showInformationMessage(
-        `Pushed to Rainbird — new map "${name}" (kmID ${kmId}). Remember: pushes are create-only; delete old scratch maps in Studio.`,
+        `Pushed to Rainbird — new model "${name}" (kmID ${kmId}). Remember: pushes are create-only; delete old scratch models in Studio.`,
         ...actions
       );
     }
@@ -111,9 +111,9 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
       await vscode.env.clipboard.writeText(kmId);
     } else if (action === "Use as workspace kmID") {
       if (await rememberKmId(doc.uri, kmId)) {
-        vscode.window.setStatusBarMessage(`rainbird.knowledgeMapId is now ${kmId} for files with no map of their own.`, 5000);
+        vscode.window.setStatusBarMessage(`rainbird.knowledgeMapId is now ${kmId} for files with no model of their own.`, 5000);
       } else {
-        vscode.window.showWarningMessage("Could not save rainbird.knowledgeMapId; this file is still bound to the new map.");
+        vscode.window.showWarningMessage("Could not save rainbird.knowledgeMapId; this file is still bound to the new model.");
       }
     }
   } catch (error) {

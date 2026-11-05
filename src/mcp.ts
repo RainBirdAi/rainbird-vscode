@@ -16,18 +16,18 @@ const MCP_URL_PATTERN = /^https:\/\/[\w.-]+\/mcp\/graph\/[a-f0-9]+$/i;
 
 export async function addMcpServer(): Promise<void> {
   const url = await vscode.window.showInputBox({
-    prompt: "Served graph MCP endpoint URL (from the graph's 'Test over MCP' page)",
+    prompt: "MCP endpoint URL of the model (from the model's 'Test over MCP' page)",
     placeHolder: "https://rake.rainbird.ai/mcp/graph/…",
     password: true, // the URL grants access — do not echo it on screen
     ignoreFocusOut: true,
     validateInput: (value) =>
-      MCP_URL_PATTERN.test(value.trim()) ? undefined : "Expected an https://…/mcp/graph/<id> URL",
+      MCP_URL_PATTERN.test(value.trim()) ? undefined : "Expected the model's MCP endpoint URL, https://…/mcp/graph/<id>",
   });
   if (!url) return;
 
   const name = await vscode.window.showInputBox({
-    prompt: "Name for this graph (used as the MCP server id)",
-    value: "rainbird-graph",
+    prompt: "Name for this model (used as the MCP server id)",
+    value: "rainbird-model",
     validateInput: (v) => (/^[\w-]+$/.test(v) ? undefined : "Letters, digits, - and _ only"),
   });
   if (!name) return;
@@ -49,7 +49,7 @@ export async function addMcpServer(): Promise<void> {
   await vscode.workspace.fs.writeFile(mcpUri, Buffer.from(JSON.stringify(config, null, 2), "utf8"));
 
   const warning =
-    "The endpoint URL is self-authenticating: anyone with the URL can query the graph. " +
-    "Consider .gitignore-ing .vscode/mcp.json, and pause the served graph from your dashboard to revoke access.";
+    "The endpoint URL is self-authenticating: anyone with the URL can query the model. " +
+    "Consider .gitignore-ing .vscode/mcp.json, and to revoke access, pause or remove the model's MCP endpoint in Rae.";
   vscode.window.showInformationMessage(`MCP server "${name}" added to .vscode/mcp.json. ${warning}`);
 }

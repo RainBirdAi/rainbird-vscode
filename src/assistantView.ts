@@ -59,7 +59,7 @@ export class AssistantViewProvider implements vscode.WebviewViewProvider {
           break;
         case "copy":
           await vscode.env.clipboard.writeText(String(msg.code ?? ""));
-          vscode.window.setStatusBarMessage("RBLang copied to clipboard", 3000);
+          vscode.window.setStatusBarMessage("Raelog copied to clipboard", 3000);
           break;
         case "setKey":
           await setAnthropicKey(this.context);
@@ -135,7 +135,7 @@ export class AssistantViewProvider implements vscode.WebviewViewProvider {
 <div id="composer">
   <div id="chips"></div>
   <div id="inputrow">
-    <textarea id="input" rows="2" placeholder="Ask about this map, or describe the change you want…"></textarea>
+    <textarea id="input" rows="2" placeholder="Ask about this model, or describe the change you want…"></textarea>
     <button class="primary" id="send" title="Send (Enter)">Send</button>
   </div>
   <div id="status"><span id="statusText"></span><span id="usage"></span></div>

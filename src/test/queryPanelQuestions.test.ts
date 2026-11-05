@@ -951,7 +951,7 @@ describe("host side: notes and messages", () => {
   test("several refused skips: the plural copy, every question and relationship named", () => {
     const detail = "Please provide an expected boolean value for unanswered.";
     const reads = speaks({ relationship: "reads", prompt: "Which books does Fred read?" });
-    const advice = 'set askable="none" on them in the map — only if every session injects those facts; otherwise rules that need them get no result.';
+    const advice = 'set askable="none" on them in the model — only if every session injects those facts; otherwise rules that need them get no result.';
     assert.equal(
       refusedNote(detail, [speaks(), reads], [{ kind: "skip" }, { kind: "skip" }], true),
       "These questions were going to be answered “No more” automatically. The engine would not let them be skipped (" + detail + "). " +
@@ -965,7 +965,7 @@ describe("host side: notes and messages", () => {
     const tom = speaks({ subject: "Tom", prompt: "Which languages does Tom speak?" });
     assert.match(
       refusedNote(detail, [speaks(), tom], [{ kind: "skip" }, { kind: "skip" }]),
-      /^The engine would not let these questions be skipped \(.*\)\. Answer them below instead, then click Submit answers\. If "speaks" should only ever be fed by injected facts, set askable="none" on it in the map/,
+      /^The engine would not let these questions be skipped \(.*\)\. Answer them below instead, then click Submit answers\. If "speaks" should only ever be fed by injected facts, set askable="none" on it in the model/,
       "one relationship: named once, in the singular"
     );
     const dontKnow = numberQ({ allowUnknown: true, plural: true });
@@ -1011,7 +1011,7 @@ describe("host side: notes and messages", () => {
     assert.equal(autoSkipItems(group, known)[0].reason, "known");
     assert.equal(
       injectOnlyPrompt("speaks", "hello-world.rbl"),
-      "Set askable=\"none\" on “speaks” in hello-world.rbl? Do this only if every session injects these facts; otherwise rules that need them get no result. Push creates a new map (new kmID), or paste the change into Studio and re-publish."
+      "Set askable=\"none\" on “speaks” in hello-world.rbl? Do this only if every session injects these facts; otherwise rules that need them get no result. Push creates a new model (new kmID), or paste the change into Studio and re-publish."
     );
     assert.deepEqual(jsonLines({ a: [1] }), ["{", '  "a": [', "    1", "  ]", "}"]);
   });
@@ -1313,7 +1313,7 @@ describe("host: refusals, checks and logging (QuestionFlow)", () => {
   test("Make inject-only without a map that declares the relationship, or when the editor refuses the edit, says so", async () => {
     const r = rig();
     await r.flow.makeInjectOnly("speaks");
-    assert.deepEqual(r.notices, [{ kind: "warning", message: "Open the RBLang file that declares “speaks” beside the query panel, then try again." }]);
+    assert.deepEqual(r.notices, [{ kind: "warning", message: "Open the Raelog file that declares “speaks” beside the query panel, then try again." }]);
     r.maps.push({ name: "hello-world.rbl", text: HELLO, writes: [], refuse: true });
     await r.flow.makeInjectOnly("speaks");
     assert.deepEqual(r.notices[1], { kind: "error", message: "VS Code could not change hello-world.rbl." });

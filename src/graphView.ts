@@ -51,10 +51,10 @@ export class GraphView {
       return;
     }
     if (!editor) {
-      vscode.window.showInformationMessage("Open an RBLang (.rbl) file to visualise it as a graph.");
+      vscode.window.showInformationMessage("Open a Raelog (.rbl) file to visualise it in the Graph View.");
       return;
     }
-    const panel = vscode.window.createWebviewPanel("rainbirdGraph", "Rainbird Graph", vscode.ViewColumn.Beside, {
+    const panel = vscode.window.createWebviewPanel("rainbirdGraph", "Graph View", vscode.ViewColumn.Beside, {
       enableScripts: true,
       retainContextWhenHidden: true,
     });
@@ -108,7 +108,7 @@ export class GraphView {
 
   private track(doc: vscode.TextDocument): void {
     this.doc = doc;
-    this.panel.title = `Graph: ${doc.uri.path.split("/").pop()}`;
+    this.panel.title = `Graph View: ${doc.uri.path.split("/").pop()}`;
     this.update();
   }
 
@@ -231,7 +231,7 @@ export function render(): string {
   <span><i style="background:#8b8b8b;width:6px;height:6px"></i>instance</span>
 </div>
 <div id="hint">click = jump to source · drag nodes · wheel = zoom</div>
-<div id="emptymsg">No concepts yet — declare a &lt;concept&gt; to see the graph.</div>
+<div id="emptymsg">No concepts yet — declare a &lt;concept&gt; to see the model as a graph.</div>
 <button id="clearOverlay">✕ evidence overlay</button>
 <script nonce="${nonce}">
   const vscode = acquireVsCodeApi();

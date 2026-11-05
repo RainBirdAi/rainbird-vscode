@@ -7,7 +7,7 @@
       "\t$0",
       "</rbl:kb>"
     ],
-    "description": "New RBLang knowledge map document"
+    "description": "New Raelog model document"
   },
   "Concept": {
     "prefix": "concept",
@@ -131,10 +131,10 @@
     "body": ["<condition expression=\"isSubset(${1:%O}, '${2:rel one}', ${3:*}, ${4:%S}, '${5:rel two}', ${6:*})\" weight=\"${7:100}\" />$0"],
     "description": "Test whether one fact set is a subset of another"
   },
-  "Import linked knowledge map": {
+  "Import linked model": {
     "prefix": "import",
     "body": ["<import km=\"${1:knowledge-map-id}\" versionNumber=\"${2:1}\" />$0"],
-    "description": "Link another knowledge map (undocumented but Studio-supported)"
+    "description": "Link another model (undocumented but Studio-supported)"
   },
   "Compound": {
     "prefix": "compound",

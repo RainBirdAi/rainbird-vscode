@@ -185,13 +185,13 @@ test("“Use … as typed” appears only when nothing matches, and Start then s
   page.type(".goal", "spe");
   assert.ok(!page.$(".combo-free"), "not offered while a goal matches");
   page.type(".goal", "zzz");
-  assert.equal(page.text(".combo-empty"), "No relationship in the open map matches “zzz”.");
+  assert.equal(page.text(".combo-empty"), "No relationship in the open model matches “zzz”.");
   assert.equal(page.text(".combo-free"), "Use “zzz” as typed");
   assert.ok(activeRow(page)?.classList.contains("combo-free"));
   page.key(".goal", "Enter");
   assert.equal(goalInput(page).value, "zzz");
   assert.ok(!page.$(".combo-list"));
-  assert.equal(page.text(".goalMeta"), "“zzz” is not a relationship in the open map — Start query will send it exactly as typed.");
+  assert.equal(page.text(".goalMeta"), "“zzz” is not a relationship in the open model — Start query will send it exactly as typed.");
   page.click(".go");
   assert.equal(page.lastPosted("start")?.relationship, "zzz");
   await page.close();
@@ -279,7 +279,7 @@ test("Enter in the goal field starts the query when the list is closed and the g
 test("init.preselect fills the goal, says why, and leaves the subject next", async () => {
   const page = loadPanel({ preselect: "lives in", preselectFrom: "editor" });
   assert.equal(goalInput(page).value, "lives in");
-  assert.equal(page.text(".goalMeta"), "Person → Country · no rules or facts in the open map — from the editor");
+  assert.equal(page.text(".goalMeta"), "Person → Country · no rules or facts in the open model — from the editor");
   assert.ok(focused(page) === page.$(".subject"), "the subject is next");
   assert.ok(!page.$(".combo-list"), "a prefill does not open the list");
   page.key(".goal", "Enter");
@@ -287,7 +287,7 @@ test("init.preselect fills the goal, says why, and leaves the subject next", asy
   await page.close();
 
   const remembered = loadPanel({ preselect: "speaks", preselectFrom: "last" });
-  assert.equal(remembered.text(".goalMeta"), "Person → Language · plural · 1 rule · 0 facts — last goal for this map");
+  assert.equal(remembered.text(".goalMeta"), "Person → Language · plural · 1 rule · 0 facts — last goal for this model");
   await remembered.close();
 });
 
@@ -298,7 +298,7 @@ test("New query starts from the goal just run", async () => {
   page.send({ type: "busy" });
   page.click("#newQuery");
   assert.equal(goalInput(page).value, "speaks");
-  assert.match(page.text(".goalMeta"), /— last goal for this map$/);
+  assert.match(page.text(".goalMeta"), /— last goal for this model$/);
   await page.close();
 });
 
@@ -309,7 +309,7 @@ test("with no goal list the field stays a plain text input", async () => {
   assert.equal(input.getAttribute("aria-expanded"), null);
   assert.equal(input.getAttribute("placeholder"), "e.g. speaks");
   assert.equal(page.text("label[for=goalInput]"), "Goal relationship");
-  assert.equal(page.$$(".hint")[0] && page.text(page.$$(".hint")[0]), "Type the relationship name exactly as the map declares it — names are case-sensitive.");
+  assert.equal(page.$$(".hint")[0] && page.text(page.$$(".hint")[0]), "Type the relationship name exactly as the model declares it — names are case-sensitive.");
   page.type(".goal", "Speaks");
   page.click(".goal");
   page.key(".goal", "ArrowDown");
@@ -321,7 +321,7 @@ test("with no goal list the field stays a plain text input", async () => {
 
 test("the label says where the goals came from", async () => {
   const editor = loadPanel();
-  assert.match(editor.text("label[for=goalInput]"), /^Goal relationship \(from the open map\)$/);
+  assert.match(editor.text("label[for=goalInput]"), /^Goal relationship \(from the open model\)$/);
   await editor.close();
   const platform = loadPanel({ goalsFrom: "platform" });
   assert.match(platform.text("label[for=goalInput]"), /^Goal relationship \(from the platform draft\)$/);
@@ -340,11 +340,11 @@ test("rows show subject → object, plural, rule and fact counts, and tags", asy
   assert.deepEqual(sub("speaks"), ["Person → Language · plural", "1 rule · 0 facts"]);
   assert.deepEqual(sub("has total income"), ["Person → Amount", "2 rules · 0 facts"]);
   assert.deepEqual(sub("national language"), ["Country → Language", "0 rules · 2 facts"]);
-  assert.deepEqual(sub("lives in"), ["Person → Country", "no rules or facts in the open map"]);
+  assert.deepEqual(sub("lives in"), ["Person → Country", "no rules or facts in the open model"]);
   assert.equal(page.text(row("speaks")), "speaks Person → Language · plural 1 rule · 0 facts", "the option reads as one line");
   assert.equal(
     page.text(row("date of birth")),
-    "date of birth the engine cannot answer it without injected facts Person → Birth date no rules or facts in the open map"
+    "date of birth the engine cannot answer it without injected facts Person → Birth date no rules or facts in the open model"
   );
   assert.deepEqual(tags("lives in"), [], "askable with nothing in the map: a neutral note, no warning");
   assert.deepEqual(tags("date of birth"), ["the engine cannot answer it without injected facts"]);
@@ -435,17 +435,17 @@ test("the list closes when focus leaves the field, and the line under it points 
   assert.ok(page.$(".combo-list"));
   field(page, ".object").focus();
   assert.ok(!page.$(".combo-list"));
-  assert.equal(page.text(".goalMeta"), "“pen” is not a relationship in the open map — choose one of the 3 that match from the list.");
+  assert.equal(page.text(".goalMeta"), "“pen” is not a relationship in the open model — choose one of the 3 that match from the list.");
   goalInput(page).focus();
   page.type(".goal", "amount");
   field(page, ".object").focus();
-  assert.equal(page.text(".goalMeta"), "“amount” is not a relationship in the open map — choose the one that matches from the list.");
+  assert.equal(page.text(".goalMeta"), "“amount” is not a relationship in the open model — choose the one that matches from the list.");
   goalInput(page).focus();
   page.type(".goal", "hti");
   field(page, ".object").focus();
   assert.equal(
     page.text(".goalMeta"),
-    "“hti” is not a relationship in the open map — Start query will send it exactly as typed.",
+    "“hti” is not a relationship in the open model — Start query will send it exactly as typed.",
     "an acronym match does not count: the text is meant as typed"
   );
   await page.close();
@@ -495,7 +495,7 @@ test("Start query asks once before sending a name that only partly matches the m
   assert.equal(page.lastPosted("start"), undefined, "the first click sends nothing");
   assert.equal(
     page.text(".startErr"),
-    "“pen” is not one of the map’s relationships — pick one from the list, or click Start query again to send it as typed."
+    "“pen” is not one of the model’s relationships — pick one from the list, or click Start query again to send it as typed."
   );
   assert.ok(focused(page) === page.$(".goal"), "the goal field is next");
   clickStart(page);
@@ -576,7 +576,7 @@ test("New query tells the extension, so ▶ does not ask about a query nobody se
 
 test("the Change… link beside the map badge posts changeKm", async () => {
   const page = track(loadWebview(render("test-nonce")));
-  assert.equal(page.text("#changeKm"), "Choose map…", "before any map is known");
+  assert.equal(page.text("#changeKm"), "Choose model…", "before any map is known");
   page.send({ type: "init", goals: GOALS, goalsFrom: "editor", kmId: "km-1", apiUrl: "https://api.rainbird.ai", useDraft: true, fileName: "hello-world.rbl" });
   assert.equal(page.text("#changeKm"), "Change…");
   assert.equal(page.$("#changeKm")!.getAttribute("title"), "Bind hello-world.rbl to a different Knowledge Map ID");
@@ -584,7 +584,7 @@ test("the Change… link beside the map badge posts changeKm", async () => {
   page.click("#changeKm");
   assert.deepEqual(page.lastPosted("changeKm"), { type: "changeKm" });
   page.send({ type: "init", goals: GOALS, goalsFrom: "platform", kmId: "km-2", apiUrl: "https://api.rainbird.ai", useDraft: false });
-  assert.equal(page.$("#changeKm")!.getAttribute("title"), "Query a different map by its Knowledge Map ID");
+  assert.equal(page.$("#changeKm")!.getAttribute("title"), "Query a different model by its Knowledge Map ID");
   assert.match(page.text("#km"), /^live · km-2$/);
   await page.close();
 });
@@ -607,8 +607,8 @@ test("startError puts the card back to Start query", async () => {
   page.type(".goal", "speaks");
   page.click(".go");
   assert.equal(page.text(".go"), "Starting…");
-  page.send({ type: "startError", message: "No map chosen yet." });
-  assert.equal(page.text(".startErr"), "No map chosen yet.");
+  page.send({ type: "startError", message: "No model chosen yet." });
+  assert.equal(page.text(".startErr"), "No model chosen yet.");
   assert.equal(page.text(".go"), "Start query");
   await page.close();
 });
@@ -696,16 +696,16 @@ test("unknownGoalNote: push or bind only when the panel queries a file, else Cha
   const km = "2fd1be28-b38d-4fa3-8b9d-b0976821912c";
   assert.equal(
     unknownGoalNote({ kmId: km, relationship: "Speaks", goalsFrom: "editor", file: true, target: { kind: "draft" } }),
-    `The map (${km}) has no relationship named exactly "Speaks" — names are case-sensitive. ` +
-      "The goal list comes from your open .rbl file; check the map name in the header above. " +
-      "If it's a different map, push the open file first (cloud icon), or point the file at the right map: " +
-      "click “Change…” beside the map in the header, or run “Rainbird: Bind Open File to a Knowledge Map ID…”."
+    `The model (${km}) has no relationship named exactly "Speaks" — names are case-sensitive. ` +
+      "The goal list comes from your open .rbl file; check the model name in the header above. " +
+      "If it's a different model, push the open file first (cloud icon), or point the file at the right model: " +
+      "click “Change…” beside the model in the header, or run “Rainbird: Bind Open File to a Knowledge Map ID…”."
   );
   assert.equal(
     unknownGoalNote({ kmId: km, relationship: "speaks", goalsFrom: "platform", file: false, target: { kind: "draft" } }),
-    `The map (${km}) has no relationship named exactly "speaks" — names are case-sensitive. ` +
-      "Check the map name in the header above. " +
-      "If it's a different map, click “Change…” beside the map in the header to query another Knowledge Map ID.",
+    `The model (${km}) has no relationship named exactly "speaks" — names are case-sensitive. ` +
+      "Check the model name in the header above. " +
+      "If it's a different model, click “Change…” beside the model in the header to query another Knowledge Map ID.",
     "a map chosen by ID (or a read-only platform document): nothing to push or bind"
   );
   assert.match(
@@ -724,16 +724,16 @@ test("unknownGoalNote: push or bind only when the panel queries a file, else Cha
 });
 
 test("noMapNote: what the panel still queries, and which file “Choose map…” / “Change…” asks about", () => {
-  assert.equal(noMapNote({}), "No map chosen. Click “Choose map…” at the top, or open the map's .rbl file and press ▶ in its title bar.");
-  assert.equal(noMapNote({ file: "scratch.rbl", retry: true }), "No map chosen for scratch.rbl. Click “Choose map…” at the top to pick one.");
+  assert.equal(noMapNote({}), "No model chosen. Click “Choose model…” at the top, or open the model's .rbl file and press ▶ in its title bar.");
+  assert.equal(noMapNote({ file: "scratch.rbl", retry: true }), "No model chosen for scratch.rbl. Click “Choose model…” at the top to pick one.");
   assert.equal(
     noMapNote({ current: "km-1", file: "scratch.rbl", retry: true }),
-    "No map chosen for scratch.rbl, so the panel still queries km-1. Click “Change…” at the top to pick one for it."
+    "No model chosen for scratch.rbl, so the panel still queries km-1. Click “Change…” at the top to pick one for it."
   );
   assert.equal(
     noMapNote({ current: "km-1", file: "scratch.rbl", retry: false }),
-    "No map chosen, so the panel still queries km-1. Click “Change…” at the top to pick another.",
+    "No model chosen, so the panel still queries km-1. Click “Change…” at the top to pick another.",
     "Change… binds the panel's own file instead"
   );
-  assert.equal(noMapNote({ current: "km-1" }), "No map chosen, so the panel still queries km-1. Click “Change…” at the top to pick another.");
+  assert.equal(noMapNote({ current: "km-1" }), "No model chosen, so the panel still queries km-1. Click “Change…” at the top to pick another.");
 });

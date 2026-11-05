@@ -407,8 +407,8 @@ describe("evidence helpers", () => {
     assert.equal(normaliseSource("synthesis"), "synthesis");
     assert.equal(normaliseSource("something-new"), "unknown");
     assert.equal(normaliseSource(undefined), "unknown");
-    assert.equal(sourceLabel("km"), "knowledge map");
-    assert.equal(sourceLabel("knowledgemap"), "knowledge map");
+    assert.equal(sourceLabel("km"), "model");
+    assert.equal(sourceLabel("knowledgemap"), "model");
     assert.equal(sourceLabel("injection"), "injected");
     assert.equal(sourceLabel("synthesis"), "not met");
     assert.equal(sourceLabel("something-new"), "something-new");

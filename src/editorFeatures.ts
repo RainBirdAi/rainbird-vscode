@@ -262,7 +262,7 @@ export function registerInlayHints(context: vscode.ExtensionContext): void {
             const hint = new vscode.InlayHint(position, ` ⇢ ${chains.map((c) => c.leftToRight).join(" · ")}`);
             hint.paddingLeft = true;
             hint.tooltip = new vscode.MarkdownString(
-              "**How Rainbird evaluates this expression.** The engine applies operators strictly left to right, with no precedence. " +
+              "**How the engine evaluates this expression.** It applies operators strictly left to right, with no precedence. " +
                 chains.map((c) => `\`${c.text}\` → \`${c.leftToRight}\` (conventional maths would read it as \`${c.conventional}\`).`).join(" ") +
                 " Use the lightbulb on the warning to insert explicit parentheses."
             );

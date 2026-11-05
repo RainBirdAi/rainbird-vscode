@@ -47,7 +47,7 @@ describe("map overview", () => {
     const text = formatDiagnostics(issues);
     assert.match(text, /^1 error/);
     assert.match(text, /Errors:\n  L10: Unknown concept in object: "Languag" — fixes: Change to "Language"/);
-    assert.equal(formatDiagnostics([]), "No diagnostics — the map passes the linter.");
+    assert.equal(formatDiagnostics([]), "No diagnostics — the model passes the linter.");
     assert.match(formatDiagnostics(issues, "warning"), /No warnings\. Overall: 1 error/);
   });
 

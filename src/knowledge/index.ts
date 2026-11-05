@@ -22,8 +22,8 @@ export { EXPLAIN_SYSTEM_PROMPT } from "./engine";
 
 /** Section headings in order — the table of contents, also checked by the tests. */
 export const KNOWLEDGE_SECTIONS: string[] = [
-  "1. What Rainbird is",
-  "2. RBLang document structure",
+  "1. What Rainbird and Rae are",
+  "2. Raelog document structure",
   "3. Concepts",
   "4. Relationships",
   "5. Concept instances",
@@ -33,7 +33,7 @@ export const KNOWLEDGE_SECTIONS: string[] = [
   "9. Variables",
   "10. Expression language",
   "11. Datasources",
-  "12. Linked maps and compounds",
+  "12. Linked models and compounds",
   "13. The certainty model",
   "14. How the engine reasons",
   "15. Naming rules and engine limits",
@@ -86,9 +86,9 @@ let cached: string | undefined;
 export function buildKnowledgeReference(): string {
   if (cached) return cached;
   cached = [
-    "# Rainbird and RBLang reference",
+    "# Rainbird reference: Rae and Raelog",
     "",
-    "Everything below is the authoritative reference for this assistant. When the user's map contradicts it (for example uses an attribute not listed), trust the linter's diagnostics and say so.",
+    "Everything below is the authoritative reference for this assistant. When the user's model contradicts it (for example uses an attribute not listed), trust the linter's diagnostics and say so.",
     "",
     PLATFORM_SECTION,
     STRUCTURE_SECTION,

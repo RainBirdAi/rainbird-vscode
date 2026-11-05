@@ -95,7 +95,7 @@ export class AssistantSession {
     this.applierInstance = createApplier(this.applyMode, doc);
     if (this.currentTurnId) {
       this.applierInstance.beginTurn(this.currentTurnId);
-      this.pendingCreated.push(`created ${this.fileName() ?? "a new map"}`);
+      this.pendingCreated.push(`created ${this.fileName() ?? "a new model"}`);
     }
   }
 
@@ -122,7 +122,7 @@ export class AssistantSession {
   kmInfo(): { kmId?: string; source?: string } {
     const doc = this.target();
     const pushed = doc ? this.context.workspaceState.get<string>(`rainbird.pushedKm.${doc.uri.toString()}`) : undefined;
-    if (pushed) return { kmId: pushed, source: "this file's map (opened, pulled, pushed or bound by Knowledge Map ID)" };
+    if (pushed) return { kmId: pushed, source: "this file's model (opened, pulled, pushed or bound by Knowledge Map ID)" };
     const setting = vscode.workspace.getConfiguration("rainbird", doc?.uri).get<string>("knowledgeMapId");
     if (setting) return { kmId: setting, source: "workspace setting" };
     return {};
@@ -254,7 +254,7 @@ export class AssistantSession {
       summary,
       canUndo: outcome.changed,
       canShowDiff: outcome.changed && !outcome.pendingProposal,
-      fileName: this.fileName() ?? "map",
+      fileName: this.fileName() ?? "model",
     };
   }
 

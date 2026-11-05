@@ -112,7 +112,7 @@ export function recordKnownMap(
     .then(() => vscode.workspace.fs.writeFile(snapshotUri(context, rest.kmId), Buffer.from(rblang, "utf8")))
     .then(
       () => snapshotChanges.fire(snapshotDocumentUri(rest.kmId)),
-      (error) => console.warn("Rainbird: could not write map snapshot:", error)
+      (error) => console.warn("Rainbird: could not write model snapshot:", error)
     );
 }
 
@@ -171,7 +171,7 @@ export class PlatformMapsProvider implements vscode.TreeDataProvider<Node> {
     );
     item.command = {
       command: "rainbird.mapsOpen",
-      title: "Open RBLang",
+      title: "Open Raelog",
       arguments: [node],
     };
     return item;
@@ -200,15 +200,15 @@ export class PlatformMapsProvider implements vscode.TreeDataProvider<Node> {
 
     const nodes: Node[] = [];
     if (this.liveMaps) {
-      nodes.push({ kind: "info", label: `Live listing (${this.liveMaps.length} maps on platform)` });
+      nodes.push({ kind: "info", label: `Live listing (${this.liveMaps.length} models on platform)` });
       nodes.push(...this.liveMaps.map((m) => ({ kind: "map" as const, map: { kmId: m.id, name: m.name, source: "platform" as const, addedAt: "" } })));
     } else {
       nodes.push({
         kind: "info",
-        label: "Maps you have opened, pushed or queried from VS Code",
+        label: "Models you have opened, pushed or queried from VS Code",
         detail:
-          "Rainbird's API has no endpoint that lists an account's maps, so this view cannot browse Studio. Start from a Knowledge Map ID " +
-          "(on the map's Publish page in Studio): Open Map by Knowledge Map ID… (cloud icon above) or Add Map by kmID (+). " +
+          "Rainbird's API has no endpoint that lists an account's models, so this view cannot browse Studio. Start from a Knowledge Map ID " +
+          "(on the model's Publish page in Studio): Open Model by Knowledge Map ID… (cloud icon above) or Add Model by kmID… (+). " +
           "If the platform adds a list endpoint, this view will use it.",
       });
     }
@@ -218,12 +218,12 @@ export class PlatformMapsProvider implements vscode.TreeDataProvider<Node> {
 
   async addManual(): Promise<void> {
     // The maps already listed are not offered: this command is for a new one.
-    const kmId = await promptKmId(this.context, { title: "Add Map by kmID", includeKnown: false });
+    const kmId = await promptKmId(this.context, { title: "Add Model by kmID", includeKnown: false });
     if (!kmId) return;
     // Escape here only skips the optional name, as before.
-    const name = await vscode.window.showInputBox({ title: "Add Map by kmID", prompt: "Display name (optional)", ignoreFocusOut: true });
+    const name = await vscode.window.showInputBox({ title: "Add Model by kmID", prompt: "Display name (optional)", ignoreFocusOut: true });
     void recordKnownMap(this.context, { kmId, name: name?.trim() || undefined, source: "manual" });
-    vscode.window.setStatusBarMessage(`Added ${kmId} to Maps — click it to read the platform draft, or use the play icon to query it.`, 6000);
+    vscode.window.setStatusBarMessage(`Added ${kmId} to Models — click it to read the platform draft, or use the play icon to query it.`, 6000);
   }
 
   remove(node?: Node): void {
@@ -266,7 +266,7 @@ export class PlatformMapsProvider implements vscode.TreeDataProvider<Node> {
         await fetchPlatformText(client, map.kmId, { kind: "draft" });
         await showPlatformDocument(platformUri(map.kmId, { kind: "draft" }));
         vscode.window.setStatusBarMessage(
-          `Read-only RBLang of the platform draft for "${map.name ?? map.kmId}" — “Rainbird: Open Map by Knowledge Map ID…” saves an editable copy bound to it.`,
+          `Read-only Raelog of the platform draft for "${map.name ?? map.kmId}" — “Rainbird: Open Model by Knowledge Map ID…” saves an editable copy bound to it.`,
           8000
         );
         return;
@@ -292,7 +292,7 @@ export class PlatformMapsProvider implements vscode.TreeDataProvider<Node> {
       const doc = await vscode.workspace.openTextDocument(snapshotDocumentUri(map.kmId));
       await vscode.window.showTextDocument(doc);
       vscode.window.setStatusBarMessage(
-        `Read-only snapshot of "${map.name ?? map.kmId}" as last pulled or pushed from VS Code. To change the map, edit a copy and push it (push creates a new map).`,
+        `Read-only snapshot of "${map.name ?? map.kmId}" as last pulled or pushed from VS Code. To change the model, edit a copy and push it (push creates a new model).`,
         8000
       );
       return;
@@ -301,8 +301,8 @@ export class PlatformMapsProvider implements vscode.TreeDataProvider<Node> {
     }
 
     const action = await vscode.window.showInformationMessage(
-      `No RBLang source is available for "${map.name ?? map.kmId}": the platform did not return it for this key (connect first, or check the kmID), ` +
-        `and there is no local file or snapshot. Export a .rbird from Studio and extract it, or query the map live.`,
+      `No Raelog source is available for "${map.name ?? map.kmId}": the platform did not return it for this key (connect first, or check the kmID), ` +
+        `and there is no local file or snapshot. Export a .rbird from Studio and extract it, or query the model live.`,
       "Extract .rbird…",
       "Run query"
     );

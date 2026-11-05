@@ -116,10 +116,10 @@ export function extractKmId(text: string, opts: ExtractKmIdOptions = {}): string
 
 /**
  * Default file name for a map pulled into the workspace: the first block of
- * the kmID keeps maps apart without a 36-character name ("map-504436fb-draft.rbl",
- * "map-504436fb-v3.rbl"). The API returns no map name to use instead.
+ * the kmID keeps maps apart without a 36-character name ("model-504436fb-draft.rbl",
+ * "model-504436fb-v3.rbl"). The API returns no map name to use instead.
  */
 export function defaultFileName(kmId: string, ref: "draft" | number): string {
   const stem = normaliseKmId(kmId).slice(0, 8).replace(/[^0-9A-Za-z_-]/g, "_") || "unknown";
-  return `map-${stem}-${ref === "draft" ? "draft" : `v${ref}`}.rbl`;
+  return `model-${stem}-${ref === "draft" ? "draft" : `v${ref}`}.rbl`;
 }
