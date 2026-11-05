@@ -434,7 +434,7 @@ export async function bindKmId(context: vscode.ExtensionContext, uri?: vscode.Ur
   void recordKnownMap(context, {
     kmId,
     source: "manual",
-    fallbackName: name.replace(/\.(rbl|rblang)$/i, ""),
+    fallbackName: name.replace(/\.(rbl|raelog|rblang)$/i, ""),
     ...(target.scheme === "file" ? { file: target.fsPath } : {}),
   });
   vscode.window.setStatusBarMessage(`Bound ${name} to ${kmId}: Run Query, the diffs and the assistant now use this model for it.`, 6000);
@@ -546,7 +546,7 @@ export async function saveRblangAs(context: vscode.ExtensionContext, opts: SaveR
         ? `Save the draft of ${opts.kmId} as an editable .rbl`
         : `Save version ${opts.ref} of ${opts.kmId} as an editable .rbl`,
     saveLabel: "Save model",
-    filters: { Raelog: ["rbl"] },
+    filters: { Raelog: ["rbl", "raelog"] },
     defaultUri: vscode.Uri.joinPath(defaultSaveFolder(), defaultFileName(opts.kmId, opts.ref)),
   });
   if (!target) return undefined;
@@ -556,7 +556,7 @@ export async function saveRblangAs(context: vscode.ExtensionContext, opts: SaveR
   await recordKnownMap(context, {
     kmId: opts.kmId,
     source: "pulled",
-    fallbackName: fileName(target).replace(/\.(rbl|rblang)$/i, ""),
+    fallbackName: fileName(target).replace(/\.(rbl|raelog|rblang)$/i, ""),
     ...(target.scheme === "file" ? { file: target.fsPath } : {}),
     ...(opts.ref === "draft" ? { rblang: opts.rblang } : {}),
   });

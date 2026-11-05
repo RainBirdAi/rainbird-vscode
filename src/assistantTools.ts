@@ -126,11 +126,17 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
 
     tool(
       "create_map",
-      "Create a new Raelog document from a complete model and make it the assistant's target. With file_name (e.g. eligibility.rbl) the file is created in the workspace folder; without it an untitled document opens. Fails if a non-empty model is already open — edit that one, or pass file_name to create a second file.",
+      "Create a new Raelog document from a complete model and make it the assistant's target. With file_name (e.g. eligibility.rbl, or eligibility.raelog; any other extension becomes .rbl) the file is created in the workspace folder; without it an untitled document opens. Fails if a non-empty model is already open — edit that one, or pass file_name to create a second file.",
       async (input) => {
         const xml = String(input.xml ?? "");
         const existing = session.target();
-        const fileName = input.file_name ? String(input.file_name).replace(/\.(rblang|xml)?$/, "").replace(/\.rbl$/, "") + ".rbl" : undefined;
+        const requested = input.file_name ? String(input.file_name) : undefined;
+        // A .raelog name is kept as asked; anything else is saved as .rbl, the default extension.
+        const fileName = requested
+          ? /\.raelog$/i.test(requested)
+            ? requested
+            : requested.replace(/\.(rblang|xml)?$/, "").replace(/\.rbl$/, "") + ".rbl"
+          : undefined;
         if (existing && existing.getText().trim() && !fileName) {
           throw new Error(`${session.fileName()} is already open and not empty. Use edit_map to change it, or pass file_name to create a separate file.`);
         }

@@ -14,7 +14,7 @@ import { EXPORT_SCHEME, exportUri, readRblang } from "./rbird";
 import { buildModel, diffReportDetailed, DiffSide as Side, showSideBySideDiff } from "./semanticDiff";
 import { pickPlatformRef, platformUri, resolveKmId } from "./platform";
 
-const EXPORT_FILTER = { "Studio export or Raelog": ["rbird", "rbl", "rblang", "xml"] };
+const EXPORT_FILTER = { "Studio export or Raelog": ["rbird", "rbl", "raelog", "rblang", "xml"] };
 
 async function fileSide(file: vscode.Uri): Promise<Side> {
   return { label: file.path.split("/").pop() ?? "export", text: await readRblang(file), uri: exportUri(file) };

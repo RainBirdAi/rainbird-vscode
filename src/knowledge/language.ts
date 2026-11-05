@@ -20,7 +20,7 @@ Raelog (previously called RBLang) is the XML dialect models are written in. Ever
 - Attribute values use double quotes. Inside them, escape \`&\` as \`&amp;\`, \`"\` as \`&quot;\` and \`<\` as \`&lt;\` (relevant in expressions such as \`%AGE &lt; 18\`; prefer the natural-language operators to avoid the issue). Apostrophes are fine in names and text.
 - XML comments \`<!-- … -->\` are allowed anywhere and are ignored by the engine. CDATA is used for datasource request bodies and markdown metadata.
 - Indentation is free-form; keep the file's existing style (this extension's formatter re-indents by nesting depth using the file's indent unit).
-- File extensions: .rbl (preferred) or .rblang. Studio exports are .rbird.
+- File extensions: .rbl (preferred), .raelog or .rblang. Studio exports are .rbird.
 
 Recommended authoring order — concepts → relationships → instances of string concepts → facts → rules. It is not enforced by the engine but avoids forward-reference mistakes, matches Studio's output and is what the linter's quick-insert commands assume.`;
 

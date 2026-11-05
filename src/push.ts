@@ -38,7 +38,7 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
   const client = await getClient(context);
   if (!client) return;
 
-  const fileName = doc.uri.path.split("/").pop()?.replace(/\.(rbl|rblang)$/, "") ?? "model";
+  const fileName = doc.uri.path.split("/").pop()?.replace(/\.(rbl|raelog|rblang)$/, "") ?? "model";
   const stamp = new Date().toISOString().slice(0, 16).replace("T", " ").replace(":", "");
   const name = await vscode.window.showInputBox({
     prompt: "Name for the new model on the platform (every push creates a new model)",

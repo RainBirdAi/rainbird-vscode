@@ -18,7 +18,7 @@ Raelog was previously called RBLang, and models were previously called knowledge
 - **Diagnostics as you type**, matched check by check against Studio's validator: unknown or misspelled elements and attributes, missing required attributes, invalid values, undeclared or duplicate concepts, relationships and instances, type mismatches in facts and conditions, certainty out of range, unbalanced quotes and unclosed elements, expression precedence traps, rules that can never fire, relationships that are never used, recursive rules, and more.
 - **Quick fixes** on most problems: declare a missing instance, accept a did-you-mean rename, pick a valid value, add or remove attributes, delete duplicates, parenthesise an expression.
 - **Completions and hovers** that know your model: child elements by context, attribute names, enum values, the concepts, relationships and instances you have declared, and every expression function with its documentation.
-- **Navigation and rename**: go to definition, find references and rename for concepts, relationships and instances. Edit a name where it is declared and every mention follows as you type (linked editing, on by default for `.rbl` files); or press `F2` on any mention. Rename also updates quoted names inside expressions, evidence text and datasource mappings, and an instance rename stays within the instance's concept (`France` the Country, not `France` the Team). Hover a name to see what uses it.
+- **Navigation and rename**: go to definition, find references and rename for concepts, relationships and instances. Edit a name where it is declared and every mention follows as you type (linked editing, on by default for Raelog files); or press `F2` on any mention. Rename also updates quoted names inside expressions, evidence text and datasource mappings, and an instance rename stays within the instance's concept (`France` the Country, not `France` the Team). Hover a name to see what uses it.
 - **Outline, breadcrumbs and folding** for the structure of the model, plus a full snippet catalogue.
 - **Formatting** with **Format Document**, **Format Selection** or `editor.formatOnSave`. Each line is re-indented from the element nesting and trailing whitespace is trimmed; the file's line breaks, blank lines, comments, wrapped attributes and element order are kept as written.
 
@@ -145,7 +145,7 @@ Raelog files default to a two-space indent (`editor.tabSize` 2, `editor.insertSp
 
 | Extension | Purpose |
 |---|---|
-| `.rbl`, `.rblang` | Raelog models. Full language support. |
+| `.rbl`, `.raelog`, `.rblang` | Raelog models. Full language support. New files are saved as `.rbl`. |
 | `.xml` | Recognised as Raelog when the file holds an `<rbl:kb>` model (the form the platform and Studio hand out). The language switches to Raelog on open, so everything above applies. Other XML files are untouched. |
 | `.rbird` | Studio exports. Right-click to extract Raelog or compare against the platform. |
 | `.rbtest.json` | Saved query sessions replayed by the Test Explorer. |

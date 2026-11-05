@@ -13,7 +13,7 @@ import { snapshotDocumentUri, snapshotUri } from "./mapsTree";
 import { fileKmId, fileKmVersion } from "./platform";
 
 async function snapshotFor(context: vscode.ExtensionContext, uri: vscode.Uri): Promise<vscode.Uri | undefined> {
-  if (!/\.(rbl|rblang)$/i.test(uri.path)) return undefined;
+  if (!/\.(rbl|raelog|rblang)$/i.test(uri.path)) return undefined;
   const kmId = fileKmId(context, uri);
   if (!kmId || fileKmVersion(context, uri) !== undefined) return undefined;
   try {

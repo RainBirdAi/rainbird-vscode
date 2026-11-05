@@ -38,6 +38,7 @@
     "onLanguage:rblang",
     "onLanguage:xml",
     "workspaceContains:**/*.rbl",
+    "workspaceContains:**/*.raelog",
     "workspaceContains:**/*.rbird",
     "onStartupFinished"
   ],
@@ -52,7 +53,8 @@
         ],
         "extensions": [
           ".rbl",
-          ".rblang"
+          ".rblang",
+          ".raelog"
         ],
         "configuration": "./language-configuration.json",
         "icon": {

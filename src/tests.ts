@@ -129,7 +129,7 @@ export async function saveSessionAsTest(record: SessionRecord): Promise<void> {
 }
 
 /** Files that mark a folder as a Rainbird project. */
-export const RAINBIRD_FILES_GLOB = "**/*.{rbl,rblang,rbird,rbtest.json}";
+export const RAINBIRD_FILES_GLOB = "**/*.{rbl,raelog,rblang,rbird,rbtest.json}";
 
 let startTests: (() => void) | undefined;
 
