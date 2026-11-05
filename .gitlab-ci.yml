@@ -14,6 +14,9 @@
 # - Optional, manual: publish the same VSIX to Open VSX. Needs a masked CI
 #   variable `OVSX_PAT` holding an open-vsx.org access token with publish
 #   rights on the `RainbirdTechnologies` namespace.
+# - Automatic, after each publish job: `verify-marketplace` and
+#   `verify-openvsx` wait until the store serves the new version under the
+#   manifest's display name (scripts/verify-published.mjs), and fail if not.
 #
 # Release flow: bump `version` in package.json, add a dated CHANGELOG entry,
 # commit, `git tag vX.Y.Z`, `git push origin main vX.Y.Z`.
@@ -171,3 +174,29 @@ publish-openvsx:
         exit 1
       fi
     - npx --yes ovsx@0 publish --packagePath "${VSIX_NAME}-${VERSION}.vsix" --pat "$OVSX_PAT"
+
+# After a publish job, waits until the store serves this version under the
+# manifest's display name, and fails if it does not within the time limit.
+# These jobs start by themselves once their publish job has run (and wait
+# while it has not). The publish jobs are allowed to fail, which shows only as
+# a warning; a failed or stuck publish fails these jobs, and the pipeline.
+.verify-published:
+  stage: release
+  cache: []
+  before_script: []
+  timeout: 30m
+  rules:
+    - *release-tag
+
+verify-marketplace:
+  extends: .verify-published
+  needs: [publish-marketplace]
+  script:
+    # The Marketplace scans each upload before serving it, which can take a while.
+    - node scripts/verify-published.mjs marketplace --minutes 20
+
+verify-openvsx:
+  extends: .verify-published
+  needs: [publish-openvsx]
+  script:
+    - node scripts/verify-published.mjs openvsx --minutes 10
