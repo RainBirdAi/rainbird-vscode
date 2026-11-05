@@ -45,7 +45,7 @@ const OPERATION: JsonSchema = obj(
   {
     op: { type: "string", enum: ["insert_element", "replace_element", "delete_element", "set_attribute", "replace_text"], description: "Operation type" },
     kind: { type: "string", enum: [...ELEMENT_KINDS], description: "insert_element: kind of element being inserted" },
-    xml: str("insert_element / replace_element: the RBLang for one or more complete top-level elements"),
+    xml: str("insert_element / replace_element: the Raelog for one or more complete top-level elements"),
     after: { ...SELECTOR, description: "insert_element: place the new element right after this one (default: the correct section for its kind)" },
     selector: { ...SELECTOR, description: "replace_element / delete_element / set_attribute: which element" },
     attr: str("set_attribute: attribute name"),
@@ -99,21 +99,21 @@ export const TOOL_SCHEMAS: Record<string, JsonSchema> = {
   ),
   create_map: obj(
     {
-      xml: str("Complete RBLang document"),
+      xml: str("Complete Raelog document"),
       file_name: str("File name such as eligibility.rbl to create in the workspace; omit for an untitled document"),
     },
     ["xml"]
   ),
   lint_rblang: obj(
     {
-      rblang: str("RBLang to check"),
-      mode: { type: "string", enum: ["map", "snippet"], description: "map: a complete document. snippet: one or more elements checked in the context of the open map." },
+      rblang: str("Raelog to check"),
+      mode: { type: "string", enum: ["map", "snippet"], description: "map: a complete document (a whole model). snippet: one or more elements checked in the context of the open model." },
     },
     ["rblang", "mode"]
   ),
   run_query: obj(
     {
-      kmId: str("Knowledge map ID. Omit to use the map this file is bound to (opened, pulled, pushed or bound by Knowledge Map ID), else rainbird.knowledgeMapId."),
+      kmId: str("The model's Knowledge Map ID. Omit to use the model this file is bound to (opened, pulled, pushed or bound by Knowledge Map ID), else rainbird.knowledgeMapId."),
       relationship: str("Goal relationship to query"),
       subject: str("Goal subject (give a subject, an object or both)"),
       object: str("Goal object (give a subject, an object or both; with a subject it asks how certain that exact fact is)"),
@@ -130,8 +130,8 @@ export const TOOL_SCHEMAS: Record<string, JsonSchema> = {
   ),
   push_map: obj(
     {
-      rblang: str("RBLang to push. Omit to push the open map as it currently stands."),
-      name: str("Plain-text map name (letters, numbers, spaces)"),
+      rblang: str("Raelog to push. Omit to push the open model as it currently stands."),
+      name: str("Plain-text model name (letters, numbers, spaces)"),
       description: str("Plain-text description"),
     },
     ["name", "description"]
@@ -142,9 +142,9 @@ export const TOOL_SCHEMAS: Record<string, JsonSchema> = {
         type: "string",
         enum: ["turn-start", "git-head", "pushed-snapshot", "text"],
         description:
-          "What to compare the open map with: turn-start (as it was when this turn began), git-head (the last commit), pushed-snapshot (the snapshot taken when this file was last pulled or pushed) or text (an RBLang document you pass)",
+          "What to compare the open model with: turn-start (as it was when this turn began), git-head (the last commit), pushed-snapshot (the snapshot taken when this file was last pulled or pushed) or text (a Raelog document you pass)",
       },
-      text: str("against=text: the other RBLang document"),
+      text: str("against=text: the other Raelog document"),
     },
     ["against"]
   ),

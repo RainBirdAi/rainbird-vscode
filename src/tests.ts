@@ -129,7 +129,7 @@ export async function saveSessionAsTest(record: SessionRecord): Promise<void> {
 }
 
 /** Files that mark a folder as a Rainbird project. */
-export const RAINBIRD_FILES_GLOB = "**/*.{rbl,rblang,rbird,rbtest.json}";
+export const RAINBIRD_FILES_GLOB = "**/*.{rbl,raelog,rblang,rbird,rbtest.json}";
 
 let startTests: (() => void) | undefined;
 
@@ -146,7 +146,7 @@ export function registerTests(context: vscode.ExtensionContext): void {
   const start = (): void => {
     if (controllerCreated) return;
     controllerCreated = true;
-    const controller = vscode.tests.createTestController("rainbirdTests", "Rainbird");
+    const controller = vscode.tests.createTestController("rainbirdTests", "Rae");
     context.subscriptions.push(controller);
 
     const addItem = async (uri: vscode.Uri) => {
@@ -184,7 +184,7 @@ export function registerTests(context: vscode.ExtensionContext): void {
       for (const item of queue) {
         if (token.isCancellationRequested) break;
         if (!client) {
-          run.errored(item, new vscode.TestMessage("Not connected — run “Rainbird: Connect” first."));
+          run.errored(item, new vscode.TestMessage("Not connected — run “Rae: Connect” first."));
           continue;
         }
         run.started(item);

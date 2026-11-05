@@ -295,7 +295,7 @@ export function nearMiss(q: Question, facts: Fact[]): NearMiss | undefined {
 export function skipRejectedNote(detail: string, q: Pick<Question, "relationship">, action = "Pick an answer below."): string {
   return (
     `The engine would not let this question be skipped${detail ? ` (${detail})` : ""}. ${action} ` +
-    `If "${q.relationship}" should only ever be fed by injected facts, set askable="none" on it in the map — only if every session injects those facts; otherwise rules that need them get no result.`
+    `If "${q.relationship}" should only ever be fed by injected facts, set askable="none" on it in the model — only if every session injects those facts; otherwise rules that need them get no result.`
   );
 }
 
@@ -308,7 +308,7 @@ function describeAsked(q: Pick<Question, "type" | "relationship" | "subject" | "
 
 /** Test replay: the engine asked something the test has no recorded answer for. */
 export function pendingQuestionMessage(q: Question): string {
-  return `The engine asked an unrecorded question: "${q.prompt}" (${describeAsked(q)}) — the map's question flow changed. If that is intended, re-record the test from the query panel.`;
+  return `The engine asked an unrecorded question: "${q.prompt}" (${describeAsked(q)}) — the model's question flow changed. If that is intended, re-record the test from the query panel.`;
 }
 
 /** Test replay: the engine refused a skip the test recorded. */
@@ -630,14 +630,14 @@ export function queryToolReply(outcome: AnswerLoopOutcome, ids: { sessionId: str
   const notes: string[] = [];
   const paren = (detail: string) => (detail ? ` (${detail})` : "");
   if (outcome.engineError !== undefined) {
-    notes.push(`Rainbird rejected the answers for this group${paren(outcome.engineError)}; nothing was recorded. Fix them and call again with this sessionId.`);
+    notes.push(`Rae rejected the answers for this group${paren(outcome.engineError)}; nothing was recorded. Fix them and call again with this sessionId.`);
   }
   if (outcome.rejected.length) notes.push("Some answers were not sent (see rejected): fix them and call again with this sessionId, answering the whole group.");
   if (outcome.refusedSkip !== undefined) {
     notes.push(
       outcome.refusedWithAnswers
-        ? `Rainbird rejected this group${paren(outcome.refusedSkip)}; the automatic "no more" was withdrawn in case it was the cause — check your answers and answer the whole group.`
-        : `Rainbird would not let a question be skipped automatically${paren(outcome.refusedSkip)}, so it is asked here.`
+        ? `Rae rejected this group${paren(outcome.refusedSkip)}; the automatic "no more" was withdrawn in case it was the cause — check your answers and answer the whole group.`
+        : `Rae would not let a question be skipped automatically${paren(outcome.refusedSkip)}, so it is asked here.`
     );
   }
   if (outcome.partial) notes.push("Only part of this group was answered, so nothing was sent: a group is answered in one call.");

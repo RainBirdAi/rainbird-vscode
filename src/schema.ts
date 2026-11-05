@@ -32,7 +32,7 @@ export const SCHEMA: Record<string, ElementSpec> = {
     optional: [],
     children: ["concept", "concinst", "rel", "relinst", "import", "compound"],
     text: false,
-    doc: "Root element of an RBLang knowledge map. xmlns:rbl must be \"http://rbl.io/schema/RBLang\".",
+    doc: "Root element of a Raelog model. xmlns:rbl must be \"http://rbl.io/schema/RBLang\".",
   },
   concept: {
     required: ["name", "type"],
@@ -138,7 +138,7 @@ export const SCHEMA: Record<string, ElementSpec> = {
     optional: ["rel", "subject", "object", "value", "expression"],
     children: [],
     text: false,
-    doc: "Binds an additional variable for the datasource request from a relationship in the graph.",
+    doc: "Binds an additional variable for the datasource request from a relationship in the model.",
   },
   headers: {
     required: [],
@@ -159,7 +159,7 @@ export const SCHEMA: Record<string, ElementSpec> = {
     optional: ["username"],
     children: [],
     text: false,
-    doc: "Links another knowledge map version into this one (Studio 'linked knowledge maps').",
+    doc: "Links another model version into this one (Studio 'linked knowledge maps').",
   },
   compound: {
     required: ["subject", "type", "object"],

@@ -24,7 +24,7 @@ export function render(nonce: string = String(Math.random()).slice(2)): string {
 </head>
 <body>
 <div id="head">
-  <h2>Rainbird Query</h2>
+  <h2>Rae Query</h2>
   <span class="badge" id="km"></span>
   <button id="newQuery">New query</button>
 </div>

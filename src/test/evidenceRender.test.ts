@@ -46,8 +46,8 @@ describe("renderEvidenceHtml", () => {
   test("the real HelloWorld tree: Studio badges, impacts against their maxima, inputs used", async () => {
     const html = renderEvidenceHtml(await expand(HELLO_WORLD, HELLO_WORLD_ROOT_ID));
     assert.match(html, /<span class="evt-badge evt-k-injection" style="background:#8ce99a;color:#1b1b1b"[^>]*>injected<\/span>/);
-    assert.match(html, /<span class="evt-badge evt-k-knowledgemap" style="background:#f76707;color:#1b1b1b"[^>]*>knowledge map<\/span>/);
-    assert.ok(!html.includes(">km<"), "the API's km is shown as knowledge map");
+    assert.match(html, /<span class="evt-badge evt-k-knowledgemap" style="background:#f76707;color:#1b1b1b"[^>]*>model<\/span>/);
+    assert.ok(!html.includes(">km<"), "the API's km is shown as model");
     // 33.75 and 37.5 against a grey maximum of 37.5 each, on a 0-100 scale.
     assert.equal(count(html, '<span class="evt-bar-max" style="width:37.5%">'), 2);
     assert.equal(count(html, '<span class="evt-bar-val" style="width:33.75%">'), 1);
@@ -55,7 +55,7 @@ describe("renderEvidenceHtml", () => {
     assert.ok(html.includes('title="Impact 33.75% of a possible 37.5% (weight 100)"'));
     assert.ok(html.includes('<span class="evt-pct">33.75%</span>'));
     assert.ok(html.includes("Inputs used by this result (2)"));
-    assert.ok(html.includes("1 injected · 1 from the knowledge map"));
+    assert.ok(html.includes("1 injected · 1 from the model"));
     assert.ok(html.includes("certainty cap 75%"));
     assert.ok(html.includes("Conditions, in the order the engine reports them"));
   });
@@ -83,10 +83,10 @@ describe("renderEvidenceHtml", () => {
     assert.equal(lines.length, 3);
     assert.ok(lines[0].includes(">injected<") && lines[0].includes("<b>1500</b>") && lines[0].includes(">100%<"));
     assert.ok(lines[1].includes(">answer<") && lines[1].includes("<b>2000</b>") && lines[1].includes(">90%<"));
-    assert.ok(lines[2].includes(">knowledge map<") && lines[2].includes("<b>1000</b>"));
+    assert.ok(lines[2].includes(">model<") && lines[2].includes("<b>1000</b>"));
     assert.ok(html.includes(">list function<"));
     assert.ok(html.includes("Inputs used by this result (3)"));
-    assert.ok(html.includes("1 answered · 1 injected · 1 from the knowledge map"));
+    assert.ok(html.includes("1 answered · 1 injected · 1 from the model"));
   });
 
   test("a rule support nests a collapsed card; collapseDepth opens it", async () => {
@@ -246,7 +246,7 @@ describe("renderEvidenceHtml", () => {
   test("the legend lists the sources present in the tree", async () => {
     const legend = (html: string) => html.split('<div class="evt-legend">')[1].split("</div>")[0];
     const hello = legend(renderEvidenceHtml(await expand(HELLO_WORLD, HELLO_WORLD_ROOT_ID)));
-    assert.ok(hello.includes(">rule<") && hello.includes(">injected<") && hello.includes(">knowledge map<"));
+    assert.ok(hello.includes(">rule<") && hello.includes(">injected<") && hello.includes(">model<"));
     assert.ok(!hello.includes(">answer<") && !hello.includes(">list function<"));
     const loan = legend(renderEvidenceHtml(await expand(LOAN, LOAN_ROOT_ID)));
     assert.ok(loan.includes(">list function<") && loan.includes(">answer<") && loan.includes(">not met<"));
@@ -348,7 +348,7 @@ describe("evidence styles", () => {
     const datasource = hue(SOURCE_STYLE.datasource.bg);
     assert.ok(datasource.g > datasource.r && datasource.g < 150, "datasource: dark green");
     const map = hue(SOURCE_STYLE.knowledgemap.bg);
-    assert.ok(map.r > 200 && map.g > 70 && map.g < 160 && map.b < 60, "knowledge map: orange");
+    assert.ok(map.r > 200 && map.g > 70 && map.g < 160 && map.b < 60, "model: orange");
 
     const luminance = (hex: string) => {
       const { r, g, b } = hue(hex);
@@ -360,7 +360,7 @@ describe("evidence styles", () => {
       const ratio = (hi + 0.05) / (lo + 0.05);
       assert.ok(ratio >= 4.5, `${kind}: contrast ${ratio.toFixed(2)} is below 4.5`);
     }
-    assert.equal(SOURCE_STYLE.knowledgemap.label, "knowledge map");
+    assert.equal(SOURCE_STYLE.knowledgemap.label, "model");
     assert.equal(SOURCE_STYLE.injection.label, "injected");
   });
 });
@@ -450,7 +450,7 @@ describe("describeEvidence", () => {
     assert.ok(text.startsWith(`Tom speaks French — 71% [inferred by a rule] (factID ${HELLO_WORLD_ROOT_ID})`));
     assert.ok(text.includes("Rule (certainty cap 75%); variables %COUNTRY = France, %O = French, %S = Tom; conditions in the order the engine reports them:"));
     assert.ok(text.includes("  1. Tom lives in France — 90% [injected] · impact 33.75% of a possible 37.5% (weight 100)"));
-    assert.ok(text.includes("  2. France national language French — 100% [built into the map] · impact 37.5% of a possible 37.5% (weight 100)"));
+    assert.ok(text.includes("  2. France national language French — 100% [built into the model] · impact 37.5% of a possible 37.5% (weight 100)"));
     assert.ok(text.includes("Inputs used by this result (2):"));
   });
 

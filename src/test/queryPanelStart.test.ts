@@ -94,7 +94,7 @@ const WHERE_DOES_FRED_LIVE = {
   knownAnswers: [],
 };
 const NO_LIVE_VERSION =
-  "This map has no live version yet, so the engine served the draft instead. Publish a version in Studio and set it live to query a live version.";
+  "This model has no live version yet, so the engine served the draft instead. Publish a version in Studio and set it live to query a live version.";
 
 // ── A start that fails after busy ──
 
@@ -125,7 +125,7 @@ test("a start that fails after busy puts the setup card back as it was, every fi
   assert.ok(page.$(".spin"), "the spinner shows");
 
   const message =
-    "The engine rejected the injected facts: 1) Could not find relationship for injection: Lives In. Relationship and instance names are case-sensitive and must match the map exactly.";
+    "The engine rejected the injected facts: 1) Could not find relationship for injection: Lives In. Relationship and instance names are case-sensitive and must match the model exactly.";
   page.send({ type: "startError", message });
   assert.ok(!page.$(".spin"), "no spinner");
   assert.deepEqual(transcript(page), [], "no Goal line");
@@ -159,7 +159,7 @@ test("the unknown-goal note keeps its blank line under the restored card", () =>
   page.type(".subject", "Tom");
   page.click(".go");
   page.send({ type: "busy" });
-  const message = 'Rainbird API 400 on /s-1/query: Bad request!\n\nThe map (km-1) has no relationship named exactly "speaks" — names are case-sensitive.';
+  const message = 'Rainbird API 400 on /s-1/query: Bad request!\n\nThe model (km-1) has no relationship named exactly "speaks" — names are case-sensitive.';
   page.send({ type: "startError", message });
   const slot = page.$(".startErr");
   assert.ok(slot, "the card's error line");
@@ -206,7 +206,7 @@ test("New query while a start is pending shows one fresh setup card", () => {
 
 test("init.mapNote shows under the card's prompt until the next init, through New query and Run another query", () => {
   const note =
-    "No map with Knowledge Map ID <b>bad</b> is visible to this API key on https://api.rainbird.ai. Check the ID on the map's Publish page in Studio, and that the key belongs to the same environment. Click “Change…” at the top to query another map.";
+    "No model with Knowledge Map ID <b>bad</b> is visible to this API key on https://api.rainbird.ai. Check the ID on the model's Publish page in Studio, and that the key belongs to the same environment. Click “Change…” at the top to query another model.";
   const page = loadPanel({ kmId: "<b>bad</b>", goals: [], goalsFrom: "none", mapNote: note });
   assert.equal(page.text(".mapNote"), note);
   assert.ok(page.$(".mapNote")?.classList.contains("err"), "shown as an error");

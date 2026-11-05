@@ -68,9 +68,9 @@ export function answerHints() {
   return {
     number: "A number, e.g. 42 or 3.5. Digits and a decimal point only — no units or thousands separators.",
     numberPlaceholder: "e.g. 42",
-    numberTooLarge: "Rainbird numbers go up to 999999999999999 (15 digits).",
-    numberTooPrecise: "Rainbird numbers have at most 15 significant digits — round this one.",
-    date: "e.g. 1 October 1981 or 1981-10-01 — Rainbird receives it as YYYY-MM-DD.",
+    numberTooLarge: "Rae numbers go up to 999999999999999 (15 digits).",
+    numberTooPrecise: "Rae numbers have at most 15 significant digits — round this one.",
+    date: "e.g. 1 October 1981 or 1981-10-01 — Rae receives it as YYYY-MM-DD.",
     datePlaceholder: "YYYY-MM-DD or e.g. 1 October 1981",
     dateNotRecognised: "Not a date I recognise — try 1981-10-01 or 1 October 1981.",
     dateFourDigitYear: "Use a four-digit year, e.g. 1981.",
@@ -351,15 +351,15 @@ export function coerceAnswer(q: QuestionLike, raw: unknown, opts?: { dateOrder?:
   const bad = s.match(/["'\\<>]/g);
   if (bad) {
     const chars = bad.filter((c, i) => bad.indexOf(c) === i).join(" ");
-    return { ok: false, error: "Rainbird does not accept the characters \" ' \\ < > in answers — remove " + chars + "." };
+    return { ok: false, error: "Rae does not accept the characters \" ' \\ < > in answers — remove " + chars + "." };
   }
-  if (s.length > 2000) return { ok: false, error: "Rainbird accepts at most 2000 characters in an answer — this one has " + s.length + "." };
+  if (s.length > 2000) return { ok: false, error: "Rae accepts at most 2000 characters in an answer — this one has " + s.length + "." };
   return { ok: true, value: s };
 }
 
-/** The note shown when the engine rejects an answer: "Rainbird rejected that answer (<detail>). It expects <expectedFormat>. Try again." */
+/** The note shown when the engine rejects an answer: "Rae rejected that answer (<detail>). It expects <expectedFormat>. Try again." */
 export function rejectionNote(detail: string, q: QuestionLike): string {
-  return "Rainbird rejected that answer" + (detail ? " (" + detail + ")" : "") + ". It expects " + expectedFormat(q) + ". Try again.";
+  return "Rae rejected that answer" + (detail ? " (" + detail + ")" : "") + ". It expects " + expectedFormat(q) + ". Try again.";
 }
 
 /**
@@ -372,7 +372,7 @@ export function rejectionNote(detail: string, q: QuestionLike): string {
  */
 export function groupRejectionNote(detail: string, group: QuestionLike[], action?: string): string {
   const expected = group.map((q) => "“" + (q.prompt || q.relationship || "") + "” — " + expectedFormat(q)).join("; ");
-  return "Rainbird rejected one of these answers" + (detail ? " (" + detail + ")" : "") + ". Expected: " + expected + ". " + (action || "Try again.");
+  return "Rae rejected one of these answers" + (detail ? " (" + detail + ")" : "") + ". Expected: " + expected + ". " + (action || "Try again.");
 }
 
 /**

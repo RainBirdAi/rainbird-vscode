@@ -2,7 +2,7 @@
  * Standalone evidence view: one editor tab per evidence tree, drawn by the
  * shared Studio-style renderer (src/evidenceRender.ts) so it matches the query
  * panel's inline tree, with Expand all / Collapse all, Open in Studio and Copy
- * link. Used by "Rainbird: Show Evidence Tree for Fact…", the Quick Pick query
+ * link. Used by "Rae: Show Evidence Tree for Fact…", the Quick Pick query
  * runner and the query panel's "Open in panel".
  */
 import { randomBytes } from "crypto";
@@ -17,7 +17,7 @@ export type EvidenceKeySource = string | (() => Promise<string | undefined>);
 
 const SET_KEY = "Set evidence key…";
 const LOCKED =
-  "Evidence is locked for this map. Enable Evidence Tree Link in Studio (Publish → API Management → Access Control), or enter the map's evidence key.";
+  "Evidence is locked for this model. Enable Evidence Tree Link in Studio (Publish → API Management → Access Control), or enter the model's evidence key.";
 
 /**
  * Fetch (unless `prefetched` is given) and show the evidence tree for a fact.
@@ -41,7 +41,7 @@ export async function showEvidenceTree(
     try {
       const usedKey = key;
       tree = await vscode.window.withProgress(
-        { location: vscode.ProgressLocation.Window, title: "Rainbird: loading the evidence tree…" },
+        { location: vscode.ProgressLocation.Window, title: "Rae: loading the evidence tree…" },
         () => client.fullEvidence(factId, sessionId, usedKey)
       );
     } catch (error) {

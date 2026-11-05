@@ -35,7 +35,7 @@ const TOM_SPEAKS_FRENCH = { subject: "Tom", relationship: "speaks", object: "Fre
 const TOM_QUALIFIES = { subject: "Tom", relationship: "qualifies for", object: "premium loan", certainty: 46, factID: LOAN_ROOT_ID };
 
 const LOCKED_TEXT =
-  "Evidence is locked for this map. Enable Evidence Tree Link in Studio (Publish → API Management → Access Control), or enter the map's evidence key.";
+  "Evidence is locked for this model. Enable Evidence Tree Link in Studio (Publish → API Management → Access Control), or enter the model's evidence key.";
 
 function resultPanel(results: Posted[] = [TOM_SPEAKS_FRENCH]): WebviewHarness {
   const page = loadWebview(render("test-nonce"));
@@ -114,7 +114,7 @@ describe("query panel results: result cards", () => {
   test("a failed explanation gives the Explain (AI) link back, in its place, to try again", async () => {
     const page = resultPanel();
     page.click("[data-explain]");
-    page.send({ type: "explainDelta", factId: HELLO_WORLD_ROOT_ID, text: "\n(Explanation failed: Evidence is locked for this map.)" });
+    page.send({ type: "explainDelta", factId: HELLO_WORLD_ROOT_ID, text: "\n(Explanation failed: Evidence is locked for this model.)" });
     page.send({ type: "explainDone", factId: HELLO_WORLD_ROOT_ID, failed: true });
     assert.deepEqual(actionLinks(page), ["Show evidence", "Explain (AI)", "Show on graph"]);
     assert.match(page.text(".explain"), /Explanation failed/);

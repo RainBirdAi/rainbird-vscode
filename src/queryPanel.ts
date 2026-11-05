@@ -129,7 +129,7 @@ export class QueryPanel {
       await current.init({ kmIdOverride, target: fileUri, goal });
       return;
     }
-    const panel = vscode.window.createWebviewPanel("rainbirdQuery", "Rainbird Query", vscode.ViewColumn.Beside, {
+    const panel = vscode.window.createWebviewPanel("rainbirdQuery", "Rae Query", vscode.ViewColumn.Beside, {
       enableScripts: true,
       retainContextWhenHidden: true,
     });
@@ -231,7 +231,7 @@ export class QueryPanel {
     if (seq !== this.initSeq) return;
     if (!client) {
       this.pendingTarget = uri;
-      this.post({ type: "error", message: "Not connected — run “Rainbird: Connect” first." });
+      this.post({ type: "error", message: "Not connected — run “Rae: Connect” first." });
       return;
     }
 
@@ -239,7 +239,7 @@ export class QueryPanel {
     // binding), then the setting for its folder, then a prompt (remembered for
     // the folder). Held on the instance: start(), the session record and the
     // header all use it, and it is never re-read from the setting.
-    const kmId = await resolveKmIdFor(this.context, { uri, override: kmIdOverride, prompt: true, title: "Run Query: which map?" });
+    const kmId = await resolveKmIdFor(this.context, { uri, override: kmIdOverride, prompt: true, title: "Run Query: which model?" });
     if (seq !== this.initSeq) return;
     if (!kmId) {
       // Kept aside, so “Choose map…” / “Change…” asks for this file's map again (and
@@ -274,7 +274,7 @@ export class QueryPanel {
       } catch (error) {
         // Verified live: /analysis/file answers 404 for an unknown or malformed kmID, or one from another environment.
         if (error instanceof ApiError && error.status === 404) {
-          mapNote = `${unknownMapMessage(kmId, currentApiUrl())} Click “Change…” at the top to query another map.`;
+          mapNote = `${unknownMapMessage(kmId, currentApiUrl())} Click “Change…” at the top to query another model.`;
         }
         // Otherwise not readable — the panel falls back to a free-text goal.
       }
@@ -332,7 +332,7 @@ export class QueryPanel {
       await this.init({ target: this.pendingTarget });
       return;
     }
-    const next = await promptKmId(this.context, { title: "Query which map?", current: this.kmId });
+    const next = await promptKmId(this.context, { title: "Query which model?", current: this.kmId });
     if (next) await this.init({ kmIdOverride: next, target: undefined });
   }
 
@@ -364,7 +364,7 @@ export class QueryPanel {
     try {
       await this.context.globalState.update(key, withLastGoal(this.context.globalState.get(key), kmId, goal));
     } catch (error) {
-      console.warn("Rainbird: could not remember the last goal:", error);
+      console.warn("Rae: could not remember the last goal:", error);
     }
   }
 
@@ -381,7 +381,7 @@ export class QueryPanel {
     if (!kmId || !client) {
       this.post({
         type: "startError",
-        message: kmId ? "Not connected — run “Rainbird: Connect” first." : "No map chosen yet — click “Choose map…” at the top.",
+        message: kmId ? "Not connected — run “Rae: Connect” first." : "No model chosen yet — click “Choose model…” at the top.",
       });
       return;
     }
@@ -461,7 +461,7 @@ export class QueryPanel {
       if (error instanceof ApiError && error.status === 404 && target.kind !== "draft") {
         throw new Error(
           `Could not start a ${describeTarget(target)} session on ${kmId} — ${
-            target.kind === "version" ? `version ${target.version} does not exist` : "the map has no live version yet"
+            target.kind === "version" ? `version ${target.version} does not exist` : "the model has no live version yet"
           }. Pick a different target.`
         );
       }
@@ -487,7 +487,7 @@ export class QueryPanel {
           // spinner nor drop the transcript lines of answers waiting for the engine.
           this.post({
             type: "notice",
-            message: "This map has no live version yet, so the engine served the draft instead. Publish a version in Studio and set it live to query a live version.",
+            message: "This model has no live version yet, so the engine served the draft instead. Publish a version in Studio and set it live to query a live version.",
           });
         }
       })
@@ -504,7 +504,7 @@ export class QueryPanel {
           // The engine's own text ends in a full stop ("…: Lives In."): drop it before adding the sentence's own.
           const detail = (error.errMessages()?.join("; ") ?? error.body.slice(0, 200)).replace(/[.\s]+$/, "");
           throw new Error(
-            `The engine rejected the injected facts: ${detail}. Relationship and instance names are case-sensitive and must match the map exactly.`
+            `The engine rejected the injected facts: ${detail}. Relationship and instance names are case-sensitive and must match the model exactly.`
           );
         }
         throw error;
@@ -662,7 +662,7 @@ export class QueryPanel {
     const mapUri = this.targetUri;
     const client = await getAnthropicClient(this.context);
     if (!client) {
-      this.post({ type: "explainDelta", factId, text: "No Anthropic API key set — run “Rainbird: Set Anthropic API Key”." });
+      this.post({ type: "explainDelta", factId, text: "No Anthropic API key set — run “Rae: Set Anthropic API Key”." });
       // failed: the webview gives the Explain (AI) link back, so it can be clicked again once there is a key.
       this.post({ type: "explainDone", factId, failed: true });
       return;
@@ -680,7 +680,7 @@ export class QueryPanel {
           // Closed or deleted: explain from the tree alone.
         }
         if (text !== undefined) {
-          source = `\n\nThe map's RBLang source (${QueryPanel.baseName(mapUri)}) for reference:\n${text.slice(0, 20000)}`;
+          source = `\n\nThe model's Raelog source (${QueryPanel.baseName(mapUri)}) for reference:\n${text.slice(0, 20000)}`;
         }
       }
       const prompt = `Explain this decision.\n\n${this.evidenceForExplain(tree)}${source}`;
@@ -769,7 +769,7 @@ export class QueryPanel {
    */
   private evidenceFailure(error: unknown): string {
     if (this.evidenceLocked(error)) {
-      return "Evidence is locked for this map. Unlock it from the result's evidence with Set evidence key… or Retry, then try again.";
+      return "Evidence is locked for this model. Unlock it from the result's evidence with Set evidence key… or Retry, then try again.";
     }
     if (this.sessionExpired(error)) return "This session has expired — click “New query” to start again.";
     return (error as Error).message;

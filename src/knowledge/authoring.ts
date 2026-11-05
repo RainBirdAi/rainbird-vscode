@@ -7,7 +7,7 @@ export const VALIDATION_SECTION = `## 16. Validation
 
 This extension's linter runs on every keystroke and produces the same findings the assistant's diagnostics tools return. It mirrors Studio's validator plus semantic checks. In plain words:
 
-Errors (the platform will reject the map or the rule is broken):
+Errors (the platform will reject the model or the rule is broken):
 - Structure: missing or duplicated \`<rbl:kb>\` root; unrecognised element; element not allowed inside its parent (e.g. \`<condition>\` at top level); mismatched, unexpected or missing closing tag; text outside an element; malformed or unbalanced attribute quotes; duplicate attribute on a tag (first value wins).
 - Attributes: required attribute missing or empty; unknown enum value (\`type="text"\`, \`askable="sometimes"\`); names containing \`" \\ < >\`.
 - Declarations: duplicate concept; duplicate relationship name; unknown concept in a rel's subject/object; unknown concept type on an instance; unknown relationship type on a relinst; unknown relationship in a condition or datasource input.
@@ -27,7 +27,7 @@ Information:
 
 The platform's own validator (on push) additionally reports one problem per upload with messages like "Relationship X expects a date as its object" or "The concept X is mutually-exclusive and should define 2 instances".
 
-Official validation checklist for generated RBLang: (1) all concepts defined before use; (2) only string, number, date, truth types; (3) relationship names unique; (4) names read naturally; (5) no instances for number/date/truth concepts; (6) concepts at the right level of abstraction; (7) every referenced concept exists; (8) every referenced instance exists; (9) relationships defined before facts and rules use them; (10) relationship subjects are string concepts; (11) primitive object values written directly; (12) rule variables consistent throughout a rule; (13) object values match the relationship's object type; (14) string literals in expressions single-quoted; (15) assignment via the \`value\` attribute; (16) missing facts tested with countRelationshipInstances(); (17) rules work for the general case; (18) expressions use supported syntax only; (19) each required query has a matching relationship; (20) every concept is connected to the graph.`;
+Official validation checklist for generated Raelog: (1) all concepts defined before use; (2) only string, number, date, truth types; (3) relationship names unique; (4) names read naturally; (5) no instances for number/date/truth concepts; (6) concepts at the right level of abstraction; (7) every referenced concept exists; (8) every referenced instance exists; (9) relationships defined before facts and rules use them; (10) relationship subjects are string concepts; (11) primitive object values written directly; (12) rule variables consistent throughout a rule; (13) object values match the relationship's object type; (14) string literals in expressions single-quoted; (15) assignment via the \`value\` attribute; (16) missing facts tested with countRelationshipInstances(); (17) rules work for the general case; (18) expressions use supported syntax only; (19) each required query has a matching relationship; (20) every concept is connected to the rest of the model.`;
 
 export const PATTERNS_SECTION = `## 17. Authoring patterns
 
@@ -43,7 +43,7 @@ export const PATTERNS_SECTION = `## 17. Authoring patterns
 - **Good questions**: write all applicable forms in the user's words, mention only the placeholders each form allows, group related questions with \`group\`, allow skipping (\`allowUnknown\`) where the data is genuinely optional, and use \`canAdd\` when the instance list cannot be exhaustive.
 - **Evidence text**: an \`alt\` on every rule ("{{%S}} qualifies because …") and, where useful, on conditions; use dot-traversal for context ({{%COUNTRY.is in continent}}).
 - **Avoid unintended recursion**: a rule for R that depends on R must have a path that terminates (base facts); otherwise restructure with an intermediate relationship.
-- **Naming**: title-case concepts, lowercase verb-phrase relationships, natural instance names; reuse the map's existing vocabulary rather than inventing synonyms; name every rule.`;
+- **Naming**: title-case concepts, lowercase verb-phrase relationships, natural instance names; reuse the model's existing vocabulary rather than inventing synonyms; name every rule.`;
 
 export const MISTAKES_SECTION = `## 18. Common mistakes
 
@@ -64,4 +64,4 @@ export const MISTAKES_SECTION = `## 18. Common mistakes
 - A variable used once — it binds nothing; either use it again or replace with \`*\` in list functions.
 - Mutually-exclusive concept with one or three instances.
 - Forgetting question wording for the forms \`askable\` permits, or writing \`%O\` inside secondFormObject.
-- "Fixing" unknown-name diagnostics that actually refer to names from an \`<import>\`ed map.`;
+- "Fixing" unknown-name diagnostics that actually refer to names from an \`<import>\`ed model.`;

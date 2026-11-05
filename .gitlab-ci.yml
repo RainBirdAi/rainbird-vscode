@@ -101,7 +101,7 @@ release:
     - echo "Creating release $CI_COMMIT_TAG for version $VERSION"
   release:
     tag_name: $CI_COMMIT_TAG
-    name: "Rainbird $CI_COMMIT_TAG"
+    name: "Rae by Rainbird $CI_COMMIT_TAG"
     description: release-notes.md
     assets:
       links:

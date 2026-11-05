@@ -69,7 +69,7 @@ ${GOAL_FILTER_SOURCE}
   function clearBusy() { if (busyEl) { busyEl.remove(); busyEl = null; } }
   function busy() {
     emit('beforeBusy');
-    clearBusy(); busyEl = el('<div class="card spin">Rainbird is reasoning…</div>'); flow.appendChild(busyEl); busyEl.scrollIntoView({block:'end'});
+    clearBusy(); busyEl = el('<div class="card spin">Rae is reasoning…</div>'); flow.appendChild(busyEl); busyEl.scrollIntoView({block:'end'});
   }
   function addTranscript(label, text) {
     flow.appendChild(el('<div class="transcript"><b>' + esc(label) + ':</b> ' + esc(text) + '</div>'));

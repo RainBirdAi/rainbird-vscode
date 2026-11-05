@@ -82,14 +82,14 @@ export function collectIssues(text: string): LintIssue[] {
       const key = `${tag.name}\u0000${tag.attrs.name}`;
       if (declared.has(key)) {
         const kind = tag.name === "concept" ? "concept" : "relationship";
-        add(tag, `Duplicate ${kind}: "${tag.attrs.name}" is already declared in this map`, "error", [removeElementFix(text, index, tag)]);
+        add(tag, `Duplicate ${kind}: "${tag.attrs.name}" is already declared in this model`, "error", [removeElementFix(text, index, tag)]);
       } else {
         declared.add(key);
       }
     } else if (tag.name === "concinst") {
       const key = `concinst\u0000${tag.attrs.type ?? ""}\u0000${tag.attrs.name}`;
       if (declared.has(key)) {
-        add(tag, `Duplicate concept instance: "${tag.attrs.name}" of "${tag.attrs.type ?? ""}" is already declared in this map`, "warning", [
+        add(tag, `Duplicate concept instance: "${tag.attrs.name}" of "${tag.attrs.type ?? ""}" is already declared in this model`, "warning", [
           removeElementFix(text, index, tag),
         ]);
       } else {
@@ -259,9 +259,9 @@ function checkRoot(text: string, index: MapIndex, addAt: AddAt): void {
   if (roots.length === 0) {
     const start = text.search(/\S/);
     const eol = text.indexOf("\n", start);
-    addAt(start, eol === -1 ? text.length : eol, `Missing root element: the map must be wrapped in <rbl:kb xmlns:rbl="${RBLANG_NAMESPACE}"> … </rbl:kb>`);
+    addAt(start, eol === -1 ? text.length : eol, `Missing root element: the model must be wrapped in <rbl:kb xmlns:rbl="${RBLANG_NAMESPACE}"> … </rbl:kb>`);
   }
-  for (const extra of roots.slice(1)) addAt(extra.start, extra.end, "Only one <rbl:kb> root is allowed per map");
+  for (const extra of roots.slice(1)) addAt(extra.start, extra.end, "Only one <rbl:kb> root is allowed per model");
 }
 
 /**

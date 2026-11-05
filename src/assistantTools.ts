@@ -26,8 +26,8 @@ import { answerQuestions, pendingQuestionMessage, queryToolReply, QuestionSessio
 import { describeEvidence } from "./evidenceRender";
 import type { ExpandedEvidence } from "./evidenceModel";
 
-const NO_MAP = "No RBLang file is open. Ask the user to open a .rbl file, or use create_map to start one.";
-const NOT_CONNECTED = "Not connected to Rainbird — ask the user to run “Rainbird: Connect” (environment + API key) first.";
+const NO_MAP = "No Raelog file is open. Ask the user to open a .rbl file, or use create_map to start one.";
+const NOT_CONNECTED = "Not connected to Rainbird — ask the user to run “Rae: Connect” (environment + API key) first.";
 
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
@@ -49,7 +49,7 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
   const requireText = (): { text: string; fileName: string } => {
     const text = session.currentText();
     if (text === undefined) throw new Error(NO_MAP);
-    return { text, fileName: session.fileName() ?? "map" };
+    return { text, fileName: session.fileName() ?? "model" };
   };
 
   const resolveKm = (explicit?: string) => explicit || session.kmInfo().kmId;
@@ -57,19 +57,19 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
   return [
     tool(
       "get_map_overview",
-      "Structured summary of the open RBLang map: concepts (type, instances), relationships (subject → object, askable, plural, fact and rule counts), facts, rules (name, cf, conditions, line range), imports, diagnostics counts and platform state. Cheap — call it before answering questions about a map that was not inlined, and before editing.",
+      "Structured summary of the open Raelog model: concepts (type, instances), relationships (subject → object, askable, plural, fact and rule counts), facts, rules (name, cf, conditions, line range), imports, diagnostics counts and platform state. Cheap — call it before answering questions about a model that was not inlined, and before editing.",
       async () => {
         const { text, fileName } = requireText();
         const client = await getClientSilent(context);
         const km = session.kmInfo();
         return buildOverview(text, { fileName, kmId: km.kmId, kmIdSource: km.source, apiUrl: client ? apiUrl() : undefined });
       },
-      { label: () => "Reading map overview" }
+      { label: () => "Reading model overview" }
     ),
 
     tool(
       "read_map",
-      "Read the open map as numbered lines: a line range (start_line/end_line, up to 300 lines per call) or one element by selector (a named rule, a relationship, a concept, a fact by rel+subject+object). Use it to see exact text before replace_element or replace_text.",
+      "Read the open model as numbered lines: a line range (start_line/end_line, up to 300 lines per call) or one element by selector (a named rule, a relationship, a concept, a fact by rel+subject+object). Use it to see exact text before replace_element or replace_text.",
       async (input) => {
         const { text } = requireText();
         if (input.element) {
@@ -88,7 +88,7 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
 
     tool(
       "get_diagnostics",
-      "Current linter findings for the open map (the same ones shown as squiggles), grouped by severity with line numbers and available quick-fix titles.",
+      "Current linter findings for the open model (the same ones shown as squiggles), grouped by severity with line numbers and available quick-fix titles.",
       async (input) => {
         const { text } = requireText();
         return formatDiagnostics(collectIssues(text), (input.severity as "error" | "warning" | "all" | undefined) ?? "all");
@@ -99,7 +99,7 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
     tool(
       "edit_map",
       [
-        "Change the open map with a batch of operations applied in order and atomically (if any fails, nothing is applied). Operations:",
+        "Change the open model with a batch of operations applied in order and atomically (if any fails, nothing is applied). Operations:",
         "insert_element {kind, xml, after?} — adds one or more complete elements of that kind (concept | rel | concinst | fact | rule); placed in the correct section (concepts → relationships → instances → facts → rules, grouped with related elements) and re-indented to the file's style, or right after the `after` selector.",
         "replace_element {selector, xml} — replaces a whole element (top-level, or a nested condition/question form selected by line).",
         "delete_element {selector} — removes an element and its line(s).",
@@ -121,16 +121,22 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
         await applier.apply(outcome.text, `edit_map (${plural(ops.length, "operation")})`);
         return describeEdit(fileName, text, outcome, collectIssues(text), collectIssues(outcome.text));
       },
-      { label: (input) => `Editing map: ${plural(((input.operations as unknown[]) ?? []).length, "operation")}` }
+      { label: (input) => `Editing model: ${plural(((input.operations as unknown[]) ?? []).length, "operation")}` }
     ),
 
     tool(
       "create_map",
-      "Create a new RBLang document from a complete map and make it the assistant's target. With file_name (e.g. eligibility.rbl) the file is created in the workspace folder; without it an untitled document opens. Fails if a non-empty map is already open — edit that one, or pass file_name to create a second file.",
+      "Create a new Raelog document from a complete model and make it the assistant's target. With file_name (e.g. eligibility.rbl, or eligibility.raelog; any other extension becomes .rbl) the file is created in the workspace folder; without it an untitled document opens. Fails if a non-empty model is already open — edit that one, or pass file_name to create a second file.",
       async (input) => {
         const xml = String(input.xml ?? "");
         const existing = session.target();
-        const fileName = input.file_name ? String(input.file_name).replace(/\.(rblang|xml)?$/, "").replace(/\.rbl$/, "") + ".rbl" : undefined;
+        const requested = input.file_name ? String(input.file_name) : undefined;
+        // A .raelog name is kept as asked; anything else is saved as .rbl, the default extension.
+        const fileName = requested
+          ? /\.raelog$/i.test(requested)
+            ? requested
+            : requested.replace(/\.(rblang|xml)?$/, "").replace(/\.rbl$/, "") + ".rbl"
+          : undefined;
         if (existing && existing.getText().trim() && !fileName) {
           throw new Error(`${session.fileName()} is already open and not empty. Use edit_map to change it, or pass file_name to create a separate file.`);
         }
@@ -164,35 +170,35 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
         const errors = issues.filter((i) => i.severity === "error");
         return `Created ${session.fileName()} (${doc.lineCount} lines). Lint: ${summariseIssues(issues)}.${errors.length ? `\n${formatDiagnostics(issues, "error")}` : ""}${doc.isUntitled ? "\nThe document is untitled — the user should save it (Cmd/Ctrl+S) to keep it." : ""}`;
       },
-      { label: (input) => `Creating map${input.file_name ? ` ${input.file_name}` : ""}` }
+      { label: (input) => `Creating model${input.file_name ? ` ${input.file_name}` : ""}` }
     ),
 
     tool(
       "lint_rblang",
-      "Check RBLang before proposing it. mode 'map' lints a complete document; mode 'snippet' lints one or more elements in the context of the open map (so relationships and concepts declared there resolve) and reports only findings inside the snippet, with snippet-relative line numbers.",
+      "Check Raelog before proposing it. mode 'map' lints a complete document; mode 'snippet' lints one or more elements in the context of the open model (so relationships and concepts declared there resolve) and reports only findings inside the snippet, with snippet-relative line numbers.",
       async (input) => {
         const rblang = String(input.rblang ?? "");
         const issues = input.mode === "snippet" ? lintSnippet(rblang, session.currentText()) : collectIssues(rblang);
         if (!issues.length) return "No issues — passes the linter.";
         return formatDiagnostics(issues);
       },
-      { label: (input) => `Linting ${input.mode === "snippet" ? "snippet" : "map"}` }
+      { label: (input) => `Linting ${input.mode === "snippet" ? "snippet" : "model"}` }
     ),
 
     tool(
       "run_query",
       [
-        "Run a live query against a Rainbird knowledge map on the platform (the draft by default; `version` pins a published version). Without sessionId each call starts a fresh session, injects `facts`, queries `relationship` with a subject, an object or both and answers the engine's questions with `answers`, matched to each question by relationship (and subject/object) — a question group is sent in one response, a plural question takes one entry per value.",
+        "Run a live query against a Rae model on the platform (the draft by default; `version` pins a published version). Without sessionId each call starts a fresh session, injects `facts`, queries `relationship` with a subject, an object or both and answers the engine's questions with `answers`, matched to each question by relationship (and subject/object) — a question group is sent in one response, a plural question takes one entry per value.",
         "Answers are checked before sending: dates as YYYY-MM-DD (an ambiguous date such as 01/10/1981 is refused), numbers as numbers, truth questions true/false; problems come back under `rejected` without reaching the engine.",
         "If questions remain they are returned with the sessionId and, per question, `expected` (the value format), de-duplicated `options`, `alreadyKnown` (facts the engine already holds) and `canSkip` with a `skipHint` — call again with that sessionId and answers for the whole group, or ask the user.",
         "`unanswered: true` is accepted only when a question has allowUnknown or known answers; with known answers it means \"no more\" and keeps them. Plural questions are asked even when facts were injected: the tool answers \"no more\" itself when the injected facts cover the question (setting rainbird.query.autoSkipPluralQuestions) unless you supplied an answer for it, and lists those in `autoSkipped`.",
-        "Returns results with certainty and fact IDs (usable with get_evidence). Needs a kmID: the map this file is bound to (opened, pulled, pushed or bound by Knowledge Map ID), the rainbird.knowledgeMapId setting, or `kmId`.",
+        "Returns results with certainty and fact IDs (usable with get_evidence). Needs a kmID: the model this file is bound to (opened, pulled, pushed or bound by Knowledge Map ID), the rainbird.knowledgeMapId setting, or `kmId`.",
       ].join(" "),
       async (input) => {
         const client = await getClientSilent(context);
         if (!client) return NOT_CONNECTED;
         const kmId = resolveKm(input.kmId as string | undefined);
-        if (!kmId) return "No knowledge map ID — pass kmId, push the map first (push_map), or ask the user to run “Rainbird: Open Map by Knowledge Map ID…” or “Rainbird: Bind Open File to a Knowledge Map ID…”.";
+        if (!kmId) return "No Knowledge Map ID — pass kmId, push the model first (push_map), or ask the user to run “Rae: Open Model by Knowledge Map ID…” or “Rae: Bind Open File to a Knowledge Map ID…”.";
         const queue = [...((input.answers as Answer[] | undefined) ?? [])];
         const settings = vscode.workspace.getConfiguration("rainbird");
         const autoSkipMode = readAutoSkipMode(settings.get("query.autoSkipPluralQuestions"));
@@ -237,7 +243,7 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
 
     tool(
       "push_map",
-      "Upload RBLang to the platform as a NEW map (create-only — a fresh kmID every time; the user cleans up old scratch maps in Studio). Omit `rblang` to push the open map as it stands. Requires the user's approval. Name/description must be plain text: letters, numbers and spaces. Returns the new kmID, which run_query uses automatically for this file from then on.",
+      "Upload Raelog to the platform as a NEW model (create-only — a fresh kmID every time; the user cleans up old scratch models in Studio). Omit `rblang` to push the open model as it stands. Requires the user's approval. Name/description must be plain text: letters, numbers and spaces. Returns the new kmID, which run_query uses automatically for this file from then on.",
       async (input) => {
         const client = await getClientSilent(context);
         if (!client) return NOT_CONNECTED;
@@ -251,8 +257,8 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
         } catch (error) {
           const validation = error instanceof ApiError ? error.errMessages() : undefined;
           if (!validation?.length) throw error;
-          if (doc && doc.getText() === rblang) showPlatformErrors(doc, validation, `Assistant push of "${name}" rejected by Rainbird`);
-          return `The platform rejected the map with ${plural(validation.length, "validation error")}:\n${validation.map((m) => `- ${m}`).join("\n")}\nFix the RBLang and push again.`;
+          if (doc && doc.getText() === rblang) showPlatformErrors(doc, validation, `Assistant push of "${name}" rejected by Rae`);
+          return `The platform rejected the model with ${plural(validation.length, "validation error")}:\n${validation.map((m) => `- ${m}`).join("\n")}\nFix the Raelog and push again.`;
         }
         const { kmId, raw, validation } = created;
         if (!kmId) return `Uploaded, but no kmID found in the response: ${JSON.stringify(raw).slice(0, 400)}`;
@@ -260,26 +266,26 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
         if (doc && doc.getText() === rblang) await context.workspaceState.update(`rainbird.pushedKm.${doc.uri.toString()}`, kmId);
         if (validation.length) {
           if (doc && doc.getText() === rblang) showPlatformErrors(doc, validation, `Assistant push of "${name}" (kmID ${kmId}) accepted with validation errors`);
-          return `Created map "${name}" with kmID ${kmId}, but the platform reported a validation error (it reports one per push):\n${validation.map((m) => `- ${m}`).join("\n")}\nThe draft was stored as-is; fix the RBLang before relying on it.`;
+          return `Created model "${name}" with kmID ${kmId}, but the platform reported a validation error (it reports one per push):\n${validation.map((m) => `- ${m}`).join("\n")}\nThe draft was stored as-is; fix the Raelog before relying on it.`;
         }
-        return `Created map "${name}" with kmID ${kmId}. run_query will use it for this file.`;
+        return `Created model "${name}" with kmID ${kmId}. run_query will use it for this file.`;
       },
       {
         async confirm(input) {
           const choice = await vscode.window.showWarningMessage(
-            `The assistant wants to push "${input.name}" to ${apiUrl()} (creates a new map).`,
+            `The assistant wants to push "${input.name}" to ${apiUrl()} (creates a new model).`,
             { modal: true },
             "Push"
           );
           return choice === "Push";
         },
-        label: (input) => `Pushing map "${input.name}"`,
+        label: (input) => `Pushing model "${input.name}"`,
       }
     ),
 
     tool(
       "semantic_diff",
-      "Model-level differences (concepts, relationships, instances, facts, rules — not XML line noise) between the open map and a base: 'turn-start' (as it was when this turn began), 'git-head' (last commit), 'pushed-snapshot' (the last pulled or pushed snapshot of the platform map this file is bound to) or 'text' (an RBLang document you pass).",
+      "Model-level differences (concepts, relationships, instances, facts, rules — not XML line noise) between the open model and a base: 'turn-start' (as it was when this turn began), 'git-head' (last commit), 'pushed-snapshot' (the last pulled or pushed snapshot of the platform model this file is bound to) or 'text' (a Raelog document you pass).",
       async (input) => {
         const { text, fileName } = requireText();
         const doc = session.target()!;
@@ -298,18 +304,18 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
           case "pushed-snapshot": {
             const kmId = context.workspaceState.get<string>(`rainbird.pushedKm.${doc.uri.toString()}`);
             if (!kmId) {
-              return "This file is not bound to a platform map (it was not opened by Knowledge Map ID, pulled, pushed or bound in this workspace), so there is no last pulled or pushed snapshot.";
+              return "This file is not bound to a platform model (it was not opened by Knowledge Map ID, pulled, pushed or bound in this workspace), so there is no last pulled or pushed snapshot.";
             }
             // Same rule as quick diff (platform.ts fileKmVersion): a copy of a saved version has no snapshot of its own.
             const pulled = context.workspaceState.get<{ kmId?: string; version?: number }>(`rainbird.pulledVersion.${doc.uri.toString()}`);
             if (typeof pulled?.version === "number" && pulled.kmId?.toLowerCase() === kmId.toLowerCase()) {
-              return `This file is a copy of version ${pulled.version} of ${kmId}. The last pulled or pushed snapshot records the draft, so it is not this file's starting point; compare against 'text' (e.g. RBLang the user pastes) instead.`;
+              return `This file is a copy of version ${pulled.version} of ${kmId}. The last pulled or pushed snapshot records the draft, so it is not this file's starting point; compare against 'text' (e.g. Raelog the user pastes) instead.`;
             }
             let raw: Uint8Array;
             try {
               raw = await vscode.workspace.fs.readFile(snapshotUri(context, kmId));
             } catch {
-              return `There is no last pulled or pushed snapshot of ${kmId} yet: one is recorded when its draft is pulled into a file or the map is pushed from VS Code.`;
+              return `There is no last pulled or pushed snapshot of ${kmId} yet: one is recorded when its draft is pulled into a file or the model is pushed from VS Code.`;
             }
             base = { label: `last pulled or pushed snapshot (kmID ${kmId})`, text: Buffer.from(raw).toString("utf8") };
             break;
@@ -350,7 +356,7 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
 
     tool(
       "get_evidence",
-      "The evidence tree for a fact inferred in a query session, as an indented outline: the fact with its certainty and source (rule, answer, injected, datasource, knowledge map), then the rule's conditions in the order the engine reports them, each with the fact that satisfied it, its impact against the maximum possible impact and its weight, plus evidence text. List-function conditions include the function result and every contributing fact; unmet optional and zero-salience conditions are marked; the outline ends with the inputs used by the result. Use the sessionId and a factID from a run_query result.",
+      "The evidence tree for a fact inferred in a query session, as an indented outline: the fact with its certainty and source (rule, answer, injected, datasource, or model for a fact stored in the model itself), then the rule's conditions in the order the engine reports them, each with the fact that satisfied it, its impact against the maximum possible impact and its weight, plus evidence text. List-function conditions include the function result and every contributing fact; unmet optional and zero-salience conditions are marked; the outline ends with the inputs used by the result. Use the sessionId and a factID from a run_query result.",
       async (input) => {
         const client = await getClientSilent(context);
         if (!client) return NOT_CONNECTED;
@@ -360,7 +366,7 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
         } catch (error) {
           if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
             throw new Error(
-              "Evidence is locked for this map. Ask the user to enable Evidence Tree Link in Studio (Publish → API Management → Access Control) or to run “Rainbird: Set Evidence Key”, then try again."
+              "Evidence is locked for this model. Ask the user to enable Evidence Tree Link in Studio (Publish → API Management → Access Control) or to run “Rae: Set Evidence Key”, then try again."
             );
           }
           throw error;

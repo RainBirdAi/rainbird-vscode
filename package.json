@@ -1,8 +1,8 @@
 {
   "name": "rainbird",
-  "displayName": "Rainbird (Beta)",
-  "description": "Beta — RBLang language support, knowledge-map tooling, query running and evidence trees for the Rainbird decision-intelligence platform.",
-  "version": "0.0.14",
+  "displayName": "Rae by Rainbird",
+  "description": "Raelog language support, model authoring, query running and evidence trees for Rae, the decision automation platform from Rainbird.",
+  "version": "0.0.15",
   "preview": true,
   "publisher": "RainbirdTechnologies",
   "license": "MIT",
@@ -27,10 +27,10 @@
   ],
   "keywords": [
     "rainbird",
+    "rae",
+    "raelog",
     "rblang",
-    "knowledge map",
-    "knowledge graph",
-    "decision intelligence",
+    "decision automation",
     "reasoning"
   ],
   "main": "./out/extension.js",
@@ -38,6 +38,7 @@
     "onLanguage:rblang",
     "onLanguage:xml",
     "workspaceContains:**/*.rbl",
+    "workspaceContains:**/*.raelog",
     "workspaceContains:**/*.rbird",
     "onStartupFinished"
   ],
@@ -46,12 +47,14 @@
       {
         "id": "rblang",
         "aliases": [
+          "Raelog",
           "RBLang",
           "rblang"
         ],
         "extensions": [
           ".rbl",
-          ".rblang"
+          ".rblang",
+          ".raelog"
         ],
         "configuration": "./language-configuration.json",
         "icon": {
@@ -89,75 +92,75 @@
     "commands": [
       {
         "command": "rainbird.getStarted",
-        "title": "Rainbird: Get Started"
+        "title": "Rae: Get Started"
       },
       {
         "command": "rainbird.connect",
-        "title": "Rainbird: Connect (set environment & API key)"
+        "title": "Rae: Connect (set environment & API key)"
       },
       {
         "command": "rainbird.runQuery",
-        "title": "Rainbird: Run Query (Quick Pick)…"
+        "title": "Rae: Run Query (Quick Pick)…"
       },
       {
         "command": "rainbird.openQueryPanel",
-        "title": "Rainbird: Run Query…",
+        "title": "Rae: Run Query…",
         "icon": "$(play)"
       },
       {
         "command": "rainbird.openGraphView",
-        "title": "Rainbird: Show Graph View",
+        "title": "Rae: Show Graph View",
         "icon": "$(type-hierarchy-sub)"
       },
       {
         "command": "rainbird.pushMap",
-        "title": "Rainbird: Push Map to Platform (creates a new map)",
+        "title": "Rae: Push Model to Platform (creates a new model)",
         "icon": "$(cloud-upload)"
       },
       {
         "command": "rainbird.explainSelection",
-        "title": "Rainbird: Explain with AI"
+        "title": "Rae: Explain with AI"
       },
       {
         "command": "rainbird.setAnthropicKey",
-        "title": "Rainbird: Set Anthropic API Key (AI assistant)",
+        "title": "Rae: Set Anthropic API Key (AI assistant)",
         "icon": "$(key)"
       },
       {
         "command": "rainbird.assistantNewChat",
-        "title": "Rainbird: New Assistant Chat",
+        "title": "Rae: New Assistant Chat",
         "icon": "$(clear-all)"
       },
       {
         "command": "rainbird.openNlPanel",
-        "title": "Rainbird: Ask in Natural Language (beta)…"
+        "title": "Rae: Ask in Natural Language (beta)…"
       },
       {
         "command": "rainbird.semanticDiff",
-        "title": "Rainbird: Diff vs git HEAD (side by side + semantic report)…"
+        "title": "Rae: Diff vs git HEAD (side by side + semantic report)…"
       },
       {
         "command": "rainbird.promotionDiff",
-        "title": "Rainbird: Compare Versions (Promotion Diff)…",
+        "title": "Rae: Compare Versions (Promotion Diff)…",
         "icon": "$(diff)"
       },
       {
         "command": "rainbird.diffAgainstPushed",
-        "title": "Rainbird: Diff Against Last Pulled or Pushed Snapshot"
+        "title": "Rae: Diff Against Last Pulled or Pushed Snapshot"
       },
       {
         "command": "rainbird.mapsRefresh",
-        "title": "Rainbird: Refresh Maps",
+        "title": "Rae: Refresh Models",
         "icon": "$(refresh)"
       },
       {
         "command": "rainbird.mapsAdd",
-        "title": "Rainbird: Add Map by kmID…",
+        "title": "Rae: Add Model by kmID…",
         "icon": "$(add)"
       },
       {
         "command": "rainbird.mapsOpen",
-        "title": "Open RBLang"
+        "title": "Open Raelog"
       },
       {
         "command": "rainbird.mapsQuery",
@@ -183,82 +186,82 @@
       },
       {
         "command": "rainbird.showEvidence",
-        "title": "Rainbird: Show Evidence Tree for Fact…"
+        "title": "Rae: Show Evidence Tree for Fact…"
       },
       {
         "command": "rainbird.setEvidenceKey",
-        "title": "Rainbird: Set Evidence Key (x-evidence-key)"
+        "title": "Rae: Set Evidence Key (x-evidence-key)"
       },
       {
         "command": "rainbird.extractRbird",
-        "title": "Rainbird: Extract RBLang from .rbird export"
+        "title": "Rae: Extract Raelog from .rbird export"
       },
       {
         "command": "rainbird.compareDraft",
-        "title": "Rainbird: Compare Draft vs Saved Version…",
+        "title": "Rae: Compare Draft vs Saved Version…",
         "icon": "$(diff)"
       },
       {
         "command": "rainbird.openMapByKmId",
-        "title": "Rainbird: Open Map by Knowledge Map ID…",
+        "title": "Rae: Open Model by Knowledge Map ID…",
         "icon": "$(cloud-download)"
       },
       {
         "command": "rainbird.pullMap",
-        "title": "Rainbird: Pull Map RBLang from Platform (read-only draft or saved version)…",
+        "title": "Rae: Pull Model Raelog from Platform (read-only draft or saved version)…",
         "icon": "$(cloud-download)"
       },
       {
         "command": "rainbird.reloadFromPlatform",
-        "title": "Rainbird: Reload Map from Studio (replace the open file with the latest draft)",
+        "title": "Rae: Reload Model from Studio (replace the open file with the latest draft)",
         "icon": "$(refresh)"
       },
       {
         "command": "rainbird.bindKmId",
-        "title": "Rainbird: Bind Open File to a Knowledge Map ID…",
+        "title": "Rae: Bind Open File to a Knowledge Map ID…",
         "icon": "$(link)"
       },
       {
         "command": "rainbird.diffAgainstDraft",
-        "title": "Rainbird: Diff Open File Against Platform Draft"
+        "title": "Rae: Diff Open File Against Platform Draft"
       },
       {
         "command": "rainbird.addMcpServer",
-        "title": "Rainbird: Add Served Graph as MCP Server…"
+        "title": "Rae: Add a Model's MCP Endpoint…"
       },
       {
         "command": "rainbird.insertElement",
-        "title": "Rainbird: Insert… (concept, relationship, instance, fact, rule)",
+        "title": "Rae: Insert… (concept, relationship, instance, fact, rule)",
         "icon": "$(add)"
       },
       {
         "command": "rainbird.addConcept",
-        "title": "Rainbird: Add Concept…",
+        "title": "Rae: Add Concept…",
         "icon": "$(add)"
       },
       {
         "command": "rainbird.addRelationship",
-        "title": "Rainbird: Add Relationship…",
+        "title": "Rae: Add Relationship…",
         "icon": "$(add)"
       },
       {
         "command": "rainbird.addInstance",
-        "title": "Rainbird: Add Instance…",
+        "title": "Rae: Add Instance…",
         "icon": "$(add)"
       },
       {
         "command": "rainbird.addFact",
-        "title": "Rainbird: Add Fact…",
+        "title": "Rae: Add Fact…",
         "icon": "$(add)"
       },
       {
         "command": "rainbird.addRule",
-        "title": "Rainbird: Add Rule…",
+        "title": "Rae: Add Rule…",
         "icon": "$(add)"
       },
       {
         "command": "rainbird.addCondition",
-        "title": "Rainbird: Add Condition to Rule at Cursor…",
+        "title": "Rae: Add Condition to Rule at Cursor…",
         "icon": "$(add)"
       }
     ],
@@ -266,8 +269,8 @@
       "activitybar": [
         {
           "id": "rainbird",
-          "title": "Rainbird",
-          "icon": "media/rainbird-activity.svg"
+          "title": "Rae",
+          "icon": "media/rae-mark.svg"
         }
       ]
     },
@@ -275,30 +278,30 @@
       "rainbird": [
         {
           "id": "rainbird.mapExplorer",
-          "name": "Map Explorer",
-          "icon": "media/rainbird-activity.svg"
+          "name": "Model Explorer",
+          "icon": "media/rae-mark.svg"
         },
         {
           "id": "rainbird.platformMaps",
-          "name": "Maps",
-          "icon": "media/rainbird-activity.svg"
+          "name": "Models",
+          "icon": "media/rae-mark.svg"
         },
         {
           "id": "rainbird.assistant",
           "type": "webview",
           "name": "AI Assistant",
-          "icon": "media/rainbird-activity.svg"
+          "icon": "media/rae-mark.svg"
         }
       ]
     },
     "viewsWelcome": [
       {
         "view": "rainbird.mapExplorer",
-        "contents": "Open an RBLang (.rbl) file to explore its concepts, relationships and rules. No file yet? Open one of your maps by its Knowledge Map ID, try the example, or start one.\n[Open a map by Knowledge Map ID…](command:rainbird.openMapByKmId)\n[Open example](command:rainbird.openExample)\n[Insert into the open file…](command:rainbird.insertElement)\n[Getting started](command:rainbird.getStarted)"
+        "contents": "Open a Raelog (.rbl) file to explore its concepts, relationships and rules. No file yet? Open one of your models by its Knowledge Map ID, try the example, or start one.\n[Open a model by Knowledge Map ID…](command:rainbird.openMapByKmId)\n[Open example](command:rainbird.openExample)\n[Insert into the open file…](command:rainbird.insertElement)\n[Getting started](command:rainbird.getStarted)"
       },
       {
         "view": "rainbird.platformMaps",
-        "contents": "Maps you open, push or query from VS Code appear here. Rainbird's API has no endpoint that lists your Studio maps, so start from a map's Knowledge Map ID (on its Publish page in Studio).\n[Open Map by Knowledge Map ID…](command:rainbird.openMapByKmId)\n[Add a kmID without opening it](command:rainbird.mapsAdd)"
+        "contents": "Models you open, push or query from VS Code appear here. Rainbird's API has no endpoint that lists your models, so start from a model's Knowledge Map ID (on its Publish page in Rainbird Studio).\n[Open Model by Knowledge Map ID…](command:rainbird.openMapByKmId)\n[Add a kmID without opening it](command:rainbird.mapsAdd)"
       }
     ],
     "menus": {
@@ -522,7 +525,7 @@
       ]
     },
     "configuration": {
-      "title": "Rainbird",
+      "title": "Rae",
       "properties": {
         "rainbird.apiUrl": {
           "type": "string",
@@ -532,13 +535,13 @@
         "rainbird.knowledgeMapId": {
           "type": "string",
           "default": "",
-          "description": "Default Knowledge Map ID (kmID) for this workspace or folder, used for files that have no map of their own and for queries with no file open. Files opened by Knowledge Map ID, pulled, pushed or bound with “Rainbird: Bind Open File to a Knowledge Map ID…” keep their own map, which wins over this setting. The ID is on the map's Publish page in Rainbird Studio, or under View Knowledge Map ID in the map's menu.",
+          "description": "Default Knowledge Map ID (kmID) for this workspace or folder, used for files that have no model of their own and for queries with no file open. Files opened by Knowledge Map ID, pulled, pushed or bound with “Rae: Bind Open File to a Knowledge Map ID…” keep their own model, which wins over this setting. The ID is on the model's Publish page in Rainbird Studio, or under View Knowledge Map ID in the model's menu.",
           "scope": "resource"
         },
         "rainbird.useDraft": {
           "type": "boolean",
           "default": true,
-          "description": "Query the draft version of the knowledge map instead of the live version."
+          "description": "Query the draft version of the model instead of the live version."
         },
         "rainbird.query.dateOrder": {
           "type": "string",
@@ -563,7 +566,7 @@
           ],
           "enumDescriptions": [
             "When the values a plural question asks about are already covered by facts injected in this session, answer “No more” automatically.",
-            "Answer “No more” automatically whenever the engine already knows some answers to a plural question, whatever their source: injected facts, the map, a datasource or a rule.",
+            "Answer “No more” automatically whenever the engine already knows some answers to a plural question, whatever their source: injected facts, the model, a datasource or a rule.",
             "Always ask. In the query panel the question card still shows what the engine already knows, with a No more button."
           ],
           "markdownDescription": "Plural relationships are asked even when the engine already holds facts for them (by design, so more can be added). This setting decides when the query panel and the assistant's `run_query` tool answer *No more* for you instead of asking. In the panel every automatic answer appears in the transcript with an **Answer instead** action and is saved in tests like any other answer; `run_query` lists them under `autoSkipped`."
@@ -571,7 +574,7 @@
         "rainbird.query.logQuestions": {
           "type": "boolean",
           "default": false,
-          "description": "Log the raw question JSON the engine sends to the query panel, and the answer payloads the panel sends back, to the Rainbird output channel. For diagnosing how questions are shown; leave off otherwise."
+          "description": "Log the raw question JSON the engine sends to the query panel, and the answer payloads the panel sends back, to the Rae output channel. For diagnosing how questions are shown; leave off otherwise."
         },
         "rainbird.studioUrl": {
           "type": "string",
@@ -618,7 +621,7 @@
             "Edits land in the open file as the assistant works (each is one undo step; the chat offers Show diff and Undo per turn).",
             "Edits accumulate in a proposal; a side-by-side diff opens and you Accept or Reject before the file changes."
           ],
-          "description": "How the AI assistant's changes reach your RBLang file."
+          "description": "How the AI assistant's changes reach your Raelog file."
         },
         "rainbird.ai.showDiffAfterEdits": {
           "type": "boolean",
@@ -637,13 +640,13 @@
     "walkthroughs": [
       {
         "id": "rainbird.gettingStarted",
-        "title": "Get started with Rainbird",
-        "description": "Author RBLang knowledge maps, open your Studio maps by Knowledge Map ID, run queries and inspect evidence without leaving VS Code. This extension is in beta — expect rough edges and please report issues on GitHub.",
+        "title": "Get started with Rae",
+        "description": "Author Raelog models for Rae, the decision automation platform from Rainbird. Open your models by Knowledge Map ID, run queries and inspect evidence without leaving VS Code. Please report issues on GitHub.",
         "steps": [
           {
             "id": "rainbird.openExample",
-            "title": "Open an example knowledge map",
-            "description": "Open a sample .rbl file to see RBLang language support in action. It works offline, but it is not on your Rainbird account: push it (cloud icon) or open one of your own maps before querying.\n[Open example](command:rainbird.openExample)",
+            "title": "Open an example model",
+            "description": "Open a sample .rbl file to see Raelog language support in action. It works offline, but it is not on your Rainbird account: push it (cloud icon) or open one of your own models before querying.\n[Open example](command:rainbird.openExample)",
             "media": {
               "markdown": "media/walkthrough/example.md"
             }
@@ -661,8 +664,8 @@
           },
           {
             "id": "rainbird.openMapStep",
-            "title": "Open your own map",
-            "description": "Paste a map's Knowledge Map ID, from its Publish page in Studio. The extension downloads the map's draft, saves it as a .rbl file and remembers which map it is.\n[Open Map by Knowledge Map ID…](command:rainbird.openMapByKmId)",
+            "title": "Open your own model",
+            "description": "Paste a model's Knowledge Map ID, from its Publish page in Rainbird Studio. The extension downloads the model's draft, saves it as a .rbl file and remembers which model it is.\n[Open Model by Knowledge Map ID…](command:rainbird.openMapByKmId)",
             "media": {
               "markdown": "media/walkthrough/open-map.md"
             },
@@ -673,7 +676,7 @@
           {
             "id": "rainbird.queryStep",
             "title": "Run your first query",
-            "description": "Start from the .rbl you opened (▶ in its title bar), so the extension knows which map to query. Pick a goal relationship, answer the questions the engine asks, and get a result with certainty and evidence.\n[Run Query](command:rainbird.openQueryPanel)",
+            "description": "Start from the .rbl you opened (▶ in its title bar), so the extension knows which model to query. Pick a goal relationship, answer the questions the engine asks, and get a result with certainty and evidence.\n[Run Query](command:rainbird.openQueryPanel)",
             "media": {
               "markdown": "media/walkthrough/query.md"
             },

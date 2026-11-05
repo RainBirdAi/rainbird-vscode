@@ -125,13 +125,13 @@
     } else if (lint) {
       const errs = lint.issues.filter((x) => x.severity === "error");
       const warns = lint.issues.filter((x) => x.severity === "warning");
-      if (!lint.issues.length) lintHtml = '<div class="lint ok">✓ passes the RBLang linter</div>';
+      if (!lint.issues.length) lintHtml = '<div class="lint ok">✓ passes the Raelog linter</div>';
       else if (!errs.length) lintHtml = `<div class="lint warn">⚠ ${warns.length} warning${warns.length === 1 ? "" : "s"}<ul>${warns.map((x) => `<li>line ${x.line + 1}: ${esc(x.message)}</li>`).join("")}</ul></div>`;
       else lintHtml = `<div class="lint bad">✗ ${errs.length} error${errs.length === 1 ? "" : "s"}<ul>${errs.map((x) => `<li>line ${x.line + 1}: ${esc(x.message)}</li>`).join("")}</ul></div>`;
       bar =
         `<div class="codebar">` +
         `<button data-act="insert" data-code="${enc}" title="Insert at the cursor (or replace the selection)">Insert</button>` +
-        (lint.complete ? `<button data-act="replaceFile" data-code="${enc}" title="Replace the whole open file with this map">Replace file</button>` : "") +
+        (lint.complete ? `<button data-act="replaceFile" data-code="${enc}" title="Replace the whole open file with this model">Replace file</button>` : "") +
         `<button data-act="copy" data-code="${enc}">Copy</button>` +
         (errs.length ? `<button data-act="fix" data-issues="${encodeURIComponent(JSON.stringify(errs.map((x) => `line ${x.line + 1}: ${x.message}`)))}">Ask to fix</button>` : "") +
         `</div>`;
@@ -144,14 +144,14 @@
   // ---------------------------------------------------------------- state & chips
 
   const CHIPS_WITH_MAP = [
-    ["Explain this map", "Explain what this map decides, which rules fire when, what the engine will ask, and how certainty flows."],
-    ["Find & fix problems", "Review this map for problems (diagnostics, unreachable rules, missing question wording, precedence traps, weak evidence text) and fix them."],
+    ["Explain this model", "Explain what this model decides, which rules fire when, what the engine will ask, and how certainty flows."],
+    ["Find & fix problems", "Review this model for problems (diagnostics, unreachable rules, missing question wording, precedence traps, weak evidence text) and fix them."],
     ["Add a rule…", "Add a rule that "],
     ["Add question wording", "Add natural question wording to every askable relationship that is missing it, in the same voice as the existing questions."],
-    ["Review certainty", "Review the certainty design of this map: rule cf values, condition weights, optional conditions and minimum-rule-certainty. Suggest improvements and apply the uncontroversial ones."],
+    ["Review certainty", "Review the certainty design of this model: rule cf values, condition weights, optional conditions and minimum-rule-certainty. Suggest improvements and apply the uncontroversial ones."],
   ];
   const CHIPS_NO_MAP = [
-    ["Create a map…", "Create a knowledge map that decides "],
+    ["Create a model…", "Create a model that decides "],
     ["What can I ask?", "What can you help me with in this extension, and what do I need set up?"],
   ];
 
@@ -163,11 +163,11 @@
   function renderEmpty() {
     const e = document.getElementById("empty");
     if (!e) return;
-    const target = state.target ? `<strong>${esc(state.target.name)}</strong> is open.` : "Open a <code>.rbl</code> file, or ask for a new map.";
+    const target = state.target ? `<strong>${esc(state.target.name)}</strong> is open.` : "Open a <code>.rbl</code> file, or ask for a new model.";
     const key = state.hasKey ? "" : `<p><button class="primary" data-act="setKey">Set Anthropic API key</button> to get started.</p>`;
     e.innerHTML =
-      `<p>${target} Ask anything about the knowledge map, or describe a change — the assistant reads the map, edits it through validated operations and reports what changed.</p>` +
-      `<ul><li>“Which rules infer <em>has risk level</em>, and what do they ask for?”</li><li>“Add a rule: applicants over 65 are exempt from the income check.”</li><li>“Why would this map never ask about postcode?”</li></ul>` +
+      `<p>${target} Ask anything about the model, or describe a change — the assistant reads the model, edits it through validated operations and reports what changed.</p>` +
+      `<ul><li>“Which rules infer <em>has risk level</em>, and what do they ask for?”</li><li>“Add a rule: applicants over 65 are exempt from the income check.”</li><li>“Why would this model never ask about postcode?”</li></ul>` +
       key;
   }
 
@@ -313,7 +313,7 @@
     const act = t.dataset.act;
     if (act === "fix") {
       const issues = JSON.parse(decodeURIComponent(t.dataset.issues));
-      send("The RBLang you showed has lint errors — fix them:\n" + issues.join("\n"));
+      send("The Raelog you showed has lint errors — fix them:\n" + issues.join("\n"));
     } else if (act === "insert" || act === "replaceFile" || act === "copy") {
       vscode.postMessage({ type: act, code: decodeURIComponent(t.dataset.code) });
     } else if (act === "showDiff" || act === "undoTurn" || act === "acceptProposal" || act === "rejectProposal") {

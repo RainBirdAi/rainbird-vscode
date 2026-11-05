@@ -346,7 +346,7 @@ describe("copy and summaries", () => {
   test("skipRejectedNote is the plan's copy", () => {
     assert.equal(
       skipRejectedNote("Please provide an expected boolean value for unanswered.", { relationship: "speaks" }),
-      'The engine would not let this question be skipped (Please provide an expected boolean value for unanswered.). Pick an answer below. If "speaks" should only ever be fed by injected facts, set askable="none" on it in the map — only if every session injects those facts; otherwise rules that need them get no result.'
+      'The engine would not let this question be skipped (Please provide an expected boolean value for unanswered.). Pick an answer below. If "speaks" should only ever be fed by injected facts, set askable="none" on it in the model — only if every session injects those facts; otherwise rules that need them get no result.'
     );
     assert.match(skipRejectedNote("x", { relationship: "speaks" }, "Pick an answer instead."), /\(x\)\. Pick an answer instead\. If "speaks"/);
   });
@@ -354,7 +354,7 @@ describe("copy and summaries", () => {
   test("replay messages", () => {
     assert.equal(
       pendingQuestionMessage(LIVE_QUESTION),
-      'The engine asked an unrecorded question: "Where does Tom live?" (Tom lives in ?) — the map\'s question flow changed. If that is intended, re-record the test from the query panel.'
+      'The engine asked an unrecorded question: "Where does Tom live?" (Tom lives in ?) — the model\'s question flow changed. If that is intended, re-record the test from the query panel.'
     );
     const batch: Answer[] = [{ relationship: "speaks", subject: "Fred", unanswered: true }];
     assert.match(replaySkipRefused(batch, "Please provide an expected boolean value for unanswered."), /^The engine refused to skip "speaks" \(Please provide .*\): this test answers it with unanswered: true/);
@@ -487,7 +487,7 @@ describe("answerQuestions (the run_query loop)", () => {
     const reply = JSON.parse(queryToolReply(outcome, { sessionId: "s1" }));
     assert.match(
       reply.note,
-      /^Rainbird rejected this group \(Invalid answer\); the automatic "no more" was withdrawn in case it was the cause — check your answers and answer the whole group\./
+      /^Rae rejected this group \(Invalid answer\); the automatic "no more" was withdrawn in case it was the cause — check your answers and answer the whole group\./
     );
     assert.doesNotMatch(reply.note, /would not let a question be skipped|Only part of this group/);
     assert.deepEqual(reply.questions.map((q: { willAutoSkip?: boolean }) => q.willAutoSkip), [undefined, undefined]);
@@ -536,7 +536,7 @@ describe("answerQuestions (the run_query loop)", () => {
   test("a 400 on supplied answers stops with the engine's message; other errors propagate", async () => {
     const outcome = await answerQuestions(scripted([new ApiError("400", 400, JSON.stringify({ err: ["Invalid answer"] }))]), "s1", asked(LIVE_QUESTION), [{ relationship: "lives in", object: "Spain" }], { facts: [], noAutoSkip: new Set(), pending: [] }, { mode: "injected" });
     assert.equal(outcome.kind === "question" && outcome.engineError, "Invalid answer");
-    assert.match(JSON.parse(queryToolReply(outcome, { sessionId: "s1" })).note, /Rainbird rejected the answers for this group \(Invalid answer\); nothing was recorded/);
+    assert.match(JSON.parse(queryToolReply(outcome, { sessionId: "s1" })).note, /Rae rejected the answers for this group \(Invalid answer\); nothing was recorded/);
     await assert.rejects(
       answerQuestions(scripted([new ApiError("404", 404, "")]), "s1", asked(LIVE_QUESTION), [{ relationship: "lives in", object: "Spain" }], { facts: [], noAutoSkip: new Set(), pending: [] }, { mode: "injected" }),
       /404/
@@ -545,7 +545,7 @@ describe("answerQuestions (the run_query loop)", () => {
 
   test("a 400 without a message is still reported to the model", async () => {
     const outcome = await answerQuestions(scripted([new ApiError("400", 400, "")]), "s1", asked(LIVE_QUESTION), [{ relationship: "lives in", object: "Spain" }], { facts: [], noAutoSkip: new Set(), pending: [] }, { mode: "injected" });
-    assert.match(JSON.parse(queryToolReply(outcome, { sessionId: "s1" })).note, /^Rainbird rejected the answers for this group; nothing was recorded\./);
+    assert.match(JSON.parse(queryToolReply(outcome, { sessionId: "s1" })).note, /^Rae rejected the answers for this group; nothing was recorded\./);
   });
 
   test("the pending group is remembered for the next call", async () => {

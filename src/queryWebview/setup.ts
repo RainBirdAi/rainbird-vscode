@@ -1,5 +1,5 @@
 /**
- * Query panel webview, setup region: the "What should Rainbird work out?" card
+ * Query panel webview, setup region: the "What should Rae work out?" card
  * (goal relationship, subject / object, target version, facts to inject) and the
  * header badge naming the map, with its "Change…" link.
  * Messages in: init, session, mapInfo, startError, factsText, and question, result and autoSkipped,
@@ -98,13 +98,13 @@ export const SETUP_SCRIPT = /* js */ `
   (function () {
     const km = document.getElementById('km');
     if (!km || !km.parentNode) return;
-    const change = el('<button type="button" class="changeKm" id="changeKm" title="Choose the map to query">Choose map…</button>');
+    const change = el('<button type="button" class="changeKm" id="changeKm" title="Choose the model to query">Choose model…</button>');
     km.parentNode.insertBefore(change, km.nextSibling);
     change.addEventListener('click', () => vscode.postMessage({ type: 'changeKm' }));
   })();
 
   function setupCount(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
-  function setupGoalSource() { return goalsFrom === 'platform' ? 'the platform draft' : 'the open map'; }
+  function setupGoalSource() { return goalsFrom === 'platform' ? 'the platform draft' : 'the open model'; }
   function setupMarked(segments) { return segments.map(s => s.match ? '<b>' + esc(s.text) + '</b>' : esc(s.text)).join(''); }
   // How many goals a name the map does not declare matches by name, subject or
   // object (acronym matches do not count): a name with matches is most likely
@@ -313,9 +313,9 @@ export const SETUP_SCRIPT = /* js */ `
         // Inside the combo, so the list opens below it and never hides the case hint.
         + '<div class="hint goalMeta" id="goalMeta" aria-live="polite"></div></div>'
       : '<label for="goalInput">Goal relationship</label><input type="text" class="goal" id="goalInput" placeholder="e.g. speaks">'
-        + '<div class="hint">Type the relationship name exactly as the map declares it — names are case-sensitive.</div>';
+        + '<div class="hint">Type the relationship name exactly as the model declares it — names are case-sensitive.</div>';
     const card = el('<div class="card">'
-      + '<div class="prompt">What should Rainbird work out?</div>'
+      + '<div class="prompt">What should Rae work out?</div>'
       + (setupMapNote ? '<div class="err mapNote">' + esc(setupMapNote) + '</div>' : '')
       + goalField
       + '<div class="row2">'
@@ -367,7 +367,7 @@ export const SETUP_SCRIPT = /* js */ `
       if (n && goal !== confirmed && !goals.some(g => g.name === goal) && setupNearMatches(goal)) {
         confirmed = goal;
         confirmShown = true;
-        errSlot.textContent = '“' + goal + '” is not one of the map’s relationships — pick one from the list, or click Start query again to send it as typed.';
+        errSlot.textContent = '“' + goal + '” is not one of the model’s relationships — pick one from the list, or click Start query again to send it as typed.';
         goalEl.focus();
         return;
       }
@@ -384,7 +384,7 @@ export const SETUP_SCRIPT = /* js */ `
         + ' · ' + (kind === 'version' ? 'version ' + version : kind) + (facts.trim() ? ' · with injected facts' : '');
       // "New query" and "Run another query" start from the goal just run.
       preselect = goal;
-      preselectWhy = 'last goal for this map';
+      preselectWhy = 'last goal for this model';
       pendingSetup = card;
       const go = card.querySelector('.go'); go.disabled = true; go.textContent = 'Starting…';
       vscode.postMessage({ type: 'start', relationship: goal, subject: subject || undefined, object: object || undefined, target, facts });
@@ -411,7 +411,7 @@ export const SETUP_SCRIPT = /* js */ `
     goalsFrom = m.goalsFrom || 'none';
     goalsAskableMixed = !!m.askableMixed;
     preselect = m.preselect || null;
-    preselectWhy = m.preselectFrom === 'editor' ? 'from the editor' : m.preselectFrom === 'last' ? 'last goal for this map' : '';
+    preselectWhy = m.preselectFrom === 'editor' ? 'from the editor' : m.preselectFrom === 'last' ? 'last goal for this model' : '';
     defaultTarget = m.useDraft ? 'draft' : 'live';
     const km = document.getElementById('km');
     km.dataset.km = m.kmId;
@@ -421,7 +421,7 @@ export const SETUP_SCRIPT = /* js */ `
     const change = document.getElementById('changeKm');
     if (change) {
       change.textContent = 'Change…';
-      change.title = m.fileName ? 'Bind ' + m.fileName + ' to a different Knowledge Map ID' : 'Query a different map by its Knowledge Map ID';
+      change.title = m.fileName ? 'Bind ' + m.fileName + ' to a different Knowledge Map ID' : 'Query a different model by its Knowledge Map ID';
     }
     setup();
   });
@@ -564,15 +564,15 @@ export function unknownGoalNote(opts: {
   const { kmId, relationship, goalsFrom, file, target } = opts;
   const ranAgainst = target?.kind === "live" ? "the live version" : target?.kind === "version" ? `version ${target.version}` : undefined;
   return [
-    `The map (${kmId}) has no relationship named exactly "${relationship}" — names are case-sensitive.`,
+    `The model (${kmId}) has no relationship named exactly "${relationship}" — names are case-sensitive.`,
     ranAgainst && goalsFrom !== "none" ? `This query ran against ${ranAgainst}, which may not have every relationship the goal list shows.` : "",
     goalsFrom === "editor"
-      ? "The goal list comes from your open .rbl file; check the map name in the header above."
-      : "Check the map name in the header above.",
+      ? "The goal list comes from your open .rbl file; check the model name in the header above."
+      : "Check the model name in the header above.",
     file
-      ? "If it's a different map, push the open file first (cloud icon), or point the file at the right map: " +
-        "click “Change…” beside the map in the header, or run “Rainbird: Bind Open File to a Knowledge Map ID…”."
-      : "If it's a different map, click “Change…” beside the map in the header to query another Knowledge Map ID.",
+      ? "If it's a different model, push the open file first (cloud icon), or point the file at the right model: " +
+        "click “Change…” beside the model in the header, or run “Rae: Bind Open File to a Knowledge Map ID…”."
+      : "If it's a different model, click “Change…” beside the model in the header to query another Knowledge Map ID.",
   ]
     .filter(Boolean)
     .join(" ");
@@ -588,10 +588,10 @@ export function noMapNote(opts: { current?: string; file?: string; retry?: boole
   const forFile = opts.file && opts.retry ? opts.file : undefined;
   if (!opts.current) {
     return forFile
-      ? `No map chosen for ${forFile}. Click “Choose map…” at the top to pick one.`
-      : "No map chosen. Click “Choose map…” at the top, or open the map's .rbl file and press ▶ in its title bar.";
+      ? `No model chosen for ${forFile}. Click “Choose model…” at the top to pick one.`
+      : "No model chosen. Click “Choose model…” at the top, or open the model's .rbl file and press ▶ in its title bar.";
   }
   return forFile
-    ? `No map chosen for ${forFile}, so the panel still queries ${opts.current}. Click “Change…” at the top to pick one for it.`
-    : `No map chosen, so the panel still queries ${opts.current}. Click “Change…” at the top to pick another.`;
+    ? `No model chosen for ${forFile}, so the panel still queries ${opts.current}. Click “Change…” at the top to pick one for it.`
+    : `No model chosen, so the panel still queries ${opts.current}. Click “Change…” at the top to pick another.`;
 }

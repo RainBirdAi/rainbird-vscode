@@ -190,7 +190,7 @@ async function runRound(
   }
   const final = await s.finalMessage();
   if (final.stop_reason === "refusal") {
-    throw new Error(final.stop_details?.explanation ?? "The model declined this request.");
+    throw new Error(final.stop_details?.explanation ?? "Claude declined this request.");
   }
   return final;
 }
@@ -320,7 +320,7 @@ export function describeApiError(error: unknown): { message: string; action?: "s
     return { message: `Rate limited by Anthropic${retry ? ` — try again in ${retry}s` : "; try again shortly"}.` };
   }
   if (error instanceof Anthropic.NotFoundError) {
-    return { message: `Model not found: ${error.message}. Check the rainbird.ai.model setting.`, action: "settings" };
+    return { message: `Claude model not found: ${error.message}. Check the rainbird.ai.model setting.`, action: "settings" };
   }
   if (error instanceof Anthropic.BadRequestError) {
     const hint = /model|thinking|effort|beta/i.test(error.message) ? " Check the rainbird.ai.model and rainbird.ai.effort settings." : "";

@@ -37,13 +37,13 @@ export async function connect(context: vscode.ExtensionContext): Promise<Rainbir
   await config.update("apiUrl", apiUrl, vscode.ConfigurationTarget.Global);
 
   const apiKey = await vscode.window.showInputBox({
-    prompt: "Rainbird API key (from your Account or the map's Publish page)",
+    prompt: "Rainbird API key (from your Account or the model's Publish page)",
     password: true,
     ignoreFocusOut: true,
   });
   if (!apiKey) return undefined;
   await context.secrets.store(secretKey(apiUrl), apiKey);
-  vscode.window.setStatusBarMessage(`Rainbird: connected to ${apiUrl}`, 5000);
+  vscode.window.setStatusBarMessage(`Rae: connected to ${apiUrl}`, 5000);
   return new RainbirdClient(apiUrl, apiKey);
 }
 
@@ -91,7 +91,7 @@ export async function runQuery(context: vscode.ExtensionContext): Promise<void> 
 
   // One kmID precedence (O-2): the file's binding, then its folder's setting,
   // then a prompt whose answer is remembered for the folder.
-  const kmId = await resolveKmIdFor(context, { uri: editor?.document.uri, prompt: true, title: "Run Query: which map?" });
+  const kmId = await resolveKmIdFor(context, { uri: editor?.document.uri, prompt: true, title: "Run Query: which model?" });
   if (!kmId) return;
   const config = vscode.workspace.getConfiguration("rainbird", editor?.document.uri);
 
@@ -158,7 +158,7 @@ export async function runQuery(context: vscode.ExtensionContext): Promise<void> 
       })
     )?.trim();
     if (!object) {
-      vscode.window.showWarningMessage("Rainbird needs a subject or an object to run a query.");
+      vscode.window.showWarningMessage("Rae needs a subject or an object to run a query.");
       return;
     }
   }
@@ -181,7 +181,7 @@ export async function runQuery(context: vscode.ExtensionContext): Promise<void> 
       const group = [response.question, ...(response.extraQuestions ?? [])];
       const answers = await askGroup(group, refusedSkips);
       if (!answers) {
-        vscode.window.showInformationMessage("Rainbird query cancelled.");
+        vscode.window.showInformationMessage("Rae query cancelled.");
         return;
       }
       try {
@@ -196,7 +196,7 @@ export async function runQuery(context: vscode.ExtensionContext): Promise<void> 
 
     await presentResult(client, sessionId, response.result, () => getEvidenceKey(context), objectType);
   } catch (error) {
-    vscode.window.showErrorMessage(`Rainbird query failed: ${(error as Error).message}`);
+    vscode.window.showErrorMessage(`Rae query failed: ${(error as Error).message}`);
   }
 }
 
@@ -273,7 +273,7 @@ async function askUser(question: Question, title: string, skippable: boolean): P
       // free-text box the map does not allow. (Values are held only when there
       // are known answers, so `skip` is set here unless the engine refused it.)
       const only = await vscode.window.showQuickPick<Choice>(
-        [{ ...skip, detail: `Every value the map offers is already known, and the map allows no new ones. ${skip.detail}` }],
+        [{ ...skip, detail: `Every value the model offers is already known, and the model allows no new ones. ${skip.detail}` }],
         { title, placeHolder: knownLine || question.prompt, ignoreFocusOut: true }
       );
       return only ? [skipAnswer(question)] : undefined;
@@ -379,7 +379,7 @@ async function presentResult(
   objectType?: string
 ): Promise<void> {
   if (results.length === 0) {
-    vscode.window.showWarningMessage("Rainbird returned no results for this query.");
+    vscode.window.showWarningMessage("Rae returned no results for this query.");
     return;
   }
   const items = results.map((r) => ({

@@ -2,6 +2,8 @@
 
 *Prepared 2026-09-03 from four inputs: the prototype source (v0.0.2), [PROPOSAL.md](PROPOSAL.md) plus the [research corpus](research/), a fresh survey of docs.rainbird.ai, the live OpenAPI spec and Rainbird Labs, and a survey of ~40 comparable VSCode extensions (rules and policy engines, logic languages, schema DSLs, API clients, AI tooling).*
 
+*Wording updated in November 2026 to current terms: Rae, the decision automation platform from Rainbird; Raelog (previously called RBLang) for the language; “model” for what was called a knowledge map. Quotations keep their original wording.*
+
 ## How to read this
 
 - **Surface** (same legend as the proposal): 🟢 client-only · 🔵 documented public API · 🟠 undocumented API (pre-release ring) · 🔴 needs new platform work
@@ -12,15 +14,15 @@
 
 | # | Feature | Why it matters | Surface | Status | Effort |
 |---|---|---|---|---|---|
-| 1 | Query panel completeness: grouped questions, undo, inject fixtures, version picker, object and first-form queries, multi-query sessions | Grouped questions (`extraQuestions[]`) are only counted today, so the panel stalls on any map that uses question groups | 🔵 | DEEPEN | S–M |
+| 1 | Query panel completeness: grouped questions, undo, inject fixtures, version picker, object and first-form queries, multi-query sessions | Grouped questions (`extraQuestions[]`) are only counted today, so the panel stalls on any model that uses question groups | 🔵 | DEEPEN | S–M |
 | 2 | Static analysis pack: reachability ("this condition can never be satisfied"), rule cycles, evaluation-order hints, date/regex/quote checks, evidence-text variable checks | "No result" is the top troubleshooting topic in Rainbird's docs and Studio catches none of these | 🟢 | NEW | M |
 | 3 | Evidence → source navigation and fired-rule decorations in the editor | The evidence tree is Rainbird's differentiator. Since 0.0.14 the inline tree reads like Studio's (conditions with their impact, list-function inputs, the inputs behind each result); the remaining gap is getting from evidence to the rule in the editor | 🔵 | PLANNED / DEEPEN | M |
 | 4 | Draft-vs-Live promotion diff (one scenario, two sessions, diff of results and evidence) | The question every compliance owner asks before Set Live; Studio has no diff at all | 🔵 | NEW | M |
-| 5 | Rename cascade fix, then formatter and "Organize Map" | Rename misses expression strings, evidence text and datasource maps; Studio has propagated renames since 4.88 | 🟢 | DEEPEN / PLANNED | S–M |
-| 6 | Plain-English rule rendering feeding hovers, semantic diff, a spec generator and a traceability matrix | The SME sign-off artifact; the bundled sample map already carries spec IDs in rule names | 🟢 | NEW | M |
+| 5 | Rename cascade fix, then formatter and "Organize Model" | Rename misses expression strings, evidence text and datasource mappings; Studio has propagated renames since 4.88 | 🟢 | DEEPEN / PLANNED | S–M |
+| 6 | Plain-English rule rendering feeding hovers, semantic diff, a spec generator and a traceability matrix | The SME sign-off artifact; the bundled sample model already carries spec IDs in rule names | 🟢 | NEW | M |
 | 7 | Test runner with Studio semantics plus rule coverage | Question-order and no-result expectations, results-only mode, version pins, Studio JSON import; coverage painted from evidence trees | 🔵 | DEEPEN | M |
 | 8 | Evidence archive and Studio deep links | Sessions go read-only after 24 h and are purged after 7 days (Community) or 30 days (Enterprise); auditors need the tree after that | 🔵 | NEW (deep links built in 0.0.14 in the format Rainbird's own apps use; not yet compared with a link Studio copies, see 2.11) | S |
-| 9 | Datasource playground | Datasource authoring (CDATA bodies, response path maps) is a documented pain point with zero tooling anywhere | 🟢 / 🔵 | NEW | M |
+| 9 | Datasource playground | Datasource authoring (CDATA bodies, response path mappings) is a documented pain point with zero tooling anywhere | 🟢 / 🔵 | NEW | M |
 | 10 | Copilot language-model tools, an MCP definition provider, and an agent-instructions generator | Gives Copilot and Cursor agents the same lint/query/test tools the built-in assistant has; matches Rainbird's agent-first positioning | 🔵 / 🟠 | PLANNED / NEW | M |
 | 11 | QuickDiff against the last pushed snapshot | Cheap, always-on answer to "does my buffer match what is on the platform?" | 🟢 | NEW | S |
 | 12 | Session facts inspector | "What does the engine know right now" while a query is running | 🔵 | NEW | S |
@@ -39,7 +41,7 @@ The rest of this document details these and the longer tail, grouped by theme.
 
 **2.5 Version picker.** `/start` takes `useDraft=true` or `version=N`, and `/analysis/session?filter=version` already tells the panel which version a session hit. Surface a draft / live / version-N picker in the panel and per test file, and stamp `kmVersion.id` on every result and saved test. 🔵 S
 
-**2.6 Rename cascade.** Rename edits only tag attributes (`kindOf` in [languageFeatures.ts](../src/languageFeatures.ts)). It does not touch quoted relationship names inside list functions (`countRelationshipInstances(%S, 'lives in', *)`), dot traversals in evidence text (`{{%COUNTRY.national language}}`), datasource `action map="rel=/path"`, or `input rel=`. A rename today silently breaks the map. Extend the span collection to those four sites. 🟢 S–M
+**2.6 Rename cascade.** Rename edits only tag attributes (`kindOf` in [languageFeatures.ts](../src/languageFeatures.ts)). It does not touch quoted relationship names inside list functions (`countRelationshipInstances(%S, 'lives in', *)`), dot traversals in evidence text (`{{%COUNTRY.national language}}`), datasource `action map="rel=/path"`, or `input rel=`. A rename today silently breaks the model. Extend the span collection to those four sites. 🟢 S–M
 
 **2.7 Richer question cards.** Date picker for `date` answers, numeric validation, markdown rendering of prompts (Studio allows markdown in question text), `knownAnswers` shown, `canAdd` honoured per side. 🔵 S SHIPPED in 0.0.14, except markdown rendering of prompts. Cards are built from the question's `dataType`: True/False for truth; a decimal text field with a format hint for numbers; for dates, a field that parses `1 October 1981`, `01/10/1981` or `1981-10-01`, previews the result, has a calendar and sends `YYYY-MM-DD` (an ambiguous numeric date such as `01/10/1981` is never guessed: both readings are offered, day first by default, `rainbird.query.dateOrder`). `knownAnswers` are shown, with **No more** (plural) or **Keep known answer** (singular) sending `unanswered: true`, and plural questions covered by injected facts are answered *No more* automatically (`rainbird.query.autoSkipPluralQuestions`, default `injected`). `canAdd` only decides whether a string question offers "Or something else"; number and date questions always get a field. A rejected answer names the expected format and keeps the user's input. Single cards and grouped forms read answers through the same code, so a new control only needs adding once. Remaining: markdown rendering of prompts. ✅
 
@@ -47,19 +49,19 @@ The rest of this document details these and the longer tail, grouped by theme.
 
 **2.9 Session facts inspector.** `GET /analysis/session/{sid}?filter=facts` returns global, local and context facts with their source. Show them as an auto-refreshing tree beside the query panel, the way the CLIPS extension shows its live facts and agenda. 🔵 S See 2.17 for the follow-up from 0.0.14.
 
-**2.9b Platform pull (done 2026-09-03).** `GET /analysis/file/{kmID}` gives the draft's RBLang and `?version=N` any saved version, so the Maps view opens the real draft, the query panel can list goals without an open file, and the draft-vs-saved-version diff runs on the API. 🔵 S
+**2.9b Platform pull (done 2026-09-03).** `GET /analysis/file/{kmID}` gives the draft's Raelog and `?version=N` any saved version, so the Models view opens the real draft, the query panel can list goals without an open file, and the draft-vs-saved-version diff runs on the API. 🔵 S
 
 **2.10 Evidence to source.** The evidence payload has no rule name (platform ask #5), but it carries the relationship type, condition triples and the rendered `alt` text. Compile each rule's `alt` template into a regex, match it against the evidence node's text, fall back to relationship-plus-condition fingerprinting, and offer a QuickPick on ambiguity. Then paint fired rules in the editor gutter with their certainty, the way Regal renders evaluation results inline and OPA paints coverage. 🔵 M Since 0.0.14 the evidence model (`src/evidenceModel.ts`) carries each condition's `alt` text and the rule's `bindings` through to the renderer, which is the input this heuristic needs.
 
-**2.11 Studio deep links.** The evidence URL format is documented: `[STUDIO]/evidence?id=[FACT_ID]&api=[API_URL]&sid=[SESSION_ID]` (the documented example passes the full API URL, e.g. `https://enterprise-api.rainbird.ai`). Add "Open in Studio" and "Copy evidence link for SME" to every result card. 🔵 S BUILT in 0.0.14 (not yet verified) as **Open in Studio** and **Copy link** on the evidence tree. The Studio address is derived from `rainbird.apiUrl` for Rainbird-hosted API hosts (`api.rainbird.ai` → `app.rainbird.ai`, `enterprise-api.rainbird.ai` → `enterprise.rainbird.ai`) and read from `rainbird.studioUrl` for other hosts. The link follows the documented format, which is also how Rainbird's own apps build it: with the full API URL in `api`, which Studio reads with URLSearchParams. It has not yet been checked against a link Studio generates, so mark it SHIPPED only after comparing it with a link copied from Studio's own evidence share. It cannot carry an evidence key, so it only opens a tree whose map has Evidence Tree Link enabled, and only while the session still exists.
+**2.11 Studio deep links.** The evidence URL format is documented: `[STUDIO]/evidence?id=[FACT_ID]&api=[API_URL]&sid=[SESSION_ID]` (the documented example passes the full API URL, e.g. `https://enterprise-api.rainbird.ai`). Add "Open in Studio" and "Copy evidence link for SME" to every result card. 🔵 S BUILT in 0.0.14 (not yet verified) as **Open in Studio** and **Copy link** on the evidence tree. The Studio address is derived from `rainbird.apiUrl` for Rainbird-hosted API hosts (`api.rainbird.ai` → `app.rainbird.ai`, `enterprise-api.rainbird.ai` → `enterprise.rainbird.ai`) and read from `rainbird.studioUrl` for other hosts. The link follows the documented format, which is also how Rainbird's own apps build it: with the full API URL in `api`, which Studio reads with URLSearchParams. It has not yet been checked against a link Studio generates, so mark it SHIPPED only after comparing it with a link copied from Studio's own evidence share. It cannot carry an evidence key, so it only opens a tree whose model has Evidence Tree Link enabled, and only while the session still exists.
 
 **2.12 Test runner with Studio semantics.** Studio's automated tests fail on an unexpected question, a wrong question order, an unexpected result, or a "No result" expectation, and support a results-only mode via inject. Mirror all of that in `.rbtest.json`, pin tests to a version, confirm before large runs (result-returning queries are billable), and import or export Studio's test JSON once a real export is available to infer the schema (ask #2). 🔵 M
 
 **2.13 JSON schemas for sidecar files.** Contribute `jsonValidation` schemas for `.rbtest.json` and `.facts.json` so they get completions and validation. 🟢 S
 
-**2.14 Datasources and imports in the views.** Both appear in the outline but not in the Map Explorer or the graph. 🟢 S
+**2.14 Datasources and imports in the views.** Both appear in the outline but not in the Model Explorer or the graph view. 🟢 S
 
-**2.15 Goal picker.** The panel's goal field was a native `<select>` with prefix-only type-ahead, unusable on maps with many similarly named relationships (feedback 2026-10). SHIPPED in 0.0.14: a searchable list matching name, subject or object (ranked by match, then document order), a case-correction hint, the relationship under the cursor preselected, the last goal remembered per map, and rule and fact counts, with a warning on relationships the engine can only fill from injected facts (askable="none" with no rules or facts). The Quick Pick runner (**Run Query (Quick Pick)…**) also matches on subject → object and on the rule and fact counts, and lists the relationship at the cursor first. Still open: reusing the last subject and object, and grouping by subject concept. ✅
+**2.15 Goal picker.** The panel's goal field was a native `<select>` with prefix-only type-ahead, unusable on models with many similarly named relationships (feedback 2026-10). SHIPPED in 0.0.14: a searchable list matching name, subject or object (ranked by match, then document order), a case-correction hint, the relationship under the cursor preselected, the last goal remembered per model, and rule and fact counts, with a warning on relationships the engine can only fill from injected facts (askable="none" with no rules or facts). The Quick Pick runner (**Run Query (Quick Pick)…**) also matches on subject → object and on the rule and fact counts, and lists the relationship at the cursor first. Still open: reusing the last subject and object, and grouping by subject concept. ✅
 
 **2.16 Explain with Rainbird (follow-up from 0.0.14).** `POST /nl/explain` ({language, sessionID, factID, instructions?}, with `X-API-Key` and the `Version: v1` header) returns the platform's own plain-language explanation of a result. Offer it next to a result's **Explain (AI)** link as "Explain (Rainbird)": it needs no Anthropic key. It is a beta endpoint (Anthropic models on AWS Bedrock, EU-processed). 🔵 S
 
@@ -95,7 +97,7 @@ These are the highest-leverage additions because they need no platform calls and
 
 ## 4. Authoring productivity
 
-**4.1 Formatter and Organize Map.** Format-on-save with the docs' recommended order (concepts → relationships → instances → facts → rules), stable attribute order, two-space indent. Load-bearing for clean PR diffs. PARTIAL 🟢 M — an indent-only formatter (re-indent from nesting, trim trailing whitespace, two-space default) shipped via `registerDocumentFormattingEditProvider`; element and attribute reordering ("Organize Map") is still open. *needs parser for comment preservation*
+**4.1 Formatter and Organize Model.** Format-on-save with the docs' recommended order (concepts → relationships → instances → facts → rules), stable attribute order, two-space indent. Load-bearing for clean PR diffs. PARTIAL 🟢 M — an indent-only formatter (re-indent from nesting, trim trailing whitespace, two-space default) shipped via `registerDocumentFormattingEditProvider`; element and attribute reordering ("Organize Model") is still open. *needs parser for comment preservation*
 
 **4.2 Bulk generators.** CSV → instances, CSV → facts, paste-a-list → instances. These were the abandoned incumbent extension's most-used commands. PLANNED 🟢 S
 
@@ -105,19 +107,19 @@ These are the highest-leverage additions because they need no platform calls and
 
 **4.5 Refactorings.** "Extract intermediate relationship" (split a long rule, the docs' own debugging advice), "Name unnamed rules" (from `alt` text or AI), "Add question forms to askable relationships" (templated), "Convert fact block to CSV and back". NEW 🟢 M
 
-**4.6 Traceability matrix.** Rule names in the sample map already carry spec IDs ("RF-4.2"). Recognise `@req` comments or name prefixes and render a requirement ↔ rules ↔ tests matrix, exportable as markdown for auditors. NEW 🟢 M
+**4.6 Traceability matrix.** Rule names in the sample model already carry spec IDs ("RF-4.2"). Recognise `@req` comments or name prefixes and render a requirement ↔ rules ↔ tests matrix, exportable as markdown for auditors. NEW 🟢 M
 
-**4.7 Decision model spec generator.** One command produces a markdown or HTML document: concepts, relationships with their question wording, rules in plain English with weights, datasources with endpoints. This is the artifact an SME signs off and the thing Studio's "Version Preview" cannot produce. NEW 🟢 M
+**4.7 Model spec generator.** One command produces a markdown or HTML document: concepts, relationships with their question wording, rules in plain English with weights, datasources with endpoints. This is the artifact an SME signs off and the thing Studio's "Version Preview" cannot produce. NEW 🟢 M
 
 **4.8 Docs integration.** Hover links to the matching docs.rainbird.ai `.md` page per element and function; an "Ask the Rainbird docs" command backed by the docs site's `?ask=` endpoint; a `search_docs` tool for the assistant. PLANNED 🟢 S
 
 **4.9 Paste transforms.** Pasting Studio code-panel XML or a JSON fact array converts and formats it (the Bicep "paste as" pattern). NEW 🟢 S
 
-**4.10 `.rbird` preview editor.** Open a `.rbird` directly: read-only view of its RBLang, README and layout summary, with an "Extract" button, and a layout sidecar that the graph view can use for Studio-faithful positions. PLANNED 🟢 M
+**4.10 `.rbird` preview editor.** Open a `.rbird` directly: read-only view of its Raelog, README and layout summary, with an "Extract" button, and a layout sidecar that the graph view can use for Studio-faithful positions. PLANNED 🟢 M
 
-**4.11 Multi-file maps.** Split a large map into `.rbl` parts assembled by a build manifest for push; workspace-wide symbols, references and diagnostics; resolution of `<import km versionNumber>` against sibling files. The 4,491-line sample map is the motivation. PLANNED 🟢 L *needs parser*
+**4.11 Multi-file models.** Split a large model into `.rbl` parts assembled by a build manifest for push; workspace-wide symbols, references and diagnostics; resolution of `<import km versionNumber>` against sibling files. The 4,491-line sample model is the motivation. PLANNED 🟢 L *needs parser*
 
-**4.12 Workspace symbols.** Cmd+T search across every map in the workspace, matching Studio's Navigator. NEW 🟢 S
+**4.12 Workspace symbols.** Cmd+T search across every model in the workspace, matching Studio's Navigator. NEW 🟢 S
 
 ## 5. Testing, governance and ModelOps
 
@@ -129,7 +131,7 @@ These are the highest-leverage additions because they need no platform calls and
 
 **5.4 Evidence archive.** Sessions become read-only 24 hours after the last update and are purged after 7 or 30 days. "Archive decision" writes the evidence JSON, rendered tree, NL explanation and `kmVersion.id` into the workspace or a zip before they vanish. NEW 🔵 S–M
 
-**5.5 QuickDiff against the pushed snapshot.** The extension already snapshots the exact RBLang sent on every push. Register an SCM quick-diff provider over that snapshot so gutter bars show what has changed locally since the last push. NEW 🟢 S SHIPPED in 0.0.3. Since 0.0.14 the snapshot is also written when a draft is pulled into a file (Open Map by Knowledge Map ID, or Pull → Save as for a draft), so the bars show what changed since the last pull or push. ✅
+**5.5 QuickDiff against the pushed snapshot.** The extension already snapshots the exact Raelog sent on every push. Register an SCM quick-diff provider over that snapshot so gutter bars show what has changed locally since the last push. NEW 🟢 S SHIPPED in 0.0.3. Since 0.0.14 the snapshot is also written when a draft is pulled into a file (Open Model by Knowledge Map ID, or Pull → Save as for a draft), so the bars show what changed since the last pull or push. ✅
 
 **5.6 Review comments.** Use the Comments API for inline review threads on rules, persisted to a git-tracked sidecar. Studio has no commenting and no roles documentation. NEW 🟢 M
 
@@ -137,7 +139,7 @@ These are the highest-leverage additions because they need no platform calls and
 
 **5.8 Query budget.** Status-bar counter of result-returning queries per session and per day, with a confirmation before large runs. PLANNED 🔵 S
 
-**5.9 Environment aliasing.** A `.rainbird.json` that maps a logical map name to a kmID per environment, so the same suite runs against dev, test and prod. Pair it with a promotion checklist that reflects the documented path (export `.rbird`, import into the target to preserve the KMID, re-run tests because tests are not in the export). PLANNED 🟢 S–M
+**5.9 Environment aliasing.** A `.rainbird.json` that maps a logical model name to a kmID per environment, so the same suite runs against dev, test and prod. Pair it with a promotion checklist that reflects the documented path (export `.rbird`, import into the target to preserve the KMID, re-run tests because tests are not in the export). PLANNED 🟢 S–M
 
 **5.10 Engine-version compatibility lint.** A feature-to-minimum-version table probed against `GET /version`; doubles as the changelog Rainbird stopped publishing at 4.106. PLANNED 🔵 M
 
@@ -145,7 +147,7 @@ These are the highest-leverage additions because they need no platform calls and
 
 **6.1 "Why no result?" analyzer.** On an empty result, combine the static reachability report (3.1) with session facts and the case-sensitivity and unknown-instance footguns ("accepted silently and attach to nothing") into one ranked explanation. NEW 🔵 M
 
-**6.2 Datasource playground.** Run a datasource's HTTP request from the editor with a sample `%S` and input values, show the response, click JSON paths to generate `<action map>` entries, and lint existing maps against the last real response. NEW 🟢 / 🔵 M
+**6.2 Datasource playground.** Run a datasource's HTTP request from the editor with a sample `%S` and input values, show the response, click JSON paths to generate `<action map>` entries, and lint existing models against the last real response. NEW 🟢 / 🔵 M
 
 **6.3 Rule Tracker bridge.** Rainbird Labs ships a Rule Tracker (rule-execution tree in interactive, live-draft and recorded-session modes, JSON export). Deep-link to it with kmID and session prefilled now; consider an in-editor equivalent later. NEW 🔵 S
 
@@ -157,11 +159,11 @@ These are the highest-leverage additions because they need no platform calls and
 
 **7.2 `.rbreq` request files.** Git-diffable decision requests with a run CodeLens and a status-bar environment switcher, the REST Client pattern. PLANNED 🔵 M
 
-**7.3 Capability explorer.** "API docs for this decision service" generated from the local map: queryable relationships, askable versus inject-only, question wording, types; export to markdown. PLANNED 🟢 S–M
+**7.3 Capability explorer.** "API docs for this decision service" generated from the local model: queryable relationships, askable versus inject-only, question wording, types; export to markdown. PLANNED 🟢 S–M
 
 **7.4 Interaction timeline.** Viewer for `/analysis/interactions` with CSV and JSON export and the "recording is off by default" education front and centre. PLANNED 🔵 S–M
 
-**7.5 Payload linting.** Validate `.facts.json` and inject payloads against the map: unknown or case-mismatched instance names, batches over 250, forbidden characters, `cf` versus `certainty`. PLANNED 🟢 S–M Since 0.0.14 the query panel flags an injected subject or object that differs from a question's only in case, on the question card; the linting itself is still open.
+**7.5 Payload linting.** Validate `.facts.json` and inject payloads against the model: unknown or case-mismatched instance names, batches over 250, forbidden characters, `cf` versus `certainty`. PLANNED 🟢 S–M Since 0.0.14 the query panel flags an injected subject or object that differs from a question's only in case, on the question card; the linting itself is still open.
 
 **7.6 Typed client generation.** One function per queryable relationship, a question-callback interface, and drift detection through the `kmVersion.id` every `/start` returns. PLANNED 🟢 L
 
@@ -169,32 +171,32 @@ These are the highest-leverage additions because they need no platform calls and
 
 **8.1 Language-model tools.** Contribute `rainbird_lint_map`, `rainbird_run_query`, `rainbird_get_evidence`, `rainbird_run_tests` and a confirmation-gated `rainbird_push_map` through `languageModelTools`, so Copilot agent mode and Cursor get the tools the built-in assistant already has. The TLA+ and Prisma extensions ship this pattern. PLANNED 🔵 M
 
-**8.2 MCP definition provider.** Replace writing `.vscode/mcp.json` with an `McpServerDefinitionProvider` that resolves the served-graph URL from SecretStorage, so the self-authenticating URL never lands on disk. Also expose the extension's own lint, query and test tools as an MCP server for external agents such as Claude Code. PLANNED / NEW 🟠 M
+**8.2 MCP definition provider.** Replace writing `.vscode/mcp.json` with an `McpServerDefinitionProvider` that resolves the URL of the model's MCP endpoint from SecretStorage, so the self-authenticating URL never lands on disk. Also expose the extension's own lint, query and test tools as an MCP server for external agents such as Claude Code. PLANNED / NEW 🟠 M
 
-**8.3 Agent-instructions generator.** Emit `AGENTS.md`, `CLAUDE.md` or `.github/copilot-instructions.md` from the schema table: RBLang rules, the left-to-right footgun, the lint and test commands. Any coding agent in the repo then writes valid RBLang, which is the premise of Rainbird's own Claude Skill. NEW 🟢 S
+**8.3 Agent-instructions generator.** Emit `AGENTS.md`, `CLAUDE.md` or `.github/copilot-instructions.md` from the schema table: Raelog rules, the left-to-right footgun, the lint and test commands. Any coding agent in the repo then writes valid Raelog, which is the premise of Rainbird's own Claude Skill. NEW 🟢 S
 
-**8.4 Model provider choice.** Let the assistant run on the VSCode Language Model API (a Copilot subscription, no key) or on AWS Bedrock, which mirrors Rainbird's own EU-Bedrock choice for Co-author and matters to regulated customers. NEW 🟢 M
+**8.4 AI provider choice.** Let the assistant run on the VSCode Language Model API (a Copilot subscription, no key) or on AWS Bedrock, which mirrors Rainbird's own EU-Bedrock choice for Co-Author and matters to regulated customers. NEW 🟢 M
 
-**8.5 Assistant tool upgrades.** SHIPPED in 0.0.13: the assistant reads the map through `get_map_overview` / `read_map` / `get_diagnostics`, edits it through `edit_map` (element-level, atomic, re-linted) with immediate or preview application, creates maps, lints snippets in context, continues query sessions, pushes the open map, and has `semantic_diff`, `run_tests` and `get_evidence`. The system prompt carries a full RBLang reference including the docs' 20-point checklist. Remaining idea: `search_docs` against docs.rainbird.ai. ✅
+**8.5 Assistant tool upgrades.** SHIPPED in 0.0.13: the assistant reads the model through `get_map_overview` / `read_map` / `get_diagnostics`, edits it through `edit_map` (element-level, atomic, re-linted) with immediate or preview application, creates models, lints snippets in context, continues query sessions, pushes the open model, and has `semantic_diff`, `run_tests` and `get_evidence`. The system prompt carries a full Raelog reference including the docs' 20-point checklist. Remaining idea: `search_docs` against docs.rainbird.ai. ✅
 
 **8.6 AI bulk codemods with preview.** Generate question wording for askable relationships, evidence text for rules, and names for unnamed rules, each presented as a refactor preview before applying. NEW 🟢 M
 
-**8.7 Generate from documents and Consult-style interviews.** Drop a PDF, CSV or text file and get a draft map; or let the assistant interview the expert. Co-author remains the sanctioned path for sensitive documents, and the UI should say so. NEW 🟢 M
+**8.7 Generate from documents and Consult-style interviews.** Drop a PDF, CSV or text file and get a draft model; or let the assistant interview the expert. Studio's Co-Author remains the sanctioned path for sensitive documents, and the UI should say so. (In Rae, Co-Author's work is done by RAKE, Rae's agentic knowledge engineer.) NEW 🟢 M
 
 ## 9. Exploration and onboarding
 
 **9.1 Decision notebook.** `%start`, `%inject`, `%query`, `%answer`, `%undo` and NL cells with an evidence renderer and "Save session as test". Must handle grouped questions. PLANNED 🔵 L
 
-**9.2 Zero-account first run.** Prefill the docs-published HelloWorld sandbox in the walkthrough so the first decision runs in under a minute. PLANNED 🔵 S Not in 0.0.14: the walkthrough is still not wired to the sandbox, and the docs now say the example map has to be pushed before it can be queried.
+**9.2 Zero-account first run.** Prefill the docs-published HelloWorld sandbox in the walkthrough so the first decision runs in under a minute. PLANNED 🔵 S Not in 0.0.14: the walkthrough is still not wired to the sandbox, and the docs now say the example model has to be pushed before it can be queried.
 
 **9.3 Web build and Open VSX.** Language features on vscode.dev and github.dev for PR review (API calls blocked until CORS, ask #7); Open VSX publishing for Cursor and VSCodium users. PLANNED 🟢 M / S
 
-**9.4 Open Map by Knowledge Map ID.** A guided pull by kmID that ends in a bound, editable `.rbl` (feedback 2026-10: a tester expected Connect to list their maps). One kmID prompt (example, clipboard offer, ID extracted from a pasted URL) and one kmID order (file binding, then setting, then prompt) for opening, binding, pulling, the platform diffs, Ask in Natural Language, the query panel and the Quick Pick runner (**Run Query (Quick Pick)…**), **Bind Open File to a Knowledge Map ID…**, and a Maps view that explains the missing list. SHIPPED in 0.0.14 ✅
+**9.4 Open Model by Knowledge Map ID.** A guided pull by kmID that ends in a bound, editable `.rbl` (feedback 2026-10: a tester expected Connect to list their models). One kmID prompt (example, clipboard offer, ID extracted from a pasted URL) and one kmID order (file binding, then setting, then prompt) for opening, binding, pulling, the platform diffs, Ask in Natural Language, the query panel and the Quick Pick runner (**Run Query (Quick Pick)…**), **Bind Open File to a Knowledge Map ID…**, and a Models view that explains the missing list. SHIPPED in 0.0.14 ✅
 
 ## 10. What stays blocked, and why
 
-- **Package as `.rbird`**: Studio's importer trusts the structured model arrays, not the RBLang lines. Needs the full parser plus a live round-trip test.
-- **Maps sidebar with list, create-version and set-live**: no management API (`GET /maps` returns 404). Ask #8. *Update 2026-09-03:* **pull is possible** — `GET /analysis/file/{kmID}[?version=N]` (undocumented, verified live) returns a map's RBLang for the draft or any version (on 2026-09-03 the response also carried Studio's structured `concepts`/`rels` arrays; on 2026-10-07 it carried only `rblang`). Built into the extension the same day (pull, draft-vs-version diff, local-vs-draft diff). Those structured arrays may also be what a faithful `.rbird` repack needs. *Update 2026-10-07:* opening a map by its Knowledge Map ID is now guided end to end (9.4); only the listing itself still waits on ask #8.
+- **Package as `.rbird`**: Studio's importer trusts the arrays that hold Studio's structured form of the model, not the Raelog lines. Needs the full parser plus a live round-trip test.
+- **Models sidebar with list, create-version and set-live**: no management API (`GET /maps` returns 404). Ask #8. *Update 2026-09-03:* **pull is possible** — `GET /analysis/file/{kmID}[?version=N]` (undocumented, verified live) returns a model's Raelog for the draft or any version (on 2026-09-03 the response also carried Studio's structured `concepts`/`rels` arrays; on 2026-10-07 it carried only `rblang`). Built into the extension the same day (pull, draft-vs-version diff, local-vs-draft diff). Those structured arrays may also be what a faithful `.rbird` repack needs. *Update 2026-10-07:* opening a model by its Knowledge Map ID is now guided end to end (9.4); only the listing itself still waits on ask #8.
 - **True rule-level stepping**: needs an engine trace API. Ask #9.
 - **Exact evidence-to-rule matching**: needs a rule identifier in evidence responses. Ask #5. Section 2.10 is the heuristic bridge.
 
@@ -208,5 +210,5 @@ These are the highest-leverage additions because they need no platform calls and
 - Rainbird Labs runs a Rule Tracker at tracker.labs.rainbird.ai with interactive, live-draft and recorded-session modes.
 - A Microsoft Power Automate connector and a UiPath activity exist; integrators on those stacks are a real audience for copy-as-payload.
 - The public changelog still ends at 4.106 while the engine reports 4.118; no MCP documentation exists on docs.rainbird.ai and the marketed `mcp.rainbird.ai` host did not resolve on 2026-09-03.
-- Verified live on 2026-10-07 against the HelloWorld sandbox (details in [research/api.md](research/api.md)): `knownAnswers` is filled from injected facts; `unanswered: true` is accepted when a question has `knownAnswers`, even with `allowUnknown` false, and the injected facts are kept; a singular fact injected below 100% certainty is asked again; `question.canAdd` is a boolean; knowledge-map evidence arrives as `source: "km"`; a condition's impact is ruleMaxCertainty × salience/Σsalience × certainty/100.
-- Still to capture, with `rainbird.query.logQuestions` on a map that has them: what the engine puts in `concepts` for truth, number and date questions, and whether date values there are epoch milliseconds at UTC midnight.
+- Verified live on 2026-10-07 against the HelloWorld sandbox (details in [research/api.md](research/api.md)): `knownAnswers` is filled from injected facts; `unanswered: true` is accepted when a question has `knownAnswers`, even with `allowUnknown` false, and the injected facts are kept; a singular fact injected below 100% certainty is asked again; `question.canAdd` is a boolean; evidence from the model itself arrives as `source: "km"`; a condition's impact is ruleMaxCertainty × salience/Σsalience × certainty/100.
+- Still to capture, with `rainbird.query.logQuestions` on a model that has them: what the engine puts in `concepts` for truth, number and date questions, and whether date values there are epoch milliseconds at UTC midnight.

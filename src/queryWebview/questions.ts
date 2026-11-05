@@ -212,7 +212,7 @@ export function groupRejectedNote(detail: string): string {
  * answers are kept to send again.
  */
 export function noReplyNote(detail: string, group: Question[]): string {
-  const why = `Rainbird did not reply${detail ? ` (${detail})` : ""}.`;
+  const why = `Rae did not reply${detail ? ` (${detail})` : ""}.`;
   return group.length > 1
     ? `${why} Your answers are kept: click Submit answers to send them again.`
     : `${why} Give your answer again to resend it.`;
@@ -226,7 +226,7 @@ export function noReplyNote(detail: string, group: Question[]): string {
 export function autoSkipFailedNote(detail: string, group: Question[]): string {
   const labels = [...new Set(group.map((q) => skipLabel(q)))];
   const label = labels.length === 1 ? labels[0] : "No more";
-  const why = `Rainbird did not reply when the panel answered “${label}” for you${detail ? ` (${detail})` : ""}.`;
+  const why = `Rae did not reply when the panel answered “${label}” for you${detail ? ` (${detail})` : ""}.`;
   return group.length > 1
     ? `${why} The questions start on “${label}”: click Submit answers to send it again, or change an answer first.`
     : `${why} Click “${label}” to send it again, or answer the question.`;
@@ -273,8 +273,8 @@ export function refusedNote(
   const rels = [...new Set(skipped.map((q) => q.relationship))];
   const advice =
     rels.length === 1
-      ? `If "${rels[0]}" should only ever be fed by injected facts, set askable="none" on it in the map`
-      : `If ${listOf(rels, '"', '"')} should only ever be fed by injected facts, set askable="none" on them in the map`;
+      ? `If "${rels[0]}" should only ever be fed by injected facts, set askable="none" on it in the model`
+      : `If ${listOf(rels, '"', '"')} should only ever be fed by injected facts, set askable="none" on them in the model`;
   return (
     intro +
     `The engine would not let ${automatic ? "them" : "these questions"} be skipped${detail ? ` (${detail})` : ""}. ${action} ` +
@@ -306,7 +306,7 @@ export function autoSkipItems(group: Question[], plan: readonly AutoSkipDecision
 export function injectOnlyPrompt(relationship: string, file: string): string {
   return (
     `Set askable="none" on “${relationship}” in ${file}? Do this only if every session injects these facts; otherwise rules that need them get no result. ` +
-    "Push creates a new map (new kmID), or paste the change into Studio and re-publish."
+    "Push creates a new model (new kmID), or paste the change into Studio and re-publish."
   );
 }
 
@@ -506,7 +506,7 @@ export class QuestionFlow {
         this.host.post({ type: "error", message: `The engine could not undo: ${errorDetail(error) || "nothing to undo"}.` });
       } else {
         const detail = (error as Error).message;
-        this.host.post({ type: "error", message: `Could not step back: Rainbird did not reply${detail ? ` (${detail})` : ""}.` });
+        this.host.post({ type: "error", message: `Could not step back: Rae did not reply${detail ? ` (${detail})` : ""}.` });
       }
       // Back removed the card: put back the question group, or the result with its actions (a result the engine
       // answered straight from /query has nothing to undo).
@@ -612,7 +612,7 @@ export class QuestionFlow {
     if (!relationship) return;
     const map = this.mapDeclaring(relationship);
     if (!map) {
-      this.host.notify("warning", `Open the RBLang file that declares “${relationship}” beside the query panel, then try again.`);
+      this.host.notify("warning", `Open the Raelog file that declares “${relationship}” beside the query panel, then try again.`);
       return;
     }
     if (!(await this.host.confirm(injectOnlyPrompt(relationship, map.name), INJECT_ONLY_ACTION))) return;

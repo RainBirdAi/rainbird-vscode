@@ -30,7 +30,7 @@ export class NlPanel {
     const fileUri = activeRblangUri();
     const panel = vscode.window.createWebviewPanel(
       "rainbirdNl",
-      "Rainbird NL (beta)",
+      "Rae NL (beta)",
       vscode.ViewColumn.Beside,
       { enableScripts: true, retainContextWhenHidden: true }
     );
@@ -62,15 +62,15 @@ export class NlPanel {
   private async init(fileUri?: vscode.Uri): Promise<void> {
     this.client = await getClient(this.context);
     if (!this.client) {
-      this.post({ type: "error", message: "Not connected — run “Rainbird: Connect” first." });
+      this.post({ type: "error", message: "Not connected — run “Rae: Connect” first." });
       return;
     }
     // Same precedence as Run Query: the file's own map, then the setting, then ask.
-    this.kmId = await resolveKmIdFor(this.context, { uri: fileUri, title: "Ask in Natural Language: which map?" });
+    this.kmId = await resolveKmIdFor(this.context, { uri: fileUri, title: "Ask in Natural Language: which model?" });
     if (!this.kmId) {
       this.post({
         type: "error",
-        message: "No map chosen. Close this panel and run “Rainbird: Ask in Natural Language (beta)…” again to pick one.",
+        message: "No model chosen. Close this panel and run “Rae: Ask in Natural Language (beta)…” again to pick one.",
       });
       return;
     }
@@ -181,7 +181,7 @@ export function render(): string {
 </head>
 <body>
 <div id="head"><b>Natural language (Rainbird /nl/interact · beta)</b><span class="badge" id="km"></span></div>
-<div id="log"><div id="empty">Talk to the map in plain language — facts are extracted and the engine reasons over them.<br><br>Try: <em>“Fred lives in France. What languages does he speak?”</em></div></div>
+<div id="log"><div id="empty">Talk to your Rae model in plain language — facts are extracted and the engine reasons over them.<br><br>Try: <em>“Fred lives in France. What languages does he speak?”</em></div></div>
 <div id="composer">
   <input id="input" placeholder="Tell the engine facts, then ask a question…">
   <button id="send">Send</button>

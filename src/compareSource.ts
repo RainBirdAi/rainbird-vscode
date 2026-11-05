@@ -14,7 +14,7 @@ import { EXPORT_SCHEME, exportUri, readRblang } from "./rbird";
 import { buildModel, diffReportDetailed, DiffSide as Side, showSideBySideDiff } from "./semanticDiff";
 import { pickPlatformRef, platformUri, resolveKmId } from "./platform";
 
-const EXPORT_FILTER = { "Studio export or RBLang": ["rbird", "rbl", "rblang", "xml"] };
+const EXPORT_FILTER = { "Studio export or Raelog": ["rbird", "rbl", "raelog", "rblang", "xml"] };
 
 async function fileSide(file: vscode.Uri): Promise<Side> {
   return { label: file.path.split("/").pop() ?? "export", text: await readRblang(file), uri: exportUri(file) };
@@ -81,7 +81,7 @@ export async function compareDraft(context: vscode.ExtensionContext, clicked?: v
     if (editorSide) newerChoices.push({ label: `$(file) Open editor`, description: editorSide.label, source: "editor" });
     newerChoices.push({ label: "$(folder-opened) A Studio export or .rbl file…", source: "file" });
     if (client) newerChoices.push({ label: "$(history) A platform version…", source: "platform-version" });
-    if (!client) newerChoices[0].detail = "Run “Rainbird: Connect” to compare against the platform draft or its versions directly.";
+    if (!client) newerChoices[0].detail = "Run “Rae: Connect” to compare against the platform draft or its versions directly.";
     const newer = await vscode.window.showQuickPick(newerChoices, { title: "Compare — the newer side (your draft)" });
     if (!newer) return;
     const draft = await resolve(newer, "draft");

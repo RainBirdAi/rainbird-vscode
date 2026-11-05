@@ -9,7 +9,7 @@ describe("context header", () => {
   test("no file open", () => {
     const h = buildContextHeader({ applyMode: "immediately", firstTurn: true });
     assert.match(h.text, /file: none open \(use create_map/);
-    assert.match(h.text, /not connected \(Rainbird: Connect\) · kmID not set/);
+    assert.match(h.text, /not connected \(Rae: Connect\) · kmID not set/);
     assert.match(h.text, /edits: applied immediately, undoable/);
     assert.equal(h.inlined, false);
     assert.equal(contextNote({ applyMode: "immediately", firstTurn: true }, h), undefined);

@@ -4,9 +4,9 @@
  * prose derived from Rainbird's public RBLang reference.
  */
 
-export const STRUCTURE_SECTION = `## 2. RBLang document structure
+export const STRUCTURE_SECTION = `## 2. Raelog document structure
 
-RBLang is an XML dialect. Every document is:
+Raelog (previously called RBLang) is the XML dialect models are written in. Every document is:
 
 \`\`\`rblang
 <?xml version="1.0" encoding="utf-8"?>
@@ -20,7 +20,7 @@ RBLang is an XML dialect. Every document is:
 - Attribute values use double quotes. Inside them, escape \`&\` as \`&amp;\`, \`"\` as \`&quot;\` and \`<\` as \`&lt;\` (relevant in expressions such as \`%AGE &lt; 18\`; prefer the natural-language operators to avoid the issue). Apostrophes are fine in names and text.
 - XML comments \`<!-- … -->\` are allowed anywhere and are ignored by the engine. CDATA is used for datasource request bodies and markdown metadata.
 - Indentation is free-form; keep the file's existing style (this extension's formatter re-indents by nesting depth using the file's indent unit).
-- File extensions: .rbl (preferred) or .rblang. Studio exports are .rbird.
+- File extensions: .rbl (preferred), .raelog or .rblang. Studio exports are .rbird.
 
 Recommended authoring order — concepts → relationships → instances of string concepts → facts → rules. It is not enforced by the engine but avoids forward-reference mistakes, matches Studio's output and is what the linter's quick-insert commands assume.`;
 
@@ -32,7 +32,7 @@ export const CONCEPTS_SECTION = `## 3. Concepts
 - \`type\` (required): exactly one of \`string\`, \`number\`, \`date\`, \`truth\`. \`truth\` is the boolean type (the legacy spelling \`boolean\` is still accepted but should be \`truth\`).
 - Only **string** concepts can be the *subject* of a relationship and only string concepts can have declared instances (\`<concinst>\`). number, date and truth concepts appear only as relationship *objects* and their values are written directly in facts and answers.
 - \`behaviour="mutually-exclusive"\` (string concepts only; \`mutex\` and \`mx\` are accepted synonyms): the concept must declare exactly two instances and asserting one precludes the other — a custom yes/no ("Eligible" / "Not Eligible", "Approved" / "Declined"). Use it for decision outcomes so a query returns one answer.
-- \`scope="context"\` marks a concept as session-context scoped (rare; leave it out unless the existing map uses it).
+- \`scope="context"\` marks a concept as session-context scoped (rare; leave it out unless the existing model uses it).
 - A concept may contain a \`<datasource>\` child (see section 11); attach it to the concept that is the *subject* of the facts the datasource produces.
 - Every concept should take part in at least one relationship; an unconnected concept is dead weight and the linter reports it.
 - Changing a concept's type after instances, facts or rules use it breaks them; decide types up front.`;
@@ -42,13 +42,13 @@ export const RELATIONSHIPS_SECTION = `## 4. Relationships
 \`<rel name="lives in" subject="Person" object="Country" plural="false" askable="all" allowCF="true" allowUnknown="false" canAdd="none" group="Person basics">\` … \`</rel>\`
 
 Attributes:
-- \`name\` (required, unique across the whole map, including against other relationships with different subjects): a lowercase verb phrase read subject-first ("has age", "lives in", "is eligible for"). Two relationships can never share a name.
+- \`name\` (required, unique across the whole model, including against other relationships with different subjects): a lowercase verb phrase read subject-first ("has age", "lives in", "is eligible for"). Two relationships can never share a name.
 - \`subject\` (required): a **string** concept. \`object\` (required): any concept.
 - \`plural\` (default false): true when one subject may have several objects at once ("speaks" many languages, "has account flag" many flags). Plural changes engine behaviour: it keeps looking for *all* matching facts (running every applicable rule pass and asking multi-select questions) rather than stopping at the first. Use plural whenever list functions will aggregate the relationship. Because it wants the complete list, the engine asks a plural question even when facts for it were injected or inferred: the question lists them as known answers, and answering "no more" keeps them. When the list only ever comes from injected data, pair plural with \`askable="none"\` — but only if every session injects it.
-- \`askable\`: which questions the engine may ask a user when it lacks a fact. \`all\` (second-form questions in both directions plus first-form yes/no confirmation), \`secondFormObject\` (only "given the subject, what is the object?" — the most common), \`secondFormSubject\` (only "given the object, who is the subject?"), \`none\` (never ask: the fact must come from the map, a rule, an injection, an import or a datasource). Legacy values \`true\` (= all) and \`false\` (= none) are still accepted. When the attribute is omitted the relationship is askable in every form (the same as \`all\`), so set \`askable="none"\` explicitly on relationships that rules or systems supply.
+- \`askable\`: which questions the engine may ask a user when it lacks a fact. \`all\` (second-form questions in both directions plus first-form yes/no confirmation), \`secondFormObject\` (only "given the subject, what is the object?" — the most common), \`secondFormSubject\` (only "given the object, who is the subject?"), \`none\` (never ask: the fact must come from the model, a rule, an injection, an import or a datasource). Legacy values \`true\` (= all) and \`false\` (= none) are still accepted. When the attribute is omitted the relationship is askable in every form (the same as \`all\`), so set \`askable="none"\` explicitly on relationships that rules or systems supply.
 - \`allowCF\` (default true): the user may attach a certainty to an answer.
 - \`allowUnknown\` (default false): the user may skip the question; the query continues without that fact.
-- \`canAdd\` (\`all\` | \`subject\` | \`object\` | \`subject,object\` | \`none\`): whether a user answering may type an instance that is not in the map.
+- \`canAdd\` (\`all\` | \`subject\` | \`object\` | \`subject,object\` | \`none\`): whether a user answering may type an instance that is not in the model.
 - \`group\`: a question-group name (comma-separated for several). Relationships in the same group **and with the same subject concept** are asked together on one screen. A group should contain at least two relationships.
 - \`scope="context"\`: rare; keep if present.
 
@@ -61,7 +61,7 @@ Question wording (child elements, each at most once, plain text or markdown):
 
 Which askable to choose: outcomes and derived values that rules compute → \`none\`; inputs a user supplies → usually \`secondFormObject\`; reverse look-ups ("who has licence type X?") → \`secondFormSubject\`; \`all\` only when both directions and yes/no confirmation genuinely make sense.
 
-A relationship that is \`askable="none"\`, has no facts, no rule inferring it and no datasource can only ever be satisfied by facts injected through the API. The linter flags this, and flags rules whose mandatory conditions depend on such a relationship as "can never fire without injected facts". That is fine for integration-fed maps and a bug for interactive ones.`;
+A relationship that is \`askable="none"\`, has no facts, no rule inferring it and no datasource can only ever be satisfied by facts injected through the API. The linter flags this, and flags rules whose mandatory conditions depend on such a relationship as "can never fire without injected facts". That is fine for integration-fed models and a bug for interactive ones.`;
 
 export const INSTANCES_SECTION = `## 5. Concept instances
 
@@ -85,7 +85,7 @@ A fact is a \`<relinst>\` with **no** \`<condition>\` children:
 \`\`\`
 
 - \`type\` is the relationship name; \`subject\` and \`object\` are both required for a fact.
-- \`cf\` (0–100, default 100) is the fact's certainty. Facts hard-coded in the map are the "knowledge map" provenance in evidence trees.
+- \`cf\` (0–100, default 100) is the fact's certainty. Facts hard-coded in the model have the \`km\` source (\`knowledgemap\` in the OpenAPI enum) in evidence trees.
 - The object literal must match the object concept's type: string → an instance name; number → a plain number (up to 15 significant digits, magnitude at most 999999999999999, no thousands separators); date → ISO 8601 \`YYYY-MM-DD\` (optionally \`YYYY-MM-DDTHH:MM:SS\`) or an epoch-milliseconds timestamp — long-form dates like "15 March 1984" are rejected; truth → lowercase \`true\` or \`false\` only.
 - Declaring the same subject/relationship/object triple twice is a duplicate fact (warning).
 - A rule header (see section 7) is also a \`<relinst>\`; the presence of conditions is the only thing that distinguishes a rule from a fact.`;
@@ -93,7 +93,7 @@ A fact is a \`<relinst>\` with **no** \`<condition>\` children:
 export const NAMING_SECTION = `## 15. Naming rules and engine limits
 
 - Concept, relationship and instance names cannot contain \`"\`, \`\\\`, \`<\` or \`>\`; the platform also rejects \`'\` in *instance* values. Names are UTF-8 and at most 2000 characters. Keep them natural English: title-case concepts, lowercase relationships, instance names as users would say them.
-- Relationship names must be unique map-wide; concept names must be unique; an instance is unique per concept.
+- Relationship names must be unique model-wide; concept names must be unique; an instance is unique per concept.
 - Rule names: optional, at most 170 characters, need not be unique, ignored on facts.
 - Numbers: 15 significant digits, magnitude ≤ 999999999999999. Dates: ISO 8601 or epoch milliseconds. Truth: lowercase true/false.
 - Queries: depth limit 2,000,000; fact injection 250 facts per request; a session expires after 24 hours of inactivity (each injection, query, answer or undo resets the clock); evidence outlives the session.

@@ -44,7 +44,7 @@ Attributes on any condition:
 - \`weight\` (integer ≥ 0, default 100): relative importance for the certainty calculation. Weights are relative to each other within the rule (100/100/100 = equal; 10/5/0 = first twice as important as second, third irrelevant to certainty). \`0\` means the condition may still be required but contributes nothing to certainty. The weights of a rule must not all be zero.
 - \`behaviour\` (\`mandatory\` default | \`optional\`): all mandatory conditions must be met for the rule to fire; an unmet optional condition does not block the rule — the engine inserts a synthetic fact with 0% certainty so the condition contributes 0 impact and the resulting certainty is lower. Use optional conditions for "nice to have" evidence that raises confidence.
 - \`alt\`: evidence text for this condition (same \`{{%VAR}}\` interpolation as on rules).
-- \`salience\` and \`funct\` exist in the validator; they are not documented publicly and should not be introduced into maps.
+- \`salience\` and \`funct\` exist in the validator; they are not documented publicly and should not be introduced into models.
 
 Idioms:
 - Bind then test: a relationship condition binds \`%AGE\`; an expression condition tests it.
