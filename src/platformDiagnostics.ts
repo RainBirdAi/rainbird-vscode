@@ -18,7 +18,7 @@ let channel: vscode.OutputChannel | undefined;
 
 export function registerPlatformDiagnostics(context: vscode.ExtensionContext): void {
   collection = vscode.languages.createDiagnosticCollection("rainbird-platform");
-  channel = vscode.window.createOutputChannel("Rainbird");
+  channel = vscode.window.createOutputChannel("Rae");
   context.subscriptions.push(
     collection,
     channel,

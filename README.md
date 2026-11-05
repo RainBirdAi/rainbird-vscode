@@ -1,4 +1,4 @@
-# Rainbird for VS Code
+# Rae by Rainbird
 
 [![Pipeline status](https://gitlab.com/rainbird-ai/labs/rainbird-vscode/badges/main/pipeline.svg)](https://gitlab.com/rainbird-ai/labs/rainbird-vscode/-/pipelines)
 
@@ -24,9 +24,9 @@ Raelog was previously called RBLang, and models were previously called knowledge
 
 ### Author without memorising the syntax
 
-- **Guided authoring**: use **Rainbird: Insert…** from the editor title bar, the right-click menu or the Model Explorer to add a concept, relationship, instance, fact, rule or condition by answering a few plain-English questions. Choices come from what the model already declares, and the element is inserted in the recommended section of the file.
+- **Guided authoring**: use **Rae: Insert…** from the editor title bar, the right-click menu or the Model Explorer to add a concept, relationship, instance, fact, rule or condition by answering a few plain-English questions. Choices come from what the model already declares, and the element is inserted in the recommended section of the file.
 - **CodeLens** above every relationship and rule to run it as a query or add a fact, rule or condition in place.
-- **Model Explorer** in the Rainbird sidebar lists the concepts, relationships, rules, facts and instances of the open model. Click any item to jump to its source.
+- **Model Explorer** in the Rae sidebar lists the concepts, relationships, rules, facts and instances of the open model. Click any item to jump to its source.
 - **Graph view** shows the open model as a live, force-directed graph. Click a node or edge to jump to its line.
 
 ### Query the real engine and see the evidence
@@ -59,7 +59,7 @@ Raelog was previously called RBLang, and models were previously called knowledge
 
 ### AI assistant
 
-The Rainbird sidebar includes an AI assistant for knowledge engineering, powered by Claude and using your own Anthropic API key. It knows Raelog and how the engine reasons in depth (a bundled reference covering concepts, relationships, rules, expressions, datasources, certainty factors and Match → Infer → Ask), and it works on the model you have open:
+The Rae sidebar includes an AI assistant for knowledge engineering, powered by Claude and using your own Anthropic API key. It knows Raelog and how the engine reasons in depth (a bundled reference covering concepts, relationships, rules, expressions, datasources, certainty factors and Match → Infer → Ask), and it works on the model you have open:
 
 - **Ask about the model** — "which rules infer *has risk level*?", "why would this never ask about postcode?", "explain this rule" — and it answers from the model's actual content, naming rules and lines.
 - **Ask for changes** — "add a rule that applicants over 65 skip the income check", "add question wording to every askable relationship", "fix every error" — and it edits the file through validated element-level operations (insert, replace, delete, set attribute), re-lints, fixes what it broke and summarises the change. By default edits land directly in the editor, each one undoable, with a per-turn **Changes** card offering **Show diff** and **Undo this turn**; set `rainbird.ai.applyEdits` to `preview` to review a side-by-side diff and **Accept** or **Reject** instead.
@@ -75,16 +75,16 @@ The Rainbird sidebar includes an AI assistant for knowledge engineering, powered
 
 ## Getting started
 
-1. Install **Rainbird** from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=RainbirdTechnologies.rainbird), or from the Extensions view in VS Code, or from a terminal:
+1. Install **Rae by Rainbird** from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=RainbirdTechnologies.rainbird), or from the Extensions view in VS Code, or from a terminal:
 
    ```bash
    code --install-extension RainbirdTechnologies.rainbird
    ```
 
-2. Run **Rainbird: Connect**, pick Community, Enterprise or a custom URL, and paste the API key from your model's **Publish** page in Rainbird Studio.
-3. Run **Rainbird: Open Model by Knowledge Map ID…**, paste the model's Knowledge Map ID, which is on the same page, and choose where to save the `.rbl` (your open folder by default): it opens bound to that model. Two other routes work too: export a `.rbird` from Studio and right-click it to **Extract Raelog**, or paste the Raelog from Studio's `</>` code panel into a new file. To look around without an account, run **Help: Get Started**, choose **Get started with Rainbird** and click **Open example**; you can explore the example model offline, but it must be pushed to your account before it can be queried.
-4. Click the play button in the editor title bar, or run **Rainbird: Run Query…**. Type part of the goal relationship's name and pick it, give a subject or an object, and click **Start query**. Answer the questions, then click **Show evidence** under the result. For an exported or pasted file, run **Rainbird: Bind Open File to a Knowledge Map ID…** first, or enter the ID when prompted (it becomes the folder's default model).
-5. Optional: open the **Rainbird** icon in the activity bar, choose **AI Assistant** and paste an Anthropic API key when prompted.
+2. Run **Rae: Connect**, pick Community, Enterprise or a custom URL, and paste the API key from your model's **Publish** page in Rainbird Studio.
+3. Run **Rae: Open Model by Knowledge Map ID…**, paste the model's Knowledge Map ID, which is on the same page, and choose where to save the `.rbl` (your open folder by default): it opens bound to that model. Two other routes work too: export a `.rbird` from Studio and right-click it to **Extract Raelog**, or paste the Raelog from Studio's `</>` code panel into a new file. To look around without an account, run **Help: Get Started**, choose **Get started with Rae** and click **Open example**; you can explore the example model offline, but it must be pushed to your account before it can be queried.
+4. Click the play button in the editor title bar, or run **Rae: Run Query…**. Type part of the goal relationship's name and pick it, give a subject or an object, and click **Start query**. Answer the questions, then click **Show evidence** under the result. For an exported or pasted file, run **Rae: Bind Open File to a Knowledge Map ID…** first, or enter the ID when prompted (it becomes the folder's default model).
+5. Optional: open the **Rae** icon in the activity bar, choose **AI Assistant** and paste an Anthropic API key when prompted.
 
 ## Commands
 
@@ -92,28 +92,28 @@ All commands are available from the Command Palette. The most used ones:
 
 | Command | What it does |
 |---|---|
-| Rainbird: Connect | Choose an environment and store an API key |
-| Rainbird: Open Model by Knowledge Map ID… | Download a model's draft by its Knowledge Map ID and save it as an editable `.rbl` bound to that model |
-| Rainbird: Run Query… | Open the interactive query panel for the open model |
-| Rainbird: Show Graph View | Show the open model as a live graph |
-| Rainbird: Insert… | Guided authoring of a concept, relationship, instance, fact, rule or condition |
-| Rainbird: Push Model to Platform | Upload the open file as a new model and bind the file to it |
-| Rainbird: Pull Model Raelog from Platform (read-only draft or saved version)… | Open the draft or a saved version read-only, with **Save as .rbl…** |
-| Rainbird: Reload Model from Studio | Replace the open, bound file with the model's current draft (warns first if you changed the file) |
-| Rainbird: Get Started | Open the getting-started walkthrough |
-| Rainbird: Bind Open File to a Knowledge Map ID… | Tell the extension which model the open file is a copy of |
-| Rainbird: Diff vs git HEAD… | Side-by-side diff with a semantic report |
-| Rainbird: Diff Open File Against Platform Draft | Check whether your file matches the platform draft |
-| Rainbird: Diff Against Last Pulled or Pushed Snapshot | Side-by-side diff with the draft you last downloaded into a file, or what you last pushed, for this file's model |
-| Rainbird: Compare Draft vs Saved Version… | Compare the platform draft with a saved version or an export |
-| Rainbird: Compare Versions (Promotion Diff)… | Replay a test or session against two versions |
-| Rainbird: Ask in Natural Language (beta)… | Free-text question against the engine |
-| Rainbird: Explain with AI | Plain-English explanation of the selected Raelog, from the AI assistant (for a query result, use **Explain (AI)** in the query panel) |
-| Rainbird: Show Evidence Tree for Fact… | Open the evidence tree for a session and fact ID in its own tab |
-| Rainbird: Extract Raelog from .rbird export | Convert a Studio export to `.rbl` |
-| Rainbird: Add a Model's MCP Endpoint… | Register a model's MCP endpoint in `.vscode/mcp.json` |
-| Rainbird: Set Anthropic API Key | Store the key used by the AI assistant |
-| Rainbird: Set Evidence Key | Store the evidence key a model requires for evidence trees |
+| Rae: Connect | Choose an environment and store an API key |
+| Rae: Open Model by Knowledge Map ID… | Download a model's draft by its Knowledge Map ID and save it as an editable `.rbl` bound to that model |
+| Rae: Run Query… | Open the interactive query panel for the open model |
+| Rae: Show Graph View | Show the open model as a live graph |
+| Rae: Insert… | Guided authoring of a concept, relationship, instance, fact, rule or condition |
+| Rae: Push Model to Platform | Upload the open file as a new model and bind the file to it |
+| Rae: Pull Model Raelog from Platform (read-only draft or saved version)… | Open the draft or a saved version read-only, with **Save as .rbl…** |
+| Rae: Reload Model from Studio | Replace the open, bound file with the model's current draft (warns first if you changed the file) |
+| Rae: Get Started | Open the getting-started walkthrough |
+| Rae: Bind Open File to a Knowledge Map ID… | Tell the extension which model the open file is a copy of |
+| Rae: Diff vs git HEAD… | Side-by-side diff with a semantic report |
+| Rae: Diff Open File Against Platform Draft | Check whether your file matches the platform draft |
+| Rae: Diff Against Last Pulled or Pushed Snapshot | Side-by-side diff with the draft you last downloaded into a file, or what you last pushed, for this file's model |
+| Rae: Compare Draft vs Saved Version… | Compare the platform draft with a saved version or an export |
+| Rae: Compare Versions (Promotion Diff)… | Replay a test or session against two versions |
+| Rae: Ask in Natural Language (beta)… | Free-text question against the engine |
+| Rae: Explain with AI | Plain-English explanation of the selected Raelog, from the AI assistant (for a query result, use **Explain (AI)** in the query panel) |
+| Rae: Show Evidence Tree for Fact… | Open the evidence tree for a session and fact ID in its own tab |
+| Rae: Extract Raelog from .rbird export | Convert a Studio export to `.rbl` |
+| Rae: Add a Model's MCP Endpoint… | Register a model's MCP endpoint in `.vscode/mcp.json` |
+| Rae: Set Anthropic API Key | Store the key used by the AI assistant |
+| Rae: Set Evidence Key | Store the evidence key a model requires for evidence trees |
 
 ## Settings
 
@@ -124,14 +124,14 @@ All commands are available from the Command Palette. The most used ones:
 | `rainbird.useDraft` | `true` | Query the draft version of the model instead of the live version. |
 | `rainbird.query.dateOrder` | `day-first` | Which reading of an ambiguous numeric date such as 01/10/1981 is offered first: `day-first` (1 October 1981) or `month-first` (10 January 1981). Ambiguous dates are never guessed: you choose one. |
 | `rainbird.query.autoSkipPluralQuestions` | `injected` | When the query panel and the assistant's `run_query` tool answer *No more* for you on a plural question: `injected` when facts injected in this session cover it, `known` whenever the engine already has answers for it, `off` never. In the panel each automatic skip is shown in the transcript with *Answer instead*; `run_query` lists them under `autoSkipped`. Saved tests replay what was recorded, whatever this setting is. |
-| `rainbird.query.logQuestions` | `false` | Write the raw JSON of every question the query panel receives, and each answer it sends, to the **Rainbird** output channel. Useful when an answer is rejected. |
+| `rainbird.query.logQuestions` | `false` | Write the raw JSON of every question the query panel receives, and each answer it sends, to the **Rae** output channel. Useful when an answer is rejected. |
 | `rainbird.studioUrl` | empty | Rainbird Studio address for **Open in Studio** and **Copy link**. Rainbird-hosted API addresses are mapped automatically (`api.rainbird.ai` → `app.rainbird.ai`, `enterprise-api.rainbird.ai` → `enterprise.rainbird.ai`); set this only for other hosts. |
 | `rainbird.ai.model` | `claude-opus-5` | Claude model used by the AI assistant (`claude-opus-5`, `claude-sonnet-5`, `claude-fable-5-1`, `claude-opus-4-8`; other ids can be typed into settings.json). |
 | `rainbird.ai.effort` | `high` | Reasoning effort per turn: `low`, `medium`, `high`, `xhigh` or `max`. |
 | `rainbird.ai.showDiffAfterEdits` | `true` | Open a before ↔ after diff automatically when a turn changed the file (direct-apply mode). |
 | `rainbird.ai.applyEdits` | `immediately` | `immediately`: the assistant's edits land in the file as it works (undoable, with Show diff / Undo per turn). `preview`: edits are proposed in a diff you Accept or Reject. |
 
-API keys are never stored in settings. Use **Rainbird: Connect** and **Rainbird: Set Anthropic API Key** to change them.
+API keys are never stored in settings. Use **Rae: Connect** and **Rae: Set Anthropic API Key** to change them.
 
 Raelog files default to a two-space indent (`editor.tabSize` 2, `editor.insertSpaces` true under `[rblang]`), which is the style Rainbird's documentation uses. VS Code's indentation detection still wins for a file that already uses tabs. To format every time you save, add to your settings:
 

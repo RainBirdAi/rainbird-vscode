@@ -1,4 +1,4 @@
-# Rainbird for VS Code: background material
+# Rae by Rainbird: background material
 
 The extension itself is at the [repository root](../). This folder holds the material behind it. Nothing here ships in the VSIX.
 

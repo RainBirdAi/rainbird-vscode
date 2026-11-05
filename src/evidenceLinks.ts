@@ -58,7 +58,7 @@ export async function openOrCopyEvidenceLink(
     }
   } else {
     await vscode.env.clipboard.writeText(link);
-    vscode.window.setStatusBarMessage("Rainbird: evidence link copied. Sessions expire, so share it soon.", 5000);
+    vscode.window.setStatusBarMessage("Rae: evidence link copied. Sessions expire, so share it soon.", 5000);
   }
 
   if (args.usedEvidenceKey && !warnedAboutKey.has(args.sessionId)) {
@@ -73,7 +73,7 @@ export async function openOrCopyEvidenceLink(
 async function askForStudioUrl(apiUrl: string): Promise<string | undefined> {
   const host = hostOf(apiUrl) ?? apiUrl;
   const choice = await vscode.window.showWarningMessage(
-    `Rainbird cannot work out the Studio address for ${host}. Set rainbird.studioUrl to the Studio URL of this environment (for example https://clientname.rainbird.ai).`,
+    `Rae cannot work out the Studio address for ${host}. Set rainbird.studioUrl to the Studio URL of this environment (for example https://clientname.rainbird.ai).`,
     SET_STUDIO_URL
   );
   if (choice !== SET_STUDIO_URL) return undefined;

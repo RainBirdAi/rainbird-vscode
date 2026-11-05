@@ -43,7 +43,7 @@ export async function connect(context: vscode.ExtensionContext): Promise<Rainbir
   });
   if (!apiKey) return undefined;
   await context.secrets.store(secretKey(apiUrl), apiKey);
-  vscode.window.setStatusBarMessage(`Rainbird: connected to ${apiUrl}`, 5000);
+  vscode.window.setStatusBarMessage(`Rae: connected to ${apiUrl}`, 5000);
   return new RainbirdClient(apiUrl, apiKey);
 }
 
@@ -158,7 +158,7 @@ export async function runQuery(context: vscode.ExtensionContext): Promise<void> 
       })
     )?.trim();
     if (!object) {
-      vscode.window.showWarningMessage("Rainbird needs a subject or an object to run a query.");
+      vscode.window.showWarningMessage("Rae needs a subject or an object to run a query.");
       return;
     }
   }
@@ -181,7 +181,7 @@ export async function runQuery(context: vscode.ExtensionContext): Promise<void> 
       const group = [response.question, ...(response.extraQuestions ?? [])];
       const answers = await askGroup(group, refusedSkips);
       if (!answers) {
-        vscode.window.showInformationMessage("Rainbird query cancelled.");
+        vscode.window.showInformationMessage("Rae query cancelled.");
         return;
       }
       try {
@@ -196,7 +196,7 @@ export async function runQuery(context: vscode.ExtensionContext): Promise<void> 
 
     await presentResult(client, sessionId, response.result, () => getEvidenceKey(context), objectType);
   } catch (error) {
-    vscode.window.showErrorMessage(`Rainbird query failed: ${(error as Error).message}`);
+    vscode.window.showErrorMessage(`Rae query failed: ${(error as Error).message}`);
   }
 }
 
@@ -379,7 +379,7 @@ async function presentResult(
   objectType?: string
 ): Promise<void> {
   if (results.length === 0) {
-    vscode.window.showWarningMessage("Rainbird returned no results for this query.");
+    vscode.window.showWarningMessage("Rae returned no results for this query.");
     return;
   }
   const items = results.map((r) => ({

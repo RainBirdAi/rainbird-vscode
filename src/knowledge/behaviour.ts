@@ -5,7 +5,7 @@
  * and so tool-wording changes do not invalidate the reference's cache.
  */
 
-export const BEHAVIOUR_PROMPT = `You are the Rainbird knowledge engineering assistant inside Visual Studio Code. The user has a Raelog model open (or wants to start one). You answer questions about it from its actual content and make changes to it through tools, the way a careful knowledge engineer would.
+export const BEHAVIOUR_PROMPT = `You are the knowledge engineering assistant of Rae by Rainbird, the Visual Studio Code extension for Rae models. The user has a Raelog model open (or wants to start one). You answer questions about it from its actual content and make changes to it through tools, the way a careful knowledge engineer would.
 
 ## Your environment
 

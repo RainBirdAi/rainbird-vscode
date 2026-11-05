@@ -569,7 +569,7 @@ test("New query tells the extension, so ▶ does not ask about a query nobody se
   });
   page.click("#newQuery");
   assert.deepEqual(page.lastPosted("newQuery"), { type: "newQuery" });
-  assert.match(page.text(), /What should Rainbird work out\?/, "a fresh setup card");
+  assert.match(page.text(), /What should Rae work out\?/, "a fresh setup card");
   assert.doesNotMatch(page.text(), /Does Fred speak French\?/);
   await page.close();
 });
@@ -699,7 +699,7 @@ test("unknownGoalNote: push or bind only when the panel queries a file, else Cha
     `The model (${km}) has no relationship named exactly "Speaks" — names are case-sensitive. ` +
       "The goal list comes from your open .rbl file; check the model name in the header above. " +
       "If it's a different model, push the open file first (cloud icon), or point the file at the right model: " +
-      "click “Change…” beside the model in the header, or run “Rainbird: Bind Open File to a Knowledge Map ID…”."
+      "click “Change…” beside the model in the header, or run “Rae: Bind Open File to a Knowledge Map ID…”."
   );
   assert.equal(
     unknownGoalNote({ kmId: km, relationship: "speaks", goalsFrom: "platform", file: false, target: { kind: "draft" } }),

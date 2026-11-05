@@ -27,7 +27,7 @@ import { describeEvidence } from "./evidenceRender";
 import type { ExpandedEvidence } from "./evidenceModel";
 
 const NO_MAP = "No Raelog file is open. Ask the user to open a .rbl file, or use create_map to start one.";
-const NOT_CONNECTED = "Not connected to Rainbird — ask the user to run “Rainbird: Connect” (environment + API key) first.";
+const NOT_CONNECTED = "Not connected to Rainbird — ask the user to run “Rae: Connect” (environment + API key) first.";
 
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
@@ -182,7 +182,7 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
     tool(
       "run_query",
       [
-        "Run a live query against a Rainbird model on the platform (the draft by default; `version` pins a published version). Without sessionId each call starts a fresh session, injects `facts`, queries `relationship` with a subject, an object or both and answers the engine's questions with `answers`, matched to each question by relationship (and subject/object) — a question group is sent in one response, a plural question takes one entry per value.",
+        "Run a live query against a Rae model on the platform (the draft by default; `version` pins a published version). Without sessionId each call starts a fresh session, injects `facts`, queries `relationship` with a subject, an object or both and answers the engine's questions with `answers`, matched to each question by relationship (and subject/object) — a question group is sent in one response, a plural question takes one entry per value.",
         "Answers are checked before sending: dates as YYYY-MM-DD (an ambiguous date such as 01/10/1981 is refused), numbers as numbers, truth questions true/false; problems come back under `rejected` without reaching the engine.",
         "If questions remain they are returned with the sessionId and, per question, `expected` (the value format), de-duplicated `options`, `alreadyKnown` (facts the engine already holds) and `canSkip` with a `skipHint` — call again with that sessionId and answers for the whole group, or ask the user.",
         "`unanswered: true` is accepted only when a question has allowUnknown or known answers; with known answers it means \"no more\" and keeps them. Plural questions are asked even when facts were injected: the tool answers \"no more\" itself when the injected facts cover the question (setting rainbird.query.autoSkipPluralQuestions) unless you supplied an answer for it, and lists those in `autoSkipped`.",
@@ -192,7 +192,7 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
         const client = await getClientSilent(context);
         if (!client) return NOT_CONNECTED;
         const kmId = resolveKm(input.kmId as string | undefined);
-        if (!kmId) return "No Knowledge Map ID — pass kmId, push the model first (push_map), or ask the user to run “Rainbird: Open Model by Knowledge Map ID…” or “Rainbird: Bind Open File to a Knowledge Map ID…”.";
+        if (!kmId) return "No Knowledge Map ID — pass kmId, push the model first (push_map), or ask the user to run “Rae: Open Model by Knowledge Map ID…” or “Rae: Bind Open File to a Knowledge Map ID…”.";
         const queue = [...((input.answers as Answer[] | undefined) ?? [])];
         const settings = vscode.workspace.getConfiguration("rainbird");
         const autoSkipMode = readAutoSkipMode(settings.get("query.autoSkipPluralQuestions"));
@@ -251,7 +251,7 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
         } catch (error) {
           const validation = error instanceof ApiError ? error.errMessages() : undefined;
           if (!validation?.length) throw error;
-          if (doc && doc.getText() === rblang) showPlatformErrors(doc, validation, `Assistant push of "${name}" rejected by Rainbird`);
+          if (doc && doc.getText() === rblang) showPlatformErrors(doc, validation, `Assistant push of "${name}" rejected by Rae`);
           return `The platform rejected the model with ${plural(validation.length, "validation error")}:\n${validation.map((m) => `- ${m}`).join("\n")}\nFix the Raelog and push again.`;
         }
         const { kmId, raw, validation } = created;
@@ -360,7 +360,7 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
         } catch (error) {
           if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
             throw new Error(
-              "Evidence is locked for this model. Ask the user to enable Evidence Tree Link in Studio (Publish → API Management → Access Control) or to run “Rainbird: Set Evidence Key”, then try again."
+              "Evidence is locked for this model. Ask the user to enable Evidence Tree Link in Studio (Publish → API Management → Access Control) or to run “Rae: Set Evidence Key”, then try again."
             );
           }
           throw error;

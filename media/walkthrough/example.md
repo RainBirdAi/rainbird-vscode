@@ -9,4 +9,4 @@ Raelog, previously called RBLang, is the language models are written in for Rae,
 - **Rename everywhere** — edit a concept, relationship or instance name where it is declared and every mention follows as you type; or press `F2` on any mention
 - **Snippets** — try `rule`, `fact`, `rel-questions`, `condition-count`
 
-The example works offline and needs no account. It is not one of your Rainbird models, though: to query it, push it first (cloud icon in the editor title bar; every push creates a new model), or open one of your own models in the next steps.
+The example works offline and needs no account. It is not one of your Rae models, though: to query it, push it first (cloud icon in the editor title bar; every push creates a new model), or open one of your own models in the next steps.

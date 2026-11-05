@@ -608,15 +608,15 @@ describe("transcript and rejections (GQ-2)", () => {
   test("a single card asked again keeps the typed value and certainty, not the lit button", async () => {
     const p = page();
     const q = dateQ({ allowCF: true });
-    ask(p, [q], { note: "Rainbird rejected that answer (x).", previous: [{ kind: "value", value: "1981-10-01", raw: "1st October 1981", certainty: 60 }] });
-    assert.equal(p.text(".qcard .note"), "Rainbird rejected that answer (x).");
+    ask(p, [q], { note: "Rae rejected that answer (x).", previous: [{ kind: "value", value: "1981-10-01", raw: "1st October 1981", certainty: 60 }] });
+    assert.equal(p.text(".qcard .note"), "Rae rejected that answer (x).");
     assert.equal(input(p, ".qcard input.val.date").value, "1st October 1981");
     assert.equal(p.text(".qcard .preview"), "Will send 1981-10-01 (Thursday 1 October 1981)");
     assert.equal(input(p, ".qcard .cf").value, "60");
     assert.equal(p.text(".qcard .cfv"), "60%");
 
     const yesNo = question({ type: "First Form", object: "French", prompt: "Does Fred speak French?", allowCF: true });
-    ask(p, [yesNo], { note: "Rainbird rejected that answer.", previous: [{ kind: "yesno", answer: "yes", certainty: 40 }] });
+    ask(p, [yesNo], { note: "Rae rejected that answer.", previous: [{ kind: "yesno", answer: "yes", certainty: 40 }] });
     assert.equal(p.$$(".qcard .on").length, 0, "a lit Yes would toggle off on the next click");
     assert.equal(inLast(p, ".cf").value, "40");
     p.click(inLast(p, "[data-yn=yes]"));
@@ -627,7 +627,7 @@ describe("transcript and rejections (GQ-2)", () => {
   test("a single plural card asked again gets its ticked and added chips back", async () => {
     const p = page();
     const q = speaks({ canAdd: true });
-    ask(p, [q], { note: "Rainbird rejected that answer (x).", previous: [{ kind: "multi", values: ["German", "Klingon", "English"], certainty: 100 }] }, { facts: FRED_SPEAKS_ENGLISH });
+    ask(p, [q], { note: "Rae rejected that answer (x).", previous: [{ kind: "multi", values: ["German", "Klingon", "English"], certainty: 100 }] }, { facts: FRED_SPEAKS_ENGLISH });
     assert.deepEqual(p.$$(".qcard [data-opt].on").map((b) => String(b.textContent)), ["German", "Klingon"], "a known value is not added again");
     assert.ok(p.$(".qcard .chip.added[data-opt=Klingon]"), "the typed value is back as an added chip");
     p.click("[data-act=submit]");
@@ -979,26 +979,26 @@ describe("host side: notes and messages", () => {
   });
 
   test("no reply: the answers are kept to send again; after an automatic skip, the note names the answer the panel sent", () => {
-    assert.equal(noReplyNote("fetch failed", [numberQ()]), "Rainbird did not reply (fetch failed). Give your answer again to resend it.");
+    assert.equal(noReplyNote("fetch failed", [numberQ()]), "Rae did not reply (fetch failed). Give your answer again to resend it.");
     assert.equal(
       noReplyNote("fetch failed", [numberQ(), truthQ()]),
-      "Rainbird did not reply (fetch failed). Your answers are kept: click Submit answers to send them again."
+      "Rae did not reply (fetch failed). Your answers are kept: click Submit answers to send them again."
     );
-    assert.equal(noReplyNote("", [numberQ()]), "Rainbird did not reply. Give your answer again to resend it.", "no empty brackets");
+    assert.equal(noReplyNote("", [numberQ()]), "Rae did not reply. Give your answer again to resend it.", "no empty brackets");
 
     assert.equal(
       autoSkipFailedNote("fetch failed", [speaks()]),
-      "Rainbird did not reply when the panel answered “No more” for you (fetch failed). Click “No more” to send it again, or answer the question."
+      "Rae did not reply when the panel answered “No more” for you (fetch failed). Click “No more” to send it again, or answer the question."
     );
     const reads = speaks({ relationship: "reads", prompt: "Which books does Fred read?" });
     assert.equal(
       autoSkipFailedNote("fetch failed", [speaks(), reads]),
-      "Rainbird did not reply when the panel answered “No more” for you (fetch failed). " +
+      "Rae did not reply when the panel answered “No more” for you (fetch failed). " +
         "The questions start on “No more”: click Submit answers to send it again, or change an answer first."
     );
     const dontKnow = numberQ({ allowUnknown: true, plural: true });
     assert.equal(skipLabel(dontKnow), "Don’t know");
-    assert.match(autoSkipFailedNote("x", [dontKnow]), /^Rainbird did not reply when the panel answered “Don’t know” for you \(x\)\. Click “Don’t know”/, "a label every question shares");
+    assert.match(autoSkipFailedNote("x", [dontKnow]), /^Rae did not reply when the panel answered “Don’t know” for you \(x\)\. Click “Don’t know”/, "a label every question shares");
     assert.match(autoSkipFailedNote("x", [speaks(), dontKnow]), /answered “No more” for you \(x\)\. The questions start on “No more”/, "different labels: “No more”");
   });
 
@@ -1518,7 +1518,7 @@ describe("host: no reply, an expired session and a failed Back (QuestionFlow)", 
     const asked = r.posts[r.posts.length - 1] as { type: string; note: string; previous: AnswerPayload[] };
     assert.equal(asked.type, "question", "the last post asks the group again");
     assert.equal(asked.note, noReplyNote("fetch failed", [numberQ()]));
-    assert.equal(asked.note, "Rainbird did not reply (fetch failed). Give your answer again to resend it.");
+    assert.equal(asked.note, "Rae did not reply (fetch failed). Give your answer again to resend it.");
     assert.deepEqual(asked.previous, [{ kind: "value", value: "42", certainty: 100 }], "the payloads the card sent");
     assert.equal(r.last("error"), undefined, "no error card");
     assert.deepEqual(r.record().answers, []);
@@ -1550,7 +1550,7 @@ describe("host: no reply, an expired session and a failed Back (QuestionFlow)", 
     assert.equal(asked.note, noReplyNote(unavailable.message, [numberQ(), truthQ()]));
     assert.equal(
       asked.note,
-      "Rainbird did not reply (Rainbird API 503 on /s-1/response: Service Unavailable). Your answers are kept: click Submit answers to send them again."
+      "Rae did not reply (Rainbird API 503 on /s-1/response: Service Unavailable). Your answers are kept: click Submit answers to send them again."
     );
     assert.equal(r.last("error"), undefined, "no error card");
     assert.equal(input(r.page, ".q[data-i='0'] input.val").value, "7");
@@ -1569,8 +1569,8 @@ describe("host: no reply, an expired session and a failed Back (QuestionFlow)", 
     r.page.click(".qcard .back");
     await r.pump();
     assert.deepEqual(types(r), ["question", "busy", "error", "question"]);
-    assert.equal(r.last("error")?.message, "Could not step back: Rainbird did not reply (fetch failed).");
-    assert.equal(r.page.text(".card.err"), "Could not step back: Rainbird did not reply (fetch failed).");
+    assert.equal(r.last("error")?.message, "Could not step back: Rae did not reply (fetch failed).");
+    assert.equal(r.page.text(".card.err"), "Could not step back: Rae did not reply (fetch failed).");
     assert.deepEqual(
       (r.last("question") as { questions: Question[] }).questions.map((q) => q.prompt),
       ["Where does Fred live?", "How much does Fred earn?"]
@@ -1594,7 +1594,7 @@ describe("host: no reply, an expired session and a failed Back (QuestionFlow)", 
   test("Back on a result the engine cannot undo shows the error, then the result again with its actions", async () => {
     const cases: [Error, string][] = [
       [refused("Nothing to undo"), "The engine could not undo: Nothing to undo."],
-      [new TypeError("fetch failed"), "Could not step back: Rainbird did not reply (fetch failed)."],
+      [new TypeError("fetch failed"), "Could not step back: Rae did not reply (fetch failed)."],
     ];
     for (const [failure, message] of cases) {
       const r = rig();
@@ -1627,7 +1627,7 @@ describe("host: no reply, an expired session and a failed Back (QuestionFlow)", 
     assert.deepEqual(types(r), ["question", "busy", "question"], "no error card, and no automatic-answer card");
     const asked = r.last("question") as { note: string; questions: { prompt: string; preSkip: boolean }[] };
     assert.equal(asked.note, autoSkipFailedNote("fetch failed", [speaks()]));
-    assert.equal(asked.note, "Rainbird did not reply when the panel answered “No more” for you (fetch failed). Click “No more” to send it again, or answer the question.");
+    assert.equal(asked.note, "Rae did not reply when the panel answered “No more” for you (fetch failed). Click “No more” to send it again, or answer the question.");
     assert.deepEqual(asked.questions.map((q) => [q.prompt, q.preSkip]), [["Which languages does Fred speak?", true]]);
     assert.deepEqual(r.record().answers, [[earns(5)]], "the accepted answer is recorded, the unanswered skip is not");
     assert.deepEqual(transcript(r.page), ["How much does Fred earn?: 5"], "the accepted answer's line is written");
@@ -1650,7 +1650,7 @@ describe("host: no reply, an expired session and a failed Back (QuestionFlow)", 
     const asked = r.last("question") as { note: string; questions: { preSkip: boolean }[] };
     assert.equal(
       asked.note,
-      "Rainbird did not reply when the panel answered “No more” for you (Rainbird API 502 on /s-1/response: Bad Gateway). " +
+      "Rae did not reply when the panel answered “No more” for you (Rainbird API 502 on /s-1/response: Bad Gateway). " +
         "The questions start on “No more”: click Submit answers to send it again, or change an answer first."
     );
     assert.deepEqual(asked.questions.map((q) => q.preSkip), [true, true]);
@@ -1697,7 +1697,7 @@ describe("host: no reply, an expired session and a failed Back (QuestionFlow)", 
 test("a re-asked one-click card focuses the button that was sent, so Enter resends the same answer", async () => {
   const page = loadWebview(render("n"));
   const yesNo = question({ relationship: "speaks", subject: "Fred", object: "French", prompt: "Does Fred speak French?", type: "First Form" });
-  page.send({ type: "question", questions: JSON.parse(JSON.stringify(decorateQuestions([yesNo]))), note: "Rainbird did not reply (fetch failed). Give your answer again to resend it.", previous: [{ kind: "yesno", answer: "no", certainty: 100 }] });
+  page.send({ type: "question", questions: JSON.parse(JSON.stringify(decorateQuestions([yesNo]))), note: "Rae did not reply (fetch failed). Give your answer again to resend it.", previous: [{ kind: "yesno", answer: "no", certainty: 100 }] });
   const no = page.$$("[data-yn=no]").pop();
   assert.ok(no, "the No button is rendered");
   assert.ok(page.window.document.activeElement === no, "focus is on No, the answer that was sent");

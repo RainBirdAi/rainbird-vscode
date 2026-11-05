@@ -57,7 +57,7 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
   try {
     clearPlatformErrors(doc.uri);
     const { kmId, raw, validation } = await vscode.window.withProgress(
-      { location: vscode.ProgressLocation.Notification, title: `Pushing "${name}" to Rainbird…` },
+      { location: vscode.ProgressLocation.Notification, title: `Pushing "${name}" to Rae…` },
       () => client.createMap(rblang, name, description)
     );
 
@@ -88,7 +88,7 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
       // The platform stores the draft as-is and reports (only) the first problem it found.
       showPlatformErrors(doc, validation, `Push of "${name}" (kmID ${kmId}) accepted with validation errors`);
       action = await vscode.window.showWarningMessage(
-        `Pushed "${name}" (kmID ${kmId}), but Rainbird reported a validation error, shown in the Problems panel: ${validation[0]}. The platform reports one problem per push; fix it and the next push may reveal another.`,
+        `Pushed "${name}" (kmID ${kmId}), but Rae reported a validation error, shown in the Problems panel: ${validation[0]}. The platform reports one problem per push; fix it and the next push may reveal another.`,
         "Show Problems",
         "Run query",
         "Copy kmID"
@@ -99,7 +99,7 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
         ? ["Run query", "Copy kmID", "Use as workspace kmID"]
         : ["Run query", "Copy kmID"];
       action = await vscode.window.showInformationMessage(
-        `Pushed to Rainbird — new model "${name}" (kmID ${kmId}). Remember: pushes are create-only; delete old scratch models in Studio.`,
+        `Pushed to Rae — new model "${name}" (kmID ${kmId}). Remember: pushes are create-only; delete old scratch models in Studio.`,
         ...actions
       );
     }
@@ -119,10 +119,10 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
   } catch (error) {
     const validation = error instanceof ApiError ? error.errMessages() : undefined;
     if (validation?.length) {
-      showPlatformErrors(doc, validation, `Push of "${name}" rejected by Rainbird`);
+      showPlatformErrors(doc, validation, `Push of "${name}" rejected by Rae`);
       const n = validation.length;
       const action = await vscode.window.showErrorMessage(
-        `Rainbird rejected "${name}": ${n} validation error${n === 1 ? "" : "s"}, shown in the Problems panel at the elements they refer to. First: ${validation[0]}`,
+        `Rae rejected "${name}": ${n} validation error${n === 1 ? "" : "s"}, shown in the Problems panel at the elements they refer to. First: ${validation[0]}`,
         "Show Problems",
         "Show all"
       );

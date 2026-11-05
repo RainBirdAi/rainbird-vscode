@@ -1,6 +1,6 @@
 # Run a query
 
-Switch to the `.rbl` you opened in the previous step and click ▶ in its title bar, or run **Rainbird: Run Query…** from the Command Palette. The file knows which model it belongs to, so there is nothing to type.
+Switch to the `.rbl` you opened in the previous step and click ▶ in its title bar, or run **Rae: Run Query…** from the Command Palette. The file knows which model it belongs to, so there is nothing to type.
 
 1. **Pick a goal.** Type part of a relationship's name, subject or object to search the list; the relationship of the rule, fact or declaration under your cursor is preselected. Give a subject, an object or both, then click **Start query**. Wrong model? Click **Change…** in the panel's header.
 2. **Answer the questions** the engine asks. Each card has the control the question needs: True / False, a number field, a date field that takes `1981-10-01` or `1 October 1981` (an ambiguous `01/10/1981` asks which you mean, day first by default — `rainbird.query.dateOrder`), or the model's options. Related questions arrive together on one card and go back with a single **Submit answers**.

@@ -294,7 +294,7 @@ describe("coerceAnswer", () => {
       assert.deepEqual(coerceAnswer(num, bad), { ok: false, error: HINTS.numberTooPrecise }, bad);
     }
     assert.deepEqual(coerceAnswer(num, Math.PI), { ok: false, error: HINTS.numberTooPrecise });
-    assert.equal(HINTS.numberTooPrecise, "Rainbird numbers have at most 15 significant digits — round this one.");
+    assert.equal(HINTS.numberTooPrecise, "Rae numbers have at most 15 significant digits — round this one.");
   });
 
   test("truth: true or false only, any case", () => {
@@ -331,7 +331,7 @@ describe("coerceAnswer", () => {
     assert.equal(quoted.ok, false);
     assert.match((quoted as { error: string }).error, /does not accept the characters " ' \\ < > in answers — remove ' < >\./);
     const long = coerceAnswer(text, "x".repeat(2001));
-    assert.deepEqual(long, { ok: false, error: "Rainbird accepts at most 2000 characters in an answer — this one has 2001." });
+    assert.deepEqual(long, { ok: false, error: "Rae accepts at most 2000 characters in an answer — this one has 2001." });
     assert.deepEqual(coerceAnswer(text, "x".repeat(2000)), { ok: true, value: "x".repeat(2000) });
     assert.deepEqual(coerceAnswer(text, "  "), { ok: false, error: HINTS.stringMissing });
   });
@@ -370,18 +370,18 @@ describe("hints, expected formats and rejection notes", () => {
   test("rejectionNote", () => {
     assert.equal(
       rejectionNote("Invalid date", question({ dataType: "date" })),
-      "Rainbird rejected that answer (Invalid date). It expects a date as YYYY-MM-DD, e.g. 1981-10-01. Try again."
+      "Rae rejected that answer (Invalid date). It expects a date as YYYY-MM-DD, e.g. 1981-10-01. Try again."
     );
-    assert.equal(rejectionNote("", question({ dataType: "truth" })), "Rainbird rejected that answer. It expects true or false. Try again.");
+    assert.equal(rejectionNote("", question({ dataType: "truth" })), "Rae rejected that answer. It expects true or false. Try again.");
   });
 
   test("groupRejectionNote lists what every question expects, then the action", () => {
     const group = [question({ dataType: "number", prompt: "How old is Tom?" }), question({ dataType: "truth", prompt: "Is Tom resident?" })];
     assert.equal(
       groupRejectionNote("bad value", group),
-      "Rainbird rejected one of these answers (bad value). Expected: “How old is Tom?” — a plain number, e.g. 42 or 3.5 (no units or thousands separators); “Is Tom resident?” — true or false. Try again."
+      "Rae rejected one of these answers (bad value). Expected: “How old is Tom?” — a plain number, e.g. 42 or 3.5 (no units or thousands separators); “Is Tom resident?” — true or false. Try again."
     );
-    assert.match(groupRejectionNote("", group, "Answer it this time."), /^Rainbird rejected one of these answers\. Expected: .* true or false\. Answer it this time\.$/);
+    assert.match(groupRejectionNote("", group, "Answer it this time."), /^Rae rejected one of these answers\. Expected: .* true or false\. Answer it this time\.$/);
   });
 });
 

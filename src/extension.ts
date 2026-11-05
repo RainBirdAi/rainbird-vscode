@@ -47,7 +47,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerCompletions(context);
 
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 90);
-  status.name = "Rainbird";
+  status.name = "Rae";
   status.command = "rainbird.connect";
   // The extension also starts with VS Code (onStartupFinished) so that RBLang pasted into
   // any window is recognised. Show the environment only where Rainbird is in use: the

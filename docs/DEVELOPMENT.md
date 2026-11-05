@@ -13,10 +13,10 @@ npm test          # linter unit tests (node:test, no VS Code host needed)
 Open the repository in VS Code and press **F5** (Run Extension). In the Extension Development Host:
 
 1. Open `examples/hello-world.rbl`, a small model written in Raelog (previously called RBLang). Highlighting, completions and diagnostics work offline. Click the graph icon in the editor title to see the model as a live graph.
-2. **Rainbird: Connect**, pick an environment and paste an API key.
-3. Click the play button, or **Rainbird: Run Query…**, set the kmID when prompted, pick a goal, answer the question cards and expand the evidence tree.
-4. Open the **Rainbird** activity-bar icon, choose **AI Assistant** and paste an Anthropic API key when prompted (or **Rainbird: Set Anthropic API Key**). Try: *"Add a rule that people also speak the languages of countries they have lived in."* — the assistant reads the model, edits it through `edit_map`, and the chat shows a Changes card with Show diff / Undo. Requests use the Claude model `claude-opus-5` by default (`rainbird.ai.model`), `high` effort (`rainbird.ai.effort`), and apply edits directly (`rainbird.ai.applyEdits`; set `preview` to Accept/Reject a diff instead).
-5. **Rainbird: Push Model to Platform** uploads the buffer as a new model (create-only endpoint) and offers to query it immediately.
+2. **Rae: Connect**, pick an environment and paste an API key.
+3. Click the play button, or **Rae: Run Query…**, set the kmID when prompted, pick a goal, answer the question cards and expand the evidence tree.
+4. Open the **Rainbird** activity-bar icon, choose **AI Assistant** and paste an Anthropic API key when prompted (or **Rae: Set Anthropic API Key**). Try: *"Add a rule that people also speak the languages of countries they have lived in."* — the assistant reads the model, edits it through `edit_map`, and the chat shows a Changes card with Show diff / Undo. Requests use the Claude model `claude-opus-5` by default (`rainbird.ai.model`), `high` effort (`rainbird.ai.effort`), and apply edits directly (`rainbird.ai.applyEdits`; set `preview` to Accept/Reject a diff instead).
+5. **Rae: Push Model to Platform** uploads the buffer as a new model (create-only endpoint) and offers to query it immediately.
 
 Try breaking the example: rename a concept, misspell an attribute, set `cf="150"`, or use a custom variable in a rule header. For the full tour, open `examples/broken/diagnostics-tour.rbl`: every diagnostic the linter knows, each preceded by an `EXPECT` comment saying what should appear in the Problems panel. The unit tests check that file block by block.
 
@@ -25,7 +25,7 @@ Try breaking the example: rename a concept, misspell an attribute, set `cf="150"
 | Path | Purpose |
 |---|---|
 | `src/` | Extension source. `lint.ts` is the editor-agnostic linter core; `diagnostics.ts` is its VS Code adapter. |
-| `src/knowledge/` | The Raelog / Rainbird reference the assistant carries in its system prompt (hand-written topic modules + tables generated from `schema.ts`), the behaviour prompt, and the worked examples the tests lint. |
+| `src/knowledge/` | The Raelog / Rae reference the assistant carries in its system prompt (hand-written topic modules + tables generated from `schema.ts`), the behaviour prompt, and the worked examples the tests lint. |
 | `src/agentLoop.ts`, `toolSchemas.ts`, `mapOverview.ts`, `assistantContext.ts`, `mapEdits.ts`, `semanticModel.ts` | VS Code-free assistant core: request shaping and tool loop, tool input validation, model overview, context header, the edit engine, the semantic model. Unit-tested. |
 | `src/anthropic.ts`, `assistantSession.ts`, `assistantTools.ts`, `editApplier.ts`, `assistantView.ts`, `media/assistant/` | VS Code glue for the assistant: key + settings, per-chat state and turn orchestration, tool bodies, immediate/preview edit application, the webview provider and its script/styles. |
 | `src/test/` | `node:test` suites run by `npm test`. |

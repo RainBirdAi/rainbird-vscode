@@ -129,7 +129,7 @@ export class QueryPanel {
       await current.init({ kmIdOverride, target: fileUri, goal });
       return;
     }
-    const panel = vscode.window.createWebviewPanel("rainbirdQuery", "Rainbird Query", vscode.ViewColumn.Beside, {
+    const panel = vscode.window.createWebviewPanel("rainbirdQuery", "Rae Query", vscode.ViewColumn.Beside, {
       enableScripts: true,
       retainContextWhenHidden: true,
     });
@@ -231,7 +231,7 @@ export class QueryPanel {
     if (seq !== this.initSeq) return;
     if (!client) {
       this.pendingTarget = uri;
-      this.post({ type: "error", message: "Not connected — run “Rainbird: Connect” first." });
+      this.post({ type: "error", message: "Not connected — run “Rae: Connect” first." });
       return;
     }
 
@@ -364,7 +364,7 @@ export class QueryPanel {
     try {
       await this.context.globalState.update(key, withLastGoal(this.context.globalState.get(key), kmId, goal));
     } catch (error) {
-      console.warn("Rainbird: could not remember the last goal:", error);
+      console.warn("Rae: could not remember the last goal:", error);
     }
   }
 
@@ -381,7 +381,7 @@ export class QueryPanel {
     if (!kmId || !client) {
       this.post({
         type: "startError",
-        message: kmId ? "Not connected — run “Rainbird: Connect” first." : "No model chosen yet — click “Choose model…” at the top.",
+        message: kmId ? "Not connected — run “Rae: Connect” first." : "No model chosen yet — click “Choose model…” at the top.",
       });
       return;
     }
@@ -662,7 +662,7 @@ export class QueryPanel {
     const mapUri = this.targetUri;
     const client = await getAnthropicClient(this.context);
     if (!client) {
-      this.post({ type: "explainDelta", factId, text: "No Anthropic API key set — run “Rainbird: Set Anthropic API Key”." });
+      this.post({ type: "explainDelta", factId, text: "No Anthropic API key set — run “Rae: Set Anthropic API Key”." });
       // failed: the webview gives the Explain (AI) link back, so it can be clicked again once there is a key.
       this.post({ type: "explainDone", factId, failed: true });
       return;

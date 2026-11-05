@@ -1,5 +1,5 @@
 /**
- * Query panel webview, setup region: the "What should Rainbird work out?" card
+ * Query panel webview, setup region: the "What should Rae work out?" card
  * (goal relationship, subject / object, target version, facts to inject) and the
  * header badge naming the map, with its "Change…" link.
  * Messages in: init, session, mapInfo, startError, factsText, and question, result and autoSkipped,
@@ -315,7 +315,7 @@ export const SETUP_SCRIPT = /* js */ `
       : '<label for="goalInput">Goal relationship</label><input type="text" class="goal" id="goalInput" placeholder="e.g. speaks">'
         + '<div class="hint">Type the relationship name exactly as the model declares it — names are case-sensitive.</div>';
     const card = el('<div class="card">'
-      + '<div class="prompt">What should Rainbird work out?</div>'
+      + '<div class="prompt">What should Rae work out?</div>'
       + (setupMapNote ? '<div class="err mapNote">' + esc(setupMapNote) + '</div>' : '')
       + goalField
       + '<div class="row2">'
@@ -571,7 +571,7 @@ export function unknownGoalNote(opts: {
       : "Check the model name in the header above.",
     file
       ? "If it's a different model, push the open file first (cloud icon), or point the file at the right model: " +
-        "click “Change…” beside the model in the header, or run “Rainbird: Bind Open File to a Knowledge Map ID…”."
+        "click “Change…” beside the model in the header, or run “Rae: Bind Open File to a Knowledge Map ID…”."
       : "If it's a different model, click “Change…” beside the model in the header to query another Knowledge Map ID.",
   ]
     .filter(Boolean)

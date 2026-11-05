@@ -112,7 +112,7 @@ export function recordKnownMap(
     .then(() => vscode.workspace.fs.writeFile(snapshotUri(context, rest.kmId), Buffer.from(rblang, "utf8")))
     .then(
       () => snapshotChanges.fire(snapshotDocumentUri(rest.kmId)),
-      (error) => console.warn("Rainbird: could not write model snapshot:", error)
+      (error) => console.warn("Rae: could not write model snapshot:", error)
     );
 }
 
@@ -266,7 +266,7 @@ export class PlatformMapsProvider implements vscode.TreeDataProvider<Node> {
         await fetchPlatformText(client, map.kmId, { kind: "draft" });
         await showPlatformDocument(platformUri(map.kmId, { kind: "draft" }));
         vscode.window.setStatusBarMessage(
-          `Read-only Raelog of the platform draft for "${map.name ?? map.kmId}" — “Rainbird: Open Model by Knowledge Map ID…” saves an editable copy bound to it.`,
+          `Read-only Raelog of the platform draft for "${map.name ?? map.kmId}" — “Rae: Open Model by Knowledge Map ID…” saves an editable copy bound to it.`,
           8000
         );
         return;
@@ -312,7 +312,7 @@ export class PlatformMapsProvider implements vscode.TreeDataProvider<Node> {
 
   /**
    * Inline "Reload from Studio": bring the map's local file up to date with the
-   * draft in Studio (Rainbird: Reload Map from Studio). A map with no local file,
+   * draft in Studio (Rae: Reload Model from Studio). A map with no local file,
    * or whose file was moved or deleted, offers to download the draft instead.
    */
   async reload(node?: Node): Promise<void> {

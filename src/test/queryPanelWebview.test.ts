@@ -21,7 +21,7 @@ function initPanel() {
 
 test("the webview script runs and shows the setup card on init", async () => {
   const page = initPanel();
-  assert.match(page.text(), /What should Rainbird work out\?/);
+  assert.match(page.text(), /What should Rae work out\?/);
   assert.match(page.text("#km"), /km-1/);
   await page.close();
 });
@@ -114,7 +114,7 @@ test("an error message renders an error card", async () => {
 
 test("the shared helpers are inlined exactly once and the page still loads", async () => {
   const page = initPanel();
-  assert.match(page.text(), /What should Rainbird work out\?/);
+  assert.match(page.text(), /What should Rae work out\?/);
   const html = render("n");
   for (const name of ["formatValue", "parseHumanDate", "canSkip", "skipLabel", "rankGoals", "canonicalGoal"]) {
     const declarations = html.split("function " + name + "(").length - 1;

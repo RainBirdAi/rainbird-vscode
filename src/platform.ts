@@ -171,7 +171,7 @@ export async function rememberKmId(uri: vscode.Uri | undefined, kmId: string): P
     if (current !== id) await config.update("knowledgeMapId", id, target);
     return true;
   } catch (error) {
-    console.warn("Rainbird: could not save rainbird.knowledgeMapId:", error);
+    console.warn("Rae: could not save rainbird.knowledgeMapId:", error);
     return false;
   }
 }
@@ -408,7 +408,7 @@ export function resolveKmId(context: vscode.ExtensionContext): Promise<string | 
   return resolveKmIdFor(context, { uri: vscode.window.activeTextEditor?.document.uri });
 }
 
-/** Command "Rainbird: Bind Open File to a Knowledge Map ID…": say which platform map a file is a copy of. */
+/** Command "Rae: Bind Open File to a Knowledge Map ID…": say which platform map a file is a copy of. */
 export async function bindKmId(context: vscode.ExtensionContext, uri?: vscode.Uri): Promise<void> {
   const target = uri ?? activeRblangUri();
   if (!target) {
@@ -418,7 +418,7 @@ export async function bindKmId(context: vscode.ExtensionContext, uri?: vscode.Ur
   const embedded = embeddedKmId(target);
   if (embedded) {
     vscode.window.showInformationMessage(
-      `This read-only document is model ${embedded} itself. Run “Rainbird: Open Model by Knowledge Map ID…” to get an editable file bound to it.`
+      `This read-only document is model ${embedded} itself. Run “Rae: Open Model by Knowledge Map ID…” to get an editable file bound to it.`
     );
     return;
   }
@@ -497,7 +497,7 @@ async function reportMapError(
     }
     if (error.status === 401) {
       const action = await vscode.window.showErrorMessage(
-        `The API key for ${env} was rejected. Run “Rainbird: Connect” to enter a new one.`,
+        `The API key for ${env} was rejected. Run “Rae: Connect” to enter a new one.`,
         "Connect"
       );
       if (action === "Connect" && (await vscode.commands.executeCommand("rainbird.connect")) && retry) await retry();
@@ -564,7 +564,7 @@ export async function saveRblangAs(context: vscode.ExtensionContext, opts: SaveR
 }
 
 /**
- * Command "Rainbird: Open Map by Knowledge Map ID…": connect if needed, ask
+ * Command "Rae: Open Model by Knowledge Map ID…": connect if needed, ask
  * for the ID (or take `kmId`), download the draft, save it where the user
  * chooses, and open it bound to the map and listed in Maps.
  */
@@ -578,7 +578,7 @@ export async function openMapByKmId(context: vscode.ExtensionContext, kmId?: str
   let rblang: string;
   try {
     rblang = await vscode.window.withProgress(
-      { location: vscode.ProgressLocation.Notification, title: `Rainbird: downloading the draft of ${id}…` },
+      { location: vscode.ProgressLocation.Notification, title: `Rae: downloading the draft of ${id}…` },
       () => fetchPlatformText(client, id, { kind: "draft" })
     );
   } catch (error) {
@@ -605,7 +605,7 @@ export async function openMapByKmId(context: vscode.ExtensionContext, kmId?: str
       return;
     }
     vscode.window.showInformationMessage(
-      `Opened the platform draft of ${id} read-only. Run “Rainbird: Open Model by Knowledge Map ID…” again and choose a location to get an editable copy.`
+      `Opened the platform draft of ${id} read-only. Run “Rae: Open Model by Knowledge Map ID…” again and choose a location to get an editable copy.`
     );
     return;
   }
@@ -658,7 +658,7 @@ export async function pickPlatformRef(
 
   if (picked.choice === "latest") {
     const latest = await vscode.window.withProgress(
-      { location: vscode.ProgressLocation.Notification, title: "Rainbird: finding the latest saved version…" },
+      { location: vscode.ProgressLocation.Notification, title: "Rae: finding the latest saved version…" },
       () => client.latestVersion(kmId)
     );
     if (latest === undefined) {
@@ -701,7 +701,7 @@ export function registerPlatformSource(context: vscode.ExtensionContext): void {
         recentText.delete(uri.toString());
         if (recent && Date.now() - recent.at < RECENT_MS) return recent.text;
         const client = await getClientSilent(context);
-        if (!client) throw new Error("Not connected — run “Rainbird: Connect” first.");
+        if (!client) throw new Error("Not connected — run “Rae: Connect” first.");
         const file = await client.getFile(parsed.kmId, parsed.ref.kind === "version" ? parsed.ref.version : undefined);
         return file.rblang;
       },
@@ -715,7 +715,7 @@ export function registerPlatformSource(context: vscode.ExtensionContext): void {
 }
 
 /**
- * Command "Rainbird: Reload Map from Studio": replace a bound file's text with
+ * Command "Rae: Reload Model from Studio": replace a bound file's text with
  * what its map's platform draft holds now (Studio edits the draft). A file with
  * no local changes since its last pull or push is replaced at once; otherwise
  * the user is warned first and can look at the differences. The replacement is
@@ -736,7 +736,7 @@ async function reloadFromPlatform(context: vscode.ExtensionContext, uri?: vscode
   if (target.scheme === PLATFORM_SCHEME && platform) {
     try {
       await vscode.window.withProgress(
-        { location: vscode.ProgressLocation.Notification, title: `Rainbird: reloading ${platform.kmId}…` },
+        { location: vscode.ProgressLocation.Notification, title: `Rae: reloading ${platform.kmId}…` },
         () => fetchPlatformText(client, platform.kmId, platform.ref)
       );
     } catch (error) {
@@ -763,7 +763,7 @@ async function reloadFromPlatform(context: vscode.ExtensionContext, uri?: vscode
   const version = fileKmVersion(context, doc.uri);
   if (version !== undefined) {
     vscode.window.showInformationMessage(
-      `${name} is a copy of saved version ${version} of ${kmId}, and saved versions never change. To get the latest Studio edits, open the draft with “Rainbird: Open Model by Knowledge Map ID…”.`
+      `${name} is a copy of saved version ${version} of ${kmId}, and saved versions never change. To get the latest Studio edits, open the draft with “Rae: Open Model by Knowledge Map ID…”.`
     );
     return;
   }
@@ -771,7 +771,7 @@ async function reloadFromPlatform(context: vscode.ExtensionContext, uri?: vscode
   let rblang: string;
   try {
     rblang = await vscode.window.withProgress(
-      { location: vscode.ProgressLocation.Notification, title: `Rainbird: downloading the draft of ${kmId}…` },
+      { location: vscode.ProgressLocation.Notification, title: `Rae: downloading the draft of ${kmId}…` },
       () => fetchPlatformText(client, kmId, { kind: "draft" })
     );
   } catch (error) {
@@ -838,7 +838,7 @@ async function pullMap(context: vscode.ExtensionContext): Promise<void> {
     const pulled = pick.ref;
     ref = pulled;
     const rblang = await vscode.window.withProgress(
-      { location: vscode.ProgressLocation.Notification, title: `Rainbird: downloading the ${pick.label} of ${id}…` },
+      { location: vscode.ProgressLocation.Notification, title: `Rae: downloading the ${pick.label} of ${id}…` },
       () => fetchPlatformText(client, id, pulled)
     );
     await showPlatformDocument(platformUri(id, pulled), { preview: false });
@@ -878,7 +878,7 @@ async function diffAgainstDraft(context: vscode.ExtensionContext): Promise<void>
   if (!kmId) return;
   try {
     const rblang = await vscode.window.withProgress(
-      { location: vscode.ProgressLocation.Notification, title: "Rainbird: fetching the platform draft…" },
+      { location: vscode.ProgressLocation.Notification, title: "Rae: fetching the platform draft…" },
       () => fetchPlatformText(client, kmId, { kind: "draft" })
     );
     const local = editor.document.getText();

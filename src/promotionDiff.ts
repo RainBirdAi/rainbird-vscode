@@ -39,7 +39,7 @@ export async function promotionDiff(context: vscode.ExtensionContext, record?: S
   const report = await vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
-      title: `Rainbird: comparing ${describeTarget(a)} with ${describeTarget(b)}…`,
+      title: `Rae: comparing ${describeTarget(a)} with ${describeTarget(b)}…`,
     },
     async () => {
       const [sideA, sideB] = await Promise.all([runSide(client, scenario, a), runSide(client, scenario, b)]);
@@ -82,7 +82,7 @@ async function pickScenario(record?: SessionRecord): Promise<PickedScenario | un
   }
   if (!items.length) {
     vscode.window.showInformationMessage(
-      "Nothing to compare yet — run a query in the Rainbird Query panel or save a test first. The diff replays a recorded scenario against two versions."
+      "Nothing to compare yet — run a query in the Rae Query panel or save a test first. The diff replays a recorded scenario against two versions."
     );
     return undefined;
   }
@@ -240,7 +240,7 @@ async function buildReport(
   lines.push("## Evidence", "");
   if (evidenceLocked) {
     lines.push(
-      "_Evidence is locked for this model — enable the Evidence Tree Link in Studio (Publish → API Management → Access Control) or run “Rainbird: Set Evidence Key”, then re-run the diff to see which rules and conditions moved._",
+      "_Evidence is locked for this model — enable the Evidence Tree Link in Studio (Publish → API Management → Access Control) or run “Rae: Set Evidence Key”, then re-run the diff to see which rules and conditions moved._",
       ""
     );
   } else if (!shared.length) {

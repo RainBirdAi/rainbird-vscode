@@ -66,7 +66,7 @@ export function buildContextHeader(info: ContextInfo): ContextHeader {
     inlined = info.text.length <= INLINE_LIMIT && (info.firstTurn || info.lastSeenHash !== hash);
   }
 
-  const platform = info.apiUrl ? `connected to ${info.apiUrl}` : "not connected (Rainbird: Connect)";
+  const platform = info.apiUrl ? `connected to ${info.apiUrl}` : "not connected (Rae: Connect)";
   const km = info.kmId ? `kmID ${info.kmId}${info.kmIdSource ? ` (${info.kmIdSource})` : ""}` : "kmID not set";
   lines.push(`platform: ${platform} · ${km}`);
   lines.push(`edits: ${info.applyMode === "preview" ? `proposed for review${info.proposalPending ? " — a proposal is pending; tools read and extend it" : ""}` : "applied immediately, undoable"}`);
