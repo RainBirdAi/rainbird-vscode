@@ -159,7 +159,7 @@ describe("RainbirdClient.start", () => {
     assert.deepEqual(urls, [`https://api.example/start/${kmId}?useDraft=true`]);
     assert.equal(
       unknownMapMessage(kmId, "https://api.example"),
-      `No model with Knowledge Map ID ${kmId} is visible to this API key on https://api.example. Check the ID on the model's Publish page in Studio, and that the key belongs to the same environment.`
+      `No model with Knowledge Map ID ${kmId} is visible to this API key on https://api.example. Check the ID (the kmID on the project's Connect → API tab in Rae, or the model's Publish page in Studio), and that the key belongs to the same environment.`
     );
   });
 

@@ -208,7 +208,7 @@ export class PlatformMapsProvider implements vscode.TreeDataProvider<Node> {
         label: "Models you have opened, pushed or queried from VS Code",
         detail:
           "Rainbird's API has no endpoint that lists an account's models, so this view cannot browse Studio. Start from a Knowledge Map ID " +
-          "(on the model's Publish page in Studio): Open Model by Knowledge Map ID… (cloud icon above) or Add Model by kmID… (+). " +
+          "(on the project's Connect → API tab in Rae, or the model's Publish page in Studio): Open Model by Knowledge Map ID… (cloud icon above) or Add Model by kmID… (+). " +
           "If the platform adds a list endpoint, this view will use it.",
       });
     }

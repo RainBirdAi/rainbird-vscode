@@ -1,6 +1,6 @@
 # Open your own model
 
-Every model in Rainbird Studio has a **Knowledge Map ID** (kmID), a code such as `504436fb-7fbb-44ea-b36c-bfd977aea8c8`. It is on the model's **Publish** page, and under **View Knowledge Map ID** in the model's menu.
+Every model has a **Knowledge Map ID** (kmID), a code such as `504436fb-7fbb-44ea-b36c-bfd977aea8c8`. In Rae, copy it from the project's **Connect → API** tab; each version of a project has its own kmID. In Rainbird Studio, it is on the model's **Publish** page, and under **View Knowledge Map ID** in the model's menu.
 
 Run **Rae: Open Model by Knowledge Map ID…** and paste it (a copied link or Publish-page line that contains the ID works too; the prompt shows which ID it will use). The extension connects first if needed, then:
 

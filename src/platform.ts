@@ -215,7 +215,7 @@ export async function promptKmId(
       kmId: clipboard,
     });
   }
-  rows.push({ label: "$(edit) Enter a Knowledge Map ID…", description: "from the model's Publish page in Studio", alwaysShow: true, enter: true });
+  rows.push({ label: "$(edit) Enter a Knowledge Map ID…", description: "from Connect → API in Rae, or the Publish page in Studio", alwaysShow: true, enter: true });
   if (known.length) {
     rows.push({ label: "Models", kind: vscode.QuickPickItemKind.Separator });
     rows.push(...known.map((map) => knownMapRow(map, opts.current)));
@@ -294,7 +294,7 @@ async function inputKmId(title: string, value: string | undefined, keys: Promise
     title,
     prompt: "Knowledge Map ID (kmID)",
     placeHolder:
-      "e.g. 504436fb-7fbb-44ea-b36c-bfd977aea8c8 — from the model's Publish page in Studio (or View Knowledge Map ID in the model's menu)",
+      "e.g. 504436fb-7fbb-44ea-b36c-bfd977aea8c8 — the kmID from the project's Connect → API tab in Rae, or the model's Publish page in Studio",
     value,
     ignoreFocusOut: true,
     // Warnings and infos only: Enter always accepts what was typed.
@@ -311,13 +311,13 @@ async function inputKmId(title: string, value: string | undefined, keys: Promise
       // The Publish page shows the API key next to the kmID, and both are GUIDs.
       if ((await keys).some((key) => sameKmId(key, id))) {
         return {
-          message: "That is the API key (or evidence key) stored for this environment, not a Knowledge Map ID. Copy the Knowledge Map ID from the model's Publish page in Studio.",
+          message: "That is the API key (or evidence key) stored for this environment, not a Knowledge Map ID. Copy the kmID from the project's Connect → API tab in Rae, or the Knowledge Map ID from the model's Publish page in Studio.",
           severity: vscode.InputBoxValidationSeverity.Warning,
         };
       }
       if (!extractKmId(trimmed, { allowOther: false })) {
         return {
-          message: `${id} is marked as a session ID or a key in the pasted text, not a Knowledge Map ID. The Knowledge Map ID is on the model's Publish page in Studio.`,
+          message: `${id} is marked as a session ID or a key in the pasted text, not a Knowledge Map ID. The kmID is on the project's Connect → API tab in Rae, or the model's Publish page in Studio.`,
           severity: vscode.InputBoxValidationSeverity.Warning,
         };
       }

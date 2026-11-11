@@ -6,7 +6,7 @@ Author, check, query and ship models for Rae, the decision automation platform f
 
 Rae models are written in **Raelog**, an XML language that declares concepts, relationships, facts and rules: expertise and policy in a form a machine can reason over. The engine reasons over a model deterministically. The same model and the same inputs always give the same answer, with a certainty and an evidence tree that shows which rules fired and which facts they used. This extension turns VS Code into a first-class Raelog editor and connects it to your Rainbird environment, so you can run real queries, read the evidence behind every answer, and push models to the platform.
 
-Raelog was previously called RBLang, and models were previously called knowledge maps. Rainbird Studio still holds your models behind the scenes, so a few steps below happen in Studio for now: finding a model's Knowledge Map ID (kmID) and API key on its **Publish** page, managing versions, enabling evidence access and exporting `.rbird` files.
+Raelog was previously called RBLang, and models were previously called knowledge maps. Build your models at [app.raelog.ai](https://app.raelog.ai); [raelog.ai](https://raelog.ai) explains how Rae works and the [docs](https://docs.raelog.ai) cover the rest. In Rae, a project's **Connect → API** tab shows its model's kmID (Knowledge Map ID), the ID this extension opens and queries models by. Rainbird Studio still holds your models behind the scenes, so a few steps below happen in Studio for now: your API key (the Platform API key Rae uses) is on your Studio account page, and managing versions, enabling evidence access and exporting `.rbird` files happen there too.
 
 ## Features
 
@@ -41,13 +41,13 @@ Raelog was previously called RBLang, and models were previously called knowledge
 ### Work with the platform
 
 - **Connect** once per environment. Your API key is stored in VS Code's encrypted secret storage, never in settings files.
-- **Open Model by Knowledge Map ID** downloads a model's draft and saves it as an editable `.rbl` that remembers which model it came from, so queries, diffs and the assistant need no ID. The Knowledge Map ID is on the model's **Publish** page in Studio.
+- **Open Model by Knowledge Map ID** downloads a model's draft and saves it as an editable `.rbl` that remembers which model it came from, so queries, diffs and the assistant need no ID. Copy the kmID from the project's **Connect → API** tab in Rae, or the Knowledge Map ID from the model's **Publish** page in Studio.
 - **Push Model to Platform** uploads the open file as a new model and binds the file to it. The extension lints the model first, then shows any validation message the platform returns in the Problems panel on the element it refers to.
 - **Pull Model Raelog from Platform** opens the draft or any saved version of a model as read-only Raelog, for reading and diffing. **Save as .rbl…** turns it into a file bound to that model. **Reload Model from Studio**, or the cloud button on a model in the Models view, brings a bound file up to date after the model was edited in Studio.
 - **Bind Open File to a Knowledge Map ID** tells the extension which model an exported or pasted file is a copy of.
 - **Models view** keeps a per-environment list of the models you have opened, pushed, queried or added by ID. Open a model's current draft or run a query straight from the list. It is not a listing of your account (see Known limitations).
 - **Extract Raelog from .rbird export** unpacks a Studio export into an editable `.rbl` file.
-- **Add a Model's MCP Endpoint** registers a model's MCP endpoint in `.vscode/mcp.json` for use in Copilot agent mode. A Rae model can be published as a Model Context Protocol endpoint alongside its REST API, so agents can hand decisions to it.
+- **Add a Model's MCP Endpoint** registers a model's MCP endpoint in `.vscode/mcp.json` for use in Copilot agent mode. A Rae model can be published as a Model Context Protocol endpoint alongside its REST API, so agents can hand decisions to it. Copy the URL from the project's **Connect → MCP** tab in Rae.
 
 ### Compare and test
 
@@ -67,7 +67,7 @@ The Rae sidebar includes an AI assistant for knowledge engineering, powered by C
 ## Requirements
 
 - VS Code 1.90 or later.
-- A Rainbird account and API key for opening models from the platform, querying and pushing. The key and the Knowledge Map ID are on the model's **Publish** page in Rainbird Studio; the ID is also under **View Knowledge Map ID** in the model details menu. Editing, linting and the graph view work offline.
+- A Rainbird account and its Platform API key, the same key Rae uses, for opening models from the platform, querying and pushing. The key is on your account page in Rainbird Studio (Rae's **Settings → API keys** links to it) and on any model's **Publish** page there. A model's kmID is on its project's **Connect → API** tab in Rae; in Studio, the Knowledge Map ID is on the model's **Publish** page and under **View Knowledge Map ID** in the model details menu. Editing, linting and the graph view work offline.
 - An Anthropic API key if you want to use the AI assistant.
 - To see evidence trees, enable the model's **Evidence Tree Link** in Studio under Publish, API Management, Access Control. **Open in Studio** works out the Studio address from `rainbird.apiUrl` for Rainbird-hosted environments; for other hosts, set `rainbird.studioUrl`.
 
@@ -79,8 +79,8 @@ The Rae sidebar includes an AI assistant for knowledge engineering, powered by C
    code --install-extension RainbirdTechnologies.rainbird
    ```
 
-2. Run **Rae: Connect**, pick Community, Enterprise or a custom URL, and paste the API key from your model's **Publish** page in Rainbird Studio.
-3. Run **Rae: Open Model by Knowledge Map ID…**, paste the model's Knowledge Map ID, which is on the same page, and choose where to save the `.rbl` (your open folder by default): it opens bound to that model. Two other routes work too: export a `.rbird` from Studio and right-click it to **Extract Raelog**, or paste the Raelog from Studio's `</>` code panel into a new file. To look around without an account, run **Help: Get Started**, choose **Get started with Rae** and click **Open example**; you can explore the example model offline, but it must be pushed to your account before it can be queried.
+2. Run **Rae: Connect**, pick Community, Enterprise or a custom URL, and paste your Platform API key (from your account page in Rainbird Studio, or any model's **Publish** page there).
+3. Run **Rae: Open Model by Knowledge Map ID…**, paste the model's kmID (from the project's **Connect → API** tab in Rae, or the Knowledge Map ID on the model's **Publish** page in Studio), and choose where to save the `.rbl` (your open folder by default): it opens bound to that model. Two other routes work too: export a `.rbird` from Studio and right-click it to **Extract Raelog**, or paste the Raelog from Studio's `</>` code panel into a new file. To look around without an account, run **Help: Get Started**, choose **Get started with Rae** and click **Open example**; you can explore the example model offline, but it must be pushed to your account before it can be queried. You can also open any `.raelog` model offline, such as the examples on [raelog.ai](https://raelog.ai).
 4. Click the play button in the editor title bar, or run **Rae: Run Query…**. Type part of the goal relationship's name and pick it, give a subject or an object, and click **Start query**. Answer the questions, then click **Show evidence** under the result. For an exported or pasted file, run **Rae: Bind Open File to a Knowledge Map ID…** first, or enter the ID when prompted (it becomes the folder's default model).
 5. Optional: open the **Rae** icon in the activity bar, choose **AI Assistant** and paste an Anthropic API key when prompted.
 
@@ -155,7 +155,7 @@ Raelog files default to a two-space indent (`editor.tabSize` 2, `editor.insertSp
 - **Linked models** are not resolved. References to symbols declared in an imported model are reported as unknown.
 - **Single-file scope.** Navigation, rename and diagnostics work within the open file. There is no workspace-wide index yet.
 - **The graph view is read-only.** Edit the Raelog, and the graph follows.
-- **No model browser.** The Rainbird API has no endpoint that lists an account's models, so there is no "pick a model" dialog: start from the Knowledge Map ID on the model's **Publish** page with **Open Model by Knowledge Map ID…**. The Models view lists the models you have opened, pushed or queried from VS Code; if the platform adds a list endpoint, the Models view will use it.
+- **No model browser.** The Rainbird API has no endpoint that lists an account's models, so there is no "pick a model" dialog: start from the model's kmID (on the project's **Connect → API** tab in Rae, or the **Publish** page in Studio) with **Open Model by Knowledge Map ID…**. The Models view lists the models you have opened, pushed or queried from VS Code; if the platform adds a list endpoint, the Models view will use it.
 - **Packaging to `.rbird`** is not supported. Studio's importer needs its own structured form of the model, not just the Raelog text. Use Push instead.
 
 ## Privacy

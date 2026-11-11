@@ -16,8 +16,8 @@ const MCP_URL_PATTERN = /^https:\/\/[\w.-]+\/mcp\/graph\/[a-f0-9]+$/i;
 
 export async function addMcpServer(): Promise<void> {
   const url = await vscode.window.showInputBox({
-    prompt: "MCP endpoint URL of the model (from the model's 'Test over MCP' page)",
-    placeHolder: "https://rake.rainbird.ai/mcp/graph/…",
+    prompt: "MCP endpoint URL of the model (from the project's Connect → MCP tab in Rae)",
+    placeHolder: "https://…/mcp/graph/…",
     password: true, // the URL grants access — do not echo it on screen
     ignoreFocusOut: true,
     validateInput: (value) =>

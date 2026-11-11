@@ -13,8 +13,8 @@ Commands and file formats may change between releases.
 You need:
 
 - **VS Code 1.90 or later.** Download it from [code.visualstudio.com](https://code.visualstudio.com/) if you do not have it.
-- **A Rainbird API key**, only if you want to open models from the platform, run queries or push models. Editing, linting and the graph view work without one.
-- **Your model's Knowledge Map ID (kmID).** Open the model in Rainbird Studio and go to its **Publish** page: the Knowledge Map ID (a long code such as `504436fb-7fbb-44ea-b36c-bfd977aea8c8`) and the API key are both shown there. The ID is also under **View Knowledge Map ID** in the model's details menu. Keep the Publish page open; you will copy from it twice.
+- **A Platform API key**, the same key Rae uses, only if you want to open models from the platform, run queries or push models. It is on your account page in Rainbird Studio (Rae's **Settings → API keys** links to it) and on any model's **Publish** page there. Editing, linting and the graph view work without one.
+- **Your model's Knowledge Map ID (kmID).** In Rae ([app.raelog.ai](https://app.raelog.ai)), open the project and go to **Connect → API**: the kmID (a long code such as `504436fb-7fbb-44ea-b36c-bfd977aea8c8`) is there with a Copy button. Each version of a project has its own kmID. For a model in Rainbird Studio, the Knowledge Map ID is on its **Publish** page, and under **View Knowledge Map ID** in the model's details menu.
 - **An Anthropic API key (Optional)**, only if you want to use the AI assistant.
 - **Evidence Tree Link enabled** on the model, if you want to see evidence trees. In Studio this is under Publish, then API Management, then Access Control.
 
@@ -36,7 +36,7 @@ All commands below are run from the Command Palette. Open it with `Cmd+Shift+P` 
 
 **First, open a folder.** Use **File > Open Folder…** and pick or create a folder for your models. Models you download from the platform are saved there, and the extension remembers each file's Knowledge Map ID with it. (Everything works without a folder too, but you will be asked for the ID more often.)
 
-1. **Connect to your environment.** Run **Rae: Connect**. Choose Community (Studio at `app.rainbird.ai`), Enterprise (Studio at `enterprise.rainbird.ai`) or a custom URL, then paste the API key from the model's Publish page. The key is stored in VS Code's encrypted secret storage, never in a settings file. You do this once per environment.
+1. **Connect to your environment.** Run **Rae: Connect**. Choose Community (Studio at `app.rainbird.ai`), Enterprise (Studio at `enterprise.rainbird.ai`) or a custom URL, then paste your Platform API key. The key is stored in VS Code's encrypted secret storage, never in a settings file. You do this once per environment.
 
 2. **Get one of your models into VS Code.** There is no command that lists your Studio models: the Rainbird API has no way to list an account's models, so every route starts from the model's Knowledge Map ID. Pick one:
 
@@ -135,7 +135,7 @@ If you would rather review each change before it lands, set `rainbird.ai.applyEd
 
 ## Good to know
 
-- **No model browser.** The Rainbird API has no endpoint that lists an account's models, so there is no "pick a model" dialog. Every route starts from a Knowledge Map ID, copied from the model's Publish page in Studio or from **View Knowledge Map ID** in the model's details menu. A list endpoint has been requested from the platform team; the Models view will use it when it exists.
+- **No model browser.** The Rainbird API has no endpoint that lists an account's models, so there is no "pick a model" dialog. Every route starts from a model's kmID, copied from the project's **Connect → API** tab in Rae, or from the model's Publish page or **View Knowledge Map ID** menu in Studio. A list endpoint has been requested from the platform team; the Models view will use it when it exists.
 - **Plural relationships are asked by design.** A plural relationship (one subject, many objects) is still asked when facts for it were injected, so that more can be added. The query panel shows what is already known and, by default, answers **No more** for you when your injected facts cover the question. To stop the engine asking at all, set `askable="none"` on the relationship in the model. If the engine refuses a skip and the panel's `.rbl`, or another `.rbl` open in an editor, declares the relationship, the card offers **Make “\<relationship>” inject-only…**, which sets it for you after asking: the file is changed but not saved, and pushing it creates a new model. Only do that if every session injects those facts: otherwise rules that need them get no result.
 - **An injected fact below 100% certainty may be asked again.** The engine can ask the question again for a fact you injected with a certainty below 100. The card shows the injected value under **Already known**, and **Keep known answer** keeps it. Verified on Rainbird's public HelloWorld model: with `Tom lives in France` injected at 90%, the engine still asked where Tom lives; at 100% it did not.
 - **Names must match exactly.** Relationship and instance names in injected facts must match the model exactly, case included. A mismatch is either rejected by the engine or attaches to nothing. When an injected subject or object differs from the question's only in case, such as `fred` for `Fred`, the question card points it out.

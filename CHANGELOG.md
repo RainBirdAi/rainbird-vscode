@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Where to find things in Rae.** Wherever the extension tells you where a model's ID or your API key is, it now points to Rae first. The kmID is on the project's **Connect → API** tab in Rae (each version of a project has its own), and the API key is the Platform API key Rae uses, on your account page in Rainbird Studio. **Rae: Add a Model's MCP Endpoint…** asks for the URL from the project's **Connect → MCP** tab instead of the old "Test over MCP" page. Studio's Publish page is still mentioned for models you manage in Studio.
+- **Links to raelog.ai.** The README and walkthrough link to [raelog.ai](https://raelog.ai), [app.raelog.ai](https://app.raelog.ai) and the [docs](https://docs.raelog.ai), and mention that the example `.raelog` models from raelog.ai open in the extension. The Marketplace listing's homepage is now raelog.ai.
+
 ## 0.0.15 — 2026-11-05
 
 - **New names from Rainbird's October 2026 glossary.** The extension now uses the vocabulary of Rae, the decision automation platform from Rainbird. The language is **Raelog** (previously RBLang) and knowledge maps are **models**. Command titles, views (**Model Explorer**, **Models**), messages, hovers, diagnostics, the walkthrough, the README and the AI assistant's built-in reference all use the new names, and the assistant still understands the old ones. **Rainbird: Add Served Graph as MCP Server…** is now **Rae: Add a Model's MCP Endpoint…**, and **Explain (AI)** is described as what it is: prose generated from the evidence tree, never a substitute for it.

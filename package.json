@@ -14,7 +14,7 @@
   "bugs": {
     "url": "https://github.com/RainBirdAi/rainbird-vscode/issues"
   },
-  "homepage": "https://github.com/RainBirdAi/rainbird-vscode#readme",
+  "homepage": "https://raelog.ai",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -301,7 +301,7 @@
       },
       {
         "view": "rainbird.platformMaps",
-        "contents": "Models you open, push or query from VS Code appear here. Rainbird's API has no endpoint that lists your models, so start from a model's Knowledge Map ID (on its Publish page in Rainbird Studio).\n[Open Model by Knowledge Map ID…](command:rainbird.openMapByKmId)\n[Add a kmID without opening it](command:rainbird.mapsAdd)"
+        "contents": "Models you open, push or query from VS Code appear here. Rainbird's API has no endpoint that lists your models, so start from a model's Knowledge Map ID (on the project's Connect → API tab in Rae, or the model's Publish page in Rainbird Studio).\n[Open Model by Knowledge Map ID…](command:rainbird.openMapByKmId)\n[Add a kmID without opening it](command:rainbird.mapsAdd)"
       }
     ],
     "menus": {
@@ -535,7 +535,7 @@
         "rainbird.knowledgeMapId": {
           "type": "string",
           "default": "",
-          "description": "Default Knowledge Map ID (kmID) for this workspace or folder, used for files that have no model of their own and for queries with no file open. Files opened by Knowledge Map ID, pulled, pushed or bound with “Rae: Bind Open File to a Knowledge Map ID…” keep their own model, which wins over this setting. The ID is on the model's Publish page in Rainbird Studio, or under View Knowledge Map ID in the model's menu.",
+          "description": "Default Knowledge Map ID (kmID) for this workspace or folder, used for files that have no model of their own and for queries with no file open. Files opened by Knowledge Map ID, pulled, pushed or bound with “Rae: Bind Open File to a Knowledge Map ID…” keep their own model, which wins over this setting. In Rae, copy it from the project's Connect → API tab; in Rainbird Studio, it is on the model's Publish page, or under View Knowledge Map ID in the model's menu.",
           "scope": "resource"
         },
         "rainbird.useDraft": {
@@ -665,7 +665,7 @@
           {
             "id": "rainbird.openMapStep",
             "title": "Open your own model",
-            "description": "Paste a model's Knowledge Map ID, from its Publish page in Rainbird Studio. The extension downloads the model's draft, saves it as a .rbl file and remembers which model it is.\n[Open Model by Knowledge Map ID…](command:rainbird.openMapByKmId)",
+            "description": "Paste a model's kmID, from the project's Connect → API tab in Rae or the model's Publish page in Rainbird Studio. The extension downloads the model's draft, saves it as a .rbl file and remembers which model it is.\n[Open Model by Knowledge Map ID…](command:rainbird.openMapByKmId)",
             "media": {
               "markdown": "media/walkthrough/open-map.md"
             },

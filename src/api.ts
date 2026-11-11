@@ -255,7 +255,7 @@ export class ApiError extends Error {
  * runners and Open Map / Pull, so the copy lives in one place.
  */
 export function unknownMapMessage(kmId: string, apiUrl: string): string {
-  return `No model with Knowledge Map ID ${kmId} is visible to this API key on ${apiUrl}. Check the ID on the model's Publish page in Studio, and that the key belongs to the same environment.`;
+  return `No model with Knowledge Map ID ${kmId} is visible to this API key on ${apiUrl}. Check the ID (the kmID on the project's Connect → API tab in Rae, or the model's Publish page in Studio), and that the key belongs to the same environment.`;
 }
 
 export interface CreateMapResult {

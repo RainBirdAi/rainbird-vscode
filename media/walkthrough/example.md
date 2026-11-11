@@ -10,3 +10,5 @@ Raelog, previously called RBLang, is the language models are written in for Rae,
 - **Snippets** — try `rule`, `fact`, `rel-questions`, `condition-count`
 
 The example works offline and needs no account. It is not one of your Rae models, though: to query it, push it first (cloud icon in the editor title bar; every push creates a new model), or open one of your own models in the next steps.
+
+You can also open any `.raelog` model, such as the examples on [raelog.ai](https://raelog.ai).
