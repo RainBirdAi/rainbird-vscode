@@ -1,7 +1,7 @@
 /**
  * Rainbird for VSCode — prototype entry point.
  *
- * Wires up: RBLang diagnostics + completions + hovers + inlay hints + formatting, the
+ * Wires up: Raelog diagnostics + completions + hovers + inlay hints + formatting, the
  * interactive query panel and graph view webviews, the Claude-powered
  * authoring assistant, push-to-platform (with quick-diff against the pushed
  * snapshot), the promotion diff, the map explorer sidebar, .rbird extraction,
@@ -39,26 +39,29 @@ import { registerFormatting } from "./formatting";
 import { registerEditApplierProviders } from "./editApplier";
 import { buildIndex } from "./mapIndex";
 import { relationshipAt } from "./authoringModel";
+import { migrateFromLegacyLanguageId } from "./migrate";
 
 export function activate(context: vscode.ExtensionContext): void {
   registerLanguageDetection(context);
   registerDiagnostics(context);
   registerPlatformDiagnostics(context);
+  // After the output channel exists: settings and snapshots saved under the old "rblang" id.
+  void migrateFromLegacyLanguageId(context);
   registerCompletions(context);
 
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 90);
   status.name = "Rae";
   status.command = "rainbird.connect";
-  // The extension also starts with VS Code (onStartupFinished) so that RBLang pasted into
+  // The extension also starts with VS Code (onStartupFinished) so that Raelog pasted into
   // any window is recognised. Show the environment only where Rainbird is in use: the
-  // folder holds maps or saved tests, or an RBLang document is open.
+  // folder holds maps or saved tests, or a Raelog document is open.
   let rainbirdFolder = false;
   const updateStatus = () => {
     const apiUrl = vscode.workspace.getConfiguration("rainbird").get<string>("apiUrl") ?? "";
     const env = apiUrl.includes("enterprise") ? "Enterprise" : apiUrl.includes("api.rainbird.ai") ? "Community" : "Custom";
     status.text = `$(circuit-board) Rainbird: ${env}`;
     status.tooltip = `Rainbird environment: ${apiUrl}\nClick to change environment / API key`;
-    const inUse = rainbirdFolder || vscode.workspace.textDocuments.some((d) => d.languageId === "rblang");
+    const inUse = rainbirdFolder || vscode.workspace.textDocuments.some((d) => d.languageId === "raelog");
     if (inUse) status.show();
     else status.hide();
   };
@@ -103,7 +106,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand("rainbird.connect", () => connect(context)),
     vscode.commands.registerCommand("rainbird.setEvidenceKey", () => setEvidenceKey(context)),
     vscode.commands.registerCommand("rainbird.runQuery", () => runQuery(context)),
-    // ▶ in an RBLang editor's title bar passes that editor's Uri: query its map,
+    // ▶ in a Raelog editor's title bar passes that editor's Uri: query its map,
     // with the relationship under its cursor preselected.
     vscode.commands.registerCommand("rainbird.openQueryPanel", (arg?: unknown) => {
       const uri = arg instanceof vscode.Uri ? arg : undefined;
@@ -130,13 +133,13 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand("rainbird.mapsCopyKmId", (node) => platformMaps.copyKmId(node)),
     vscode.commands.registerCommand("rainbird.mapsRemove", (node) => platformMaps.remove(node)),
     vscode.commands.registerCommand("rainbird.mapsOpenFile", (node) => platformMaps.openFile(node)),
-    vscode.commands.registerCommand("rainbird.mapsOpen", (node) => platformMaps.openRblang(node)),
+    vscode.commands.registerCommand("rainbird.mapsOpen", (node) => platformMaps.openRaelog(node)),
     vscode.commands.registerCommand("rainbird.mapsQuery", (node) => platformMaps.query(node)),
     vscode.commands.registerCommand("rainbird.mapsReload", (node) => platformMaps.reload(node)),
     vscode.commands.registerCommand("rainbird.openMapByKmId", (kmId?: unknown) =>
       openMapByKmId(context, typeof kmId === "string" ? kmId : undefined)
     ),
-    // From the editor context menu, or with the extracted file's Uri after Extract RBLang.
+    // From the editor context menu, or with the extracted file's Uri after Extract Raelog.
     vscode.commands.registerCommand("rainbird.bindKmId", (uri?: unknown) =>
       bindKmId(context, uri instanceof vscode.Uri ? uri : undefined)
     ),
@@ -160,7 +163,7 @@ export function activate(context: vscode.ExtensionContext): void {
       vscode.commands.executeCommand("workbench.action.openWalkthrough", `${context.extension.id}#rainbird.gettingStarted`, false)
     ),
     vscode.commands.registerCommand("rainbird.openExample", async () => {
-      const example = vscode.Uri.joinPath(context.extensionUri, "examples", "hello-world.rbl");
+      const example = vscode.Uri.joinPath(context.extensionUri, "examples", "hello-world.raelog");
       const doc = await vscode.workspace.openTextDocument(example);
       await vscode.window.showTextDocument(doc);
     })
@@ -174,7 +177,7 @@ export function deactivate(): void {
 /**
  * The relationship under the cursor, preselected in the query panel (G-2): in
  * the editor whose title-bar ▶ was pressed (its Uri is the command argument;
- * the active editor first when it shows that file), else in the active RBLang
+ * the active editor first when it shows that file), else in the active Raelog
  * editor. Read before the panel takes focus.
  */
 function goalAtCursor(uri: vscode.Uri | undefined): string | undefined {
@@ -182,7 +185,7 @@ function goalAtCursor(uri: vscode.Uri | undefined): string | undefined {
   const editor = uri
     ? [active, ...vscode.window.visibleTextEditors].find((e) => e?.document.uri.toString() === uri.toString())
     : active;
-  if (!editor || editor.document.languageId !== "rblang") return undefined;
+  if (!editor || editor.document.languageId !== "raelog") return undefined;
   const doc = editor.document;
   return relationshipAt(buildIndex(doc.getText()), doc.offsetAt(editor.selection.active));
 }

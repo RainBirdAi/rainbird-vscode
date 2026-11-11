@@ -148,11 +148,11 @@ export class AssistantViewProvider implements vscode.WebviewViewProvider {
 
 async function insertIntoEditor(code: string, replaceFile: boolean): Promise<void> {
   let editor = vscode.window.activeTextEditor;
-  if (!editor || editor.document.languageId !== "rblang") {
-    editor = vscode.window.visibleTextEditors.find((e) => e.document.languageId === "rblang");
+  if (!editor || editor.document.languageId !== "raelog") {
+    editor = vscode.window.visibleTextEditors.find((e) => e.document.languageId === "raelog");
   }
   if (!editor) {
-    const doc = await vscode.workspace.openTextDocument({ language: "rblang", content: code });
+    const doc = await vscode.workspace.openTextDocument({ language: "raelog", content: code });
     await vscode.window.showTextDocument(doc);
     return;
   }

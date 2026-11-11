@@ -203,7 +203,7 @@
 
   <!-- RF-3 and RF-4 diagnosis selection.
        Note the diagnosis role rel is named separately from the Code role rel
-       because RBLang keys a relationship by name alone and the two carry
+       because Raelog keys a relationship by name alone and the two carry
        different subjects. -->
   <rel name="is primary candidate from findings" subject="ClinicalConcept" object="Flag" askable="none"/>
   <rel name="is primary diagnosis candidate" subject="ClinicalConcept" object="Flag" askable="none"/>
@@ -3273,7 +3273,7 @@
   <!-- ============ The four rule sequence ordinal ============
        Block ordinal times 100, plus role position times 10, plus the event
        order within the block. Decomposed into four rules with ONE arithmetic
-       operator each: RBLang evaluates strictly left to right with no
+       operator each: Raelog evaluates strictly left to right with no
        operator precedence even inside brackets, so a single combined
        expression would compute the wrong number silently. -->
 
@@ -3343,7 +3343,7 @@
        Position ordinal = block ordinal * 100 + the role offset, with the role
        offset written as a literal in each rule because each rule already
        knows its own role. One arithmetic operator per expression throughout:
-       RBLang has no operator precedence even inside brackets.
+       Raelog has no operator precedence even inside brackets.
 
        Role offsets follow R-J-3, which is the commonest sequencing error:
        10 body system, 20 Chapter Y METHOD QUALIFIER (before its site code),

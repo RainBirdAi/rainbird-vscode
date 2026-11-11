@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "Raelog",
-  "scopeName": "text.xml.rblang",
+  "scopeName": "text.xml.raelog",
   "patterns": [
     { "include": "#prolog" },
     { "include": "#comment" },
@@ -16,25 +16,25 @@
       "begin": "(<\\?)\\s*(xml)",
       "end": "(\\?>)",
       "beginCaptures": {
-        "1": { "name": "punctuation.definition.tag.rblang" },
-        "2": { "name": "entity.name.tag.xml.rblang" }
+        "1": { "name": "punctuation.definition.tag.raelog" },
+        "2": { "name": "entity.name.tag.xml.raelog" }
       },
       "endCaptures": {
-        "1": { "name": "punctuation.definition.tag.rblang" }
+        "1": { "name": "punctuation.definition.tag.raelog" }
       },
       "patterns": [{ "include": "#generic-attribute" }]
     },
     "comment": {
       "begin": "<!--",
       "end": "-->",
-      "name": "comment.block.rblang"
+      "name": "comment.block.raelog"
     },
     "cdata": {
       "begin": "<!\\[CDATA\\[",
       "end": "\\]\\]>",
-      "name": "string.unquoted.cdata.rblang",
-      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.rblang" } },
-      "endCaptures": { "0": { "name": "punctuation.definition.string.end.rblang" } },
+      "name": "string.unquoted.cdata.raelog",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.raelog" } },
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.raelog" } },
       "patterns": [{ "include": "#interpolation" }]
     },
     "question-element": {
@@ -42,46 +42,46 @@
       "begin": "(<)(firstForm|secondFormSubject|secondFormObject)(>)",
       "end": "(</)(\\2)(>)",
       "beginCaptures": {
-        "1": { "name": "punctuation.definition.tag.rblang" },
-        "2": { "name": "entity.name.tag.question.rblang" },
-        "3": { "name": "punctuation.definition.tag.rblang" }
+        "1": { "name": "punctuation.definition.tag.raelog" },
+        "2": { "name": "entity.name.tag.question.raelog" },
+        "3": { "name": "punctuation.definition.tag.raelog" }
       },
       "endCaptures": {
-        "1": { "name": "punctuation.definition.tag.rblang" },
-        "2": { "name": "entity.name.tag.question.rblang" },
-        "3": { "name": "punctuation.definition.tag.rblang" }
+        "1": { "name": "punctuation.definition.tag.raelog" },
+        "2": { "name": "entity.name.tag.question.raelog" },
+        "3": { "name": "punctuation.definition.tag.raelog" }
       },
-      "contentName": "string.unquoted.question.rblang",
+      "contentName": "string.unquoted.question.raelog",
       "patterns": [{ "include": "#placeholder" }]
     },
     "meta-element": {
       "begin": "(<)(meta)\\b",
       "end": "(</)(meta)(>)|(/>)",
       "beginCaptures": {
-        "1": { "name": "punctuation.definition.tag.rblang" },
-        "2": { "name": "entity.name.tag.rblang" }
+        "1": { "name": "punctuation.definition.tag.raelog" },
+        "2": { "name": "entity.name.tag.raelog" }
       },
       "endCaptures": {
-        "1": { "name": "punctuation.definition.tag.rblang" },
-        "2": { "name": "entity.name.tag.rblang" },
-        "3": { "name": "punctuation.definition.tag.rblang" },
-        "4": { "name": "punctuation.definition.tag.rblang" }
+        "1": { "name": "punctuation.definition.tag.raelog" },
+        "2": { "name": "entity.name.tag.raelog" },
+        "3": { "name": "punctuation.definition.tag.raelog" },
+        "4": { "name": "punctuation.definition.tag.raelog" }
       },
       "patterns": [
         { "include": "#type-attribute" },
         { "include": "#generic-attribute" },
-        { "match": ">", "name": "punctuation.definition.tag.rblang" }
+        { "match": ">", "name": "punctuation.definition.tag.raelog" }
       ]
     },
     "known-tag": {
       "begin": "(</?)(rbl:kb|concept|concinst|rel|relinst|condition|datasource|action|input|headers|header|import|compound)\\b",
       "end": "(/?>)",
       "beginCaptures": {
-        "1": { "name": "punctuation.definition.tag.rblang" },
-        "2": { "name": "entity.name.tag.rblang" }
+        "1": { "name": "punctuation.definition.tag.raelog" },
+        "2": { "name": "entity.name.tag.raelog" }
       },
       "endCaptures": {
-        "1": { "name": "punctuation.definition.tag.rblang" }
+        "1": { "name": "punctuation.definition.tag.raelog" }
       },
       "patterns": [
         { "include": "#expression-attribute" },
@@ -99,11 +99,11 @@
       "begin": "(</?)([a-zA-Z_][\\w:.-]*)",
       "end": "(/?>)",
       "beginCaptures": {
-        "1": { "name": "punctuation.definition.tag.rblang" },
-        "2": { "name": "invalid.unimplemented.tag.rblang" }
+        "1": { "name": "punctuation.definition.tag.raelog" },
+        "2": { "name": "invalid.unimplemented.tag.raelog" }
       },
       "endCaptures": {
-        "1": { "name": "punctuation.definition.tag.rblang" }
+        "1": { "name": "punctuation.definition.tag.raelog" }
       },
       "patterns": [{ "include": "#generic-attribute" }]
     },
@@ -112,33 +112,33 @@
       "begin": "\\b(name)\\s*(=)\\s*(\")",
       "end": "(\")",
       "beginCaptures": {
-        "1": { "name": "entity.other.attribute-name.rblang" },
-        "2": { "name": "punctuation.separator.key-value.rblang" },
-        "3": { "name": "punctuation.definition.string.begin.rblang" }
+        "1": { "name": "entity.other.attribute-name.raelog" },
+        "2": { "name": "punctuation.separator.key-value.raelog" },
+        "3": { "name": "punctuation.definition.string.begin.raelog" }
       },
       "endCaptures": {
-        "1": { "name": "punctuation.definition.string.end.rblang" }
+        "1": { "name": "punctuation.definition.string.end.raelog" }
       },
-      "contentName": "entity.name.function.declaration.rblang"
+      "contentName": "entity.name.function.declaration.raelog"
     },
     "type-attribute": {
       "comment": "type= is a primitive enum on <concept>/<meta> but a reference to a concept (<concinst>) or relationship (<relinst>) elsewhere",
       "begin": "\\b(type)\\s*(=)\\s*(\")",
       "end": "(\")",
       "beginCaptures": {
-        "1": { "name": "entity.other.attribute-name.rblang" },
-        "2": { "name": "punctuation.separator.key-value.rblang" },
-        "3": { "name": "punctuation.definition.string.begin.rblang" }
+        "1": { "name": "entity.other.attribute-name.raelog" },
+        "2": { "name": "punctuation.separator.key-value.raelog" },
+        "3": { "name": "punctuation.definition.string.begin.raelog" }
       },
       "endCaptures": {
-        "1": { "name": "punctuation.definition.string.end.rblang" }
+        "1": { "name": "punctuation.definition.string.end.raelog" }
       },
       "patterns": [
         {
           "match": "\\b(string|number|date|truth|md)\\b(?=\"|$)",
-          "name": "constant.language.primitive.rblang"
+          "name": "constant.language.primitive.raelog"
         },
-        { "match": "[^\"]+", "name": "support.class.reference.rblang" }
+        { "match": "[^\"]+", "name": "support.class.reference.raelog" }
       ]
     },
     "ref-attribute": {
@@ -146,50 +146,50 @@
       "begin": "\\b(subject|object|rel|funct|group|km)\\s*(=)\\s*(\")",
       "end": "(\")",
       "beginCaptures": {
-        "1": { "name": "entity.other.attribute-name.rblang" },
-        "2": { "name": "punctuation.separator.key-value.rblang" },
-        "3": { "name": "punctuation.definition.string.begin.rblang" }
+        "1": { "name": "entity.other.attribute-name.raelog" },
+        "2": { "name": "punctuation.separator.key-value.raelog" },
+        "3": { "name": "punctuation.definition.string.begin.raelog" }
       },
       "endCaptures": {
-        "1": { "name": "punctuation.definition.string.end.rblang" }
+        "1": { "name": "punctuation.definition.string.end.raelog" }
       },
       "patterns": [
         { "include": "#placeholder" },
-        { "match": "%[A-Z][A-Z0-9_]*", "name": "variable.other.binding.rblang" },
-        { "match": "\\b(true|false)\\b(?=\")", "name": "constant.language.rblang" },
-        { "match": "-?\\d+(\\.\\d+)?(?=\")", "name": "constant.numeric.rblang" },
-        { "match": "[^\"]+", "name": "support.class.reference.rblang" }
+        { "match": "%[A-Z][A-Z0-9_]*", "name": "variable.other.binding.raelog" },
+        { "match": "\\b(true|false)\\b(?=\")", "name": "constant.language.raelog" },
+        { "match": "-?\\d+(\\.\\d+)?(?=\")", "name": "constant.numeric.raelog" },
+        { "match": "[^\"]+", "name": "support.class.reference.raelog" }
       ]
     },
     "number-attribute": {
       "begin": "\\b(cf|weight|salience|minimum-rule-certainty|minimumRuleCertainty|versionNumber)\\s*(=)\\s*(\")",
       "end": "(\")",
       "beginCaptures": {
-        "1": { "name": "entity.other.attribute-name.rblang" },
-        "2": { "name": "punctuation.separator.key-value.rblang" },
-        "3": { "name": "punctuation.definition.string.begin.rblang" }
+        "1": { "name": "entity.other.attribute-name.raelog" },
+        "2": { "name": "punctuation.separator.key-value.raelog" },
+        "3": { "name": "punctuation.definition.string.begin.raelog" }
       },
       "endCaptures": {
-        "1": { "name": "punctuation.definition.string.end.rblang" }
+        "1": { "name": "punctuation.definition.string.end.raelog" }
       },
       "patterns": [
-        { "match": "-?\\d+(\\.\\d+)?", "name": "constant.numeric.rblang" },
-        { "match": "[^\"]+", "name": "invalid.illegal.expected-number.rblang" }
+        { "match": "-?\\d+(\\.\\d+)?", "name": "constant.numeric.raelog" },
+        { "match": "[^\"]+", "name": "invalid.illegal.expected-number.raelog" }
       ]
     },
     "expression-attribute": {
-      "comment": "The RBLang expression language embedded inside expression=\"...\" and the assignment target value=\"...\"",
+      "comment": "The Raelog expression language embedded inside expression=\"...\" and the assignment target value=\"...\"",
       "begin": "\\b(expression|value)\\s*(=)\\s*(\")",
       "end": "(\")",
       "beginCaptures": {
-        "1": { "name": "entity.other.attribute-name.expression.rblang" },
-        "2": { "name": "punctuation.separator.key-value.rblang" },
-        "3": { "name": "punctuation.definition.string.begin.rblang" }
+        "1": { "name": "entity.other.attribute-name.expression.raelog" },
+        "2": { "name": "punctuation.separator.key-value.raelog" },
+        "3": { "name": "punctuation.definition.string.begin.raelog" }
       },
       "endCaptures": {
-        "1": { "name": "punctuation.definition.string.end.rblang" }
+        "1": { "name": "punctuation.definition.string.end.raelog" }
       },
-      "contentName": "meta.embedded.expression.rblang",
+      "contentName": "meta.embedded.expression.raelog",
       "patterns": [{ "include": "#expression" }]
     },
     "alt-attribute": {
@@ -197,14 +197,14 @@
       "begin": "\\b(alt)\\s*(=)\\s*(\")",
       "end": "(\")",
       "beginCaptures": {
-        "1": { "name": "entity.other.attribute-name.alt.rblang" },
-        "2": { "name": "punctuation.separator.key-value.rblang" },
-        "3": { "name": "punctuation.definition.string.begin.rblang" }
+        "1": { "name": "entity.other.attribute-name.alt.raelog" },
+        "2": { "name": "punctuation.separator.key-value.raelog" },
+        "3": { "name": "punctuation.definition.string.begin.raelog" }
       },
       "endCaptures": {
-        "1": { "name": "punctuation.definition.string.end.rblang" }
+        "1": { "name": "punctuation.definition.string.end.raelog" }
       },
-      "contentName": "string.quoted.double.alt.rblang",
+      "contentName": "string.quoted.double.alt.raelog",
       "patterns": [{ "include": "#interpolation" }]
     },
     "map-attribute": {
@@ -212,20 +212,20 @@
       "begin": "\\b(map)\\s*(=)\\s*(\")",
       "end": "(\")",
       "beginCaptures": {
-        "1": { "name": "entity.other.attribute-name.map.rblang" },
-        "2": { "name": "punctuation.separator.key-value.rblang" },
-        "3": { "name": "punctuation.definition.string.begin.rblang" }
+        "1": { "name": "entity.other.attribute-name.map.raelog" },
+        "2": { "name": "punctuation.separator.key-value.raelog" },
+        "3": { "name": "punctuation.definition.string.begin.raelog" }
       },
       "endCaptures": {
-        "1": { "name": "punctuation.definition.string.end.rblang" }
+        "1": { "name": "punctuation.definition.string.end.raelog" }
       },
       "patterns": [
         {
           "match": "([^=\"]+)(=)([^\"]*)",
           "captures": {
-            "1": { "name": "support.class.reference.rblang" },
-            "2": { "name": "punctuation.separator.key-value.rblang" },
-            "3": { "name": "string.other.path.rblang" }
+            "1": { "name": "support.class.reference.raelog" },
+            "2": { "name": "punctuation.separator.key-value.raelog" },
+            "3": { "name": "string.other.path.raelog" }
           }
         }
       ]
@@ -235,19 +235,19 @@
       "begin": "\\b(behaviour|askable|allowCF|allowUnknown|plural|canAdd|scope|method)\\s*(=)\\s*(\")",
       "end": "(\")",
       "beginCaptures": {
-        "1": { "name": "entity.other.attribute-name.rblang" },
-        "2": { "name": "punctuation.separator.key-value.rblang" },
-        "3": { "name": "punctuation.definition.string.begin.rblang" }
+        "1": { "name": "entity.other.attribute-name.raelog" },
+        "2": { "name": "punctuation.separator.key-value.raelog" },
+        "3": { "name": "punctuation.definition.string.begin.raelog" }
       },
       "endCaptures": {
-        "1": { "name": "punctuation.definition.string.end.rblang" }
+        "1": { "name": "punctuation.definition.string.end.raelog" }
       },
       "patterns": [
         {
           "match": "\\b(mutually-exclusive|mutex|mx|mandatory|optional|top-down-strict|top-down|all|none|secondFormSubject|secondFormObject|subject,object|object,subject|subject|object|true|false|context|GET|POST)\\b",
-          "name": "constant.language.enum.rblang"
+          "name": "constant.language.enum.raelog"
         },
-        { "match": "[^\"]+", "name": "invalid.illegal.enum-value.rblang" }
+        { "match": "[^\"]+", "name": "invalid.illegal.enum-value.raelog" }
       ]
     },
     "generic-attribute": {
@@ -255,24 +255,24 @@
         {
           "match": "\\b(hostname|path|key|value|username|xmlns:rbl|version|encoding)\\b\\s*(=)",
           "captures": {
-            "1": { "name": "entity.other.attribute-name.rblang" },
-            "2": { "name": "punctuation.separator.key-value.rblang" }
+            "1": { "name": "entity.other.attribute-name.raelog" },
+            "2": { "name": "punctuation.separator.key-value.raelog" }
           }
         },
         {
           "match": "\\b([a-zA-Z_][\\w:.-]*)\\s*(=)",
           "captures": {
-            "1": { "name": "invalid.unimplemented.attribute-name.rblang" },
-            "2": { "name": "punctuation.separator.key-value.rblang" }
+            "1": { "name": "invalid.unimplemented.attribute-name.raelog" },
+            "2": { "name": "punctuation.separator.key-value.raelog" }
           }
         },
         {
           "begin": "\"",
           "end": "\"",
-          "name": "string.quoted.double.rblang",
+          "name": "string.quoted.double.raelog",
           "patterns": [
             { "include": "#placeholder" },
-            { "match": "\\{\\{\\s*%[A-Z][A-Z0-9_]*\\s*\\}\\}", "name": "variable.other.interpolated.rblang" }
+            { "match": "\\{\\{\\s*%[A-Z][A-Z0-9_]*\\s*\\}\\}", "name": "variable.other.interpolated.raelog" }
           ]
         }
       ]
@@ -281,61 +281,61 @@
       "patterns": [
         {
           "match": "\\b(abs|addDays|addMonths|addWeeks|addYears|atan2|ceil|cot|countRelationshipInstances|csc|dayOfMonth|dayOfWeek|dayOfYear|daysBetween|endsWith|factorial|floor|hoursBetween|includes|isAfterDate|isBeforeDate|isSameDate|isSubset|isWithinRange|joinObjects|max|maxObjects|min|minObjects|minutesBetween|mod|monthOfYear|monthsBetween|now|pow|regexCount|round|sec|secondsBetween|sqrt|startsWith|subtractDays|subtractMonths|subtractWeeks|subtractYears|sumObjects|tan|today|weeksBetween|year|yearsBetween)(?=\\s*\\()",
-          "name": "support.function.rblang-expression"
+          "name": "support.function.raelog-expression"
         },
         {
           "match": "\\b(is\\s+greater\\s+than\\s+or\\s+equal\\s+to|is\\s+less\\s+than\\s+or\\s+equal\\s+to|is\\s+greater\\s+than|is\\s+less\\s+than|is\\s+not\\s+equal\\s+to|is\\s+equal\\s+to|does\\s+not\\s+equal|greater\\s+than|less\\s+than|equals|gte|lte|gt|lt)\\b",
-          "name": "keyword.control.comparison.word.rblang-expression"
+          "name": "keyword.control.comparison.word.raelog-expression"
         },
         {
           "match": "(?i)\\b(and|or)\\b",
-          "name": "keyword.control.logical.rblang-expression"
+          "name": "keyword.control.logical.raelog-expression"
         },
         {
           "match": "!=|&gt;=|&lt;=|&gt;|&lt;|>=|<=|=|>|<",
-          "name": "keyword.operator.comparison.rblang-expression"
+          "name": "keyword.operator.comparison.raelog-expression"
         },
         {
           "match": "[+\\-*/]",
-          "name": "keyword.operator.arithmetic.rblang-expression"
+          "name": "keyword.operator.arithmetic.raelog-expression"
         },
         { "include": "#placeholder" },
         {
           "match": "%[A-Z][A-Z0-9_]*",
-          "name": "variable.other.binding.rblang"
+          "name": "variable.other.binding.raelog"
         },
         {
           "begin": "'",
           "end": "'",
-          "name": "string.quoted.single.rblang-expression"
+          "name": "string.quoted.single.raelog-expression"
         },
         {
           "match": "\\b\\d+(\\.\\d+)?\\b",
-          "name": "constant.numeric.rblang-expression"
+          "name": "constant.numeric.raelog-expression"
         },
         {
           "match": "\\*",
-          "name": "constant.language.wildcard.rblang-expression"
+          "name": "constant.language.wildcard.raelog-expression"
         },
         {
           "match": "[(),]",
-          "name": "punctuation.rblang-expression"
+          "name": "punctuation.raelog-expression"
         }
       ]
     },
     "placeholder": {
       "match": "%[SO]\\b",
-      "name": "variable.language.placeholder.rblang"
+      "name": "variable.language.placeholder.raelog"
     },
     "interpolation": {
       "patterns": [
         {
           "match": "(\\{\\{)\\s*(%[A-Z][A-Z0-9_]*|%[SO])(\\.[^}]+)?\\s*(\\}\\})",
           "captures": {
-            "1": { "name": "punctuation.definition.interpolation.begin.rblang" },
-            "2": { "name": "variable.other.binding.rblang" },
-            "3": { "name": "support.class.reference.rblang" },
-            "4": { "name": "punctuation.definition.interpolation.end.rblang" }
+            "1": { "name": "punctuation.definition.interpolation.begin.raelog" },
+            "2": { "name": "variable.other.binding.raelog" },
+            "3": { "name": "support.class.reference.raelog" },
+            "4": { "name": "punctuation.definition.interpolation.end.raelog" }
           }
         }
       ]

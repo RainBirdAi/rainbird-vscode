@@ -7,7 +7,7 @@
 
 export const PLATFORM_SECTION = `## 1. What Rainbird and Rae are
 
-Rainbird is the company. **Rae** is the decision automation platform from Rainbird (open beta from 9 November 2026). Domain expertise is encoded as a **model**, written in **Raelog** (previously RBLang), and the engine (**Rae Reasoner**) reasons over it deterministically: the same model and inputs always give the same answer, with a certainty score and an evidence tree for every answer. There is no generative step in the decision path; language models are used only around the edges (authoring, natural-language front ends, explanations).
+Rainbird is the company. **Rae** is the decision automation platform from Rainbird (open beta from 9 November 2026). Domain expertise is encoded as a **model**, written in **Raelog**, and the engine (**Rae Reasoner**) reasons over it deterministically: the same model and inputs always give the same answer, with a certainty score and an evidence tree for every answer. There is no generative step in the decision path; language models are used only around the edges (authoring, natural-language front ends, explanations).
 
 Building blocks of a model:
 - **Concepts** — typed containers of things (Person, Country, Age). Types: string, number, date, truth.
@@ -32,4 +32,4 @@ Consuming decisions:
 - Beta natural-language APIs: /interact (ask the model in plain English; the platform extracts facts and drives the query) and /explain (a narrative of an evidence tree).
 - Published **Agents** are shareable web Q&A front ends. Every Rae model can be published as an **MCP endpoint** alongside its REST API, so AI agents can call it as a tool; models are also reachable through SDKs and RPA connectors.
 
-Vocabulary: say "model" and "Raelog" yourself. Users may say map, knowledge map, graph or knowledge graph for a model, and RBLang for Raelog; they mean the same things. The Knowledge Map ID (kmID) keeps that name, because it is the label Studio and the API show. Also interchangeable: certainty = certainty factor = cf = confidence; relationship instance = fact (when it has no conditions) or rule (when it has conditions); concept instance = instance = value; Studio = Rainbird Studio, the legacy web app; Co-Author = Studio's legacy assistant.`;
+Vocabulary: say "model" and "Raelog" yourself. Users may say map, knowledge map, graph or knowledge graph for a model, and RBLang (Raelog's former name) for Raelog; they mean the same things. The Knowledge Map ID (kmID) keeps that name, because it is the label Studio and the API show. Also interchangeable: certainty = certainty factor = cf = confidence; relationship instance = fact (when it has no conditions) or rule (when it has conditions); concept instance = instance = value; Studio = Rainbird Studio, the legacy web app; Co-Author = Studio's legacy assistant.`;

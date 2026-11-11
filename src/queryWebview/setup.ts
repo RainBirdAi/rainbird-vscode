@@ -482,7 +482,7 @@ function conceptType(type: string | undefined): string {
   return type === "boolean" ? "truth" : "string";
 }
 
-/** The init message's goal list for a map's RBLang: the open file's text, or the platform draft's. */
+/** The init message's goal list for a map's Raelog: the open file's text, or the platform draft's. */
 export function panelGoals(text: string): PanelGoalList {
   const index = buildIndex(text);
   const list = goalsFromIndex(index);
@@ -567,7 +567,7 @@ export function unknownGoalNote(opts: {
     `The model (${kmId}) has no relationship named exactly "${relationship}" — names are case-sensitive.`,
     ranAgainst && goalsFrom !== "none" ? `This query ran against ${ranAgainst}, which may not have every relationship the goal list shows.` : "",
     goalsFrom === "editor"
-      ? "The goal list comes from your open .rbl file; check the model name in the header above."
+      ? "The goal list comes from your open .raelog file; check the model name in the header above."
       : "Check the model name in the header above.",
     file
       ? "If it's a different model, push the open file first (cloud icon), or point the file at the right model: " +
@@ -589,7 +589,7 @@ export function noMapNote(opts: { current?: string; file?: string; retry?: boole
   if (!opts.current) {
     return forFile
       ? `No model chosen for ${forFile}. Click “Choose model…” at the top to pick one.`
-      : "No model chosen. Click “Choose model…” at the top, or open the model's .rbl file and press ▶ in its title bar.";
+      : "No model chosen. Click “Choose model…” at the top, or open the model's .raelog file and press ▶ in its title bar.";
   }
   return forFile
     ? `No model chosen for ${forFile}, so the panel still queries ${opts.current}. Click “Change…” at the top to pick one for it.`

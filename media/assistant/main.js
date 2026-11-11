@@ -72,7 +72,7 @@
         flushPara();
         closeList();
         const b = blocks[Number(ph[1])];
-        const isCode = /^(rblang|xml)?$/.test(b.lang || "");
+        const isCode = /^(raelog|rblang|xml)?$/.test(b.lang || "");
         const lint = isCode && lints ? lints[codeIndex] : null;
         if (isCode) codeIndex++;
         html += codeBlock(b, lint);
@@ -135,7 +135,7 @@
         `<button data-act="copy" data-code="${enc}">Copy</button>` +
         (errs.length ? `<button data-act="fix" data-issues="${encodeURIComponent(JSON.stringify(errs.map((x) => `line ${x.line + 1}: ${x.message}`)))}">Ask to fix</button>` : "") +
         `</div>`;
-    } else if (!/^(rblang|xml)?$/.test(b.lang || "")) {
+    } else if (!/^(raelog|rblang|xml)?$/.test(b.lang || "")) {
       bar = `<div class="codebar"><button data-act="copy" data-code="${enc}">Copy</button></div>`;
     }
     return `<div class="codewrap"><pre>${esc(code)}</pre>${bar}${lintHtml}</div>`;
@@ -163,7 +163,7 @@
   function renderEmpty() {
     const e = document.getElementById("empty");
     if (!e) return;
-    const target = state.target ? `<strong>${esc(state.target.name)}</strong> is open.` : "Open a <code>.rbl</code> file, or ask for a new model.";
+    const target = state.target ? `<strong>${esc(state.target.name)}</strong> is open.` : "Open a <code>.raelog</code> file, or ask for a new model.";
     const key = state.hasKey ? "" : `<p><button class="primary" data-act="setKey">Set Anthropic API key</button> to get started.</p>`;
     e.innerHTML =
       `<p>${target} Ask anything about the model, or describe a change — the assistant reads the model, edits it through validated operations and reports what changed.</p>` +

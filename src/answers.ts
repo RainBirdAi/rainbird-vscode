@@ -16,7 +16,7 @@
  * - Numbers have at most 15 significant digits and a magnitude of at most
  *   999999999999999 (the language reference); coerceAnswer() refuses both
  *   rather than let a value be rounded or rejected later.
- * - canAdd is a boolean on the wire (live: `canAdd: true`); the RBLang string
+ * - canAdd is a boolean on the wire (live: `canAdd: true`); the Raelog string
  *   form (all | subject | object | subject,object | none) is tolerated.
  * - Truth objects are never plural, so a truth question never needs chips.
  *
@@ -88,7 +88,7 @@ export const HINTS: Readonly<ReturnType<typeof answerHints>> = Object.freeze(ans
 
 /**
  * Whether the person answering may type a value that is not offered, on the
- * side this question asks about. A boolean on the wire; the RBLang string form
+ * side this question asks about. A boolean on the wire; the Raelog string form
  * lists the sides (subject, object) that accept new instances.
  */
 export function canAddHere(q: { canAdd?: unknown; type?: string }): boolean {

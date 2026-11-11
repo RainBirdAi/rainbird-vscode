@@ -1,9 +1,9 @@
 /**
- * RBLang structural schema.
+ * Raelog structural schema.
  *
- * Clean-room TypeScript encoding of the RBLang element/attribute rules, derived
- * from Rainbird's public RBLang reference documentation
- * (https://docs.rainbird.ai/rainbird/knowledge-modelling/modelling-features/rblang-reference)
+ * Clean-room TypeScript encoding of the Raelog element/attribute rules, derived
+ * from Rainbird's public Raelog reference documentation
+ * (https://docs.rainbird.ai/rainbird/knowledge-modelling/modelling-features/raelog-reference)
  * and observed Studio validation behaviour. In the full extension this table
  * becomes the core of the language server; here it drives prototype
  * diagnostics and completions.
@@ -24,7 +24,7 @@ export interface ElementSpec {
   doc: string;
 }
 
-export const RBLANG_NAMESPACE = "http://rbl.io/schema/RBLang";
+export const RAELOG_NAMESPACE = "http://rbl.io/schema/RBLang";
 
 export const SCHEMA: Record<string, ElementSpec> = {
   "rbl:kb": {

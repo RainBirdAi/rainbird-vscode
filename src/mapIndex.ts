@@ -1,5 +1,5 @@
 /**
- * Lightweight regex-based index of an RBLang document: declared concepts,
+ * Lightweight regex-based index of a Raelog document: declared concepts,
  * relationships, instances and the tags in the file with their positions,
  * plus the lexical problems met while tokenising (malformed or duplicate
  * attributes, quotes that run into the next element).
@@ -56,7 +56,7 @@ export interface MapIndex {
 }
 
 const TAG_RE = /<(\/?)([a-zA-Z_][\w:.-]*)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
-/** One well-formed attribute: name="value" (double quotes only, as RBLang is written). Sticky so residue can be located. */
+/** One well-formed attribute: name="value" (double quotes only, as Raelog is written). Sticky so residue can be located. */
 const STRICT_ATTR_RE = /\s*([a-zA-Z_][\w:.-]*)\s*=\s*"([^"]*)"/y;
 /** A quoted value that contains a line break followed by the start of another element has swallowed it: a quote is missing. */
 const RUNAWAY_VALUE_RE = /\n\s*<[a-zA-Z_/!?]/;

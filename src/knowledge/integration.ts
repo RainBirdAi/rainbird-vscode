@@ -8,7 +8,7 @@ export const DATASOURCES_SECTION = `## 11. Datasources
 
 A datasource lets the engine fetch facts from a REST API mid-inference, in the *Match* step of Match → Infer → Ask, so the user is not asked for data a system already knows.
 
-\`\`\`rblang
+\`\`\`raelog
 <concept name="Vehicle" type="string">
   <datasource hostname="https://api.example.com" path="/vehicles?reg={{%S}}" method="GET" name="Vehicle lookup">
     <action map="has make=/Response/Vehicle/Make"/>

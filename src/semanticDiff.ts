@@ -1,5 +1,5 @@
 /**
- * Diff the open RBLang file against git HEAD (or a picked base file). The
+ * Diff the open Raelog file against git HEAD (or a picked base file). The
  * primary view is the git-diff experience — both sources side by side in
  * VS Code's diff editor with added / removed / changed lines highlighted. On
  * top of that, the model-level semantic diff (concepts, relationships,
@@ -8,12 +8,12 @@
  */
 import * as vscode from "vscode";
 import { buildModel, diffReportDetailed, Report } from "./semanticModel";
-import { exportUri, readRblang } from "./rbird";
+import { exportUri, readRaelog } from "./rbird";
 
 export { buildModel, diffReport, diffReportDetailed } from "./semanticModel";
 export type { Model, Report, Rule } from "./semanticModel";
 
-/** One side of a comparison: its RBLang text, a label for titles, and a URI the diff editor can open. */
+/** One side of a comparison: its Raelog text, a label for titles, and a URI the diff editor can open. */
 export interface DiffSide {
   label: string;
   text: string;
@@ -44,8 +44,8 @@ export async function showReport(markdown: string): Promise<void> {
 
 export async function semanticDiff(): Promise<void> {
   const editor = vscode.window.activeTextEditor;
-  if (!editor || editor.document.languageId !== "rblang") {
-    vscode.window.showInformationMessage("Open the Raelog (.rbl) file you want to diff first.");
+  if (!editor || editor.document.languageId !== "raelog") {
+    vscode.window.showInformationMessage("Open the Raelog (.raelog) file you want to diff first.");
     return;
   }
   const doc = editor.document;
@@ -77,11 +77,11 @@ async function baseContent(doc: vscode.TextDocument): Promise<DiffSide | undefin
   const fromGit = await gitHeadSide(doc);
   if (fromGit) return fromGit;
   const picked = await vscode.window.showOpenDialog({
-    title: "No git history for this file — pick the base version to compare against (.rbl or a Studio .rbird export)",
-    filters: { "Raelog or Studio export": ["rbl", "raelog", "rblang", "xml", "rbird"] },
+    title: "No git history for this file — pick the base version to compare against (.raelog or a Studio .rbird export)",
+    filters: { "Raelog or Studio export": ["raelog", "rbl", "rblang", "xml", "rbird"] },
     canSelectMany: false,
   });
   if (!picked?.[0]) return undefined;
-  return { text: await readRblang(picked[0]), label: picked[0].path.split("/").pop() ?? "base", uri: exportUri(picked[0]) };
+  return { text: await readRaelog(picked[0]), label: picked[0].path.split("/").pop() ?? "base", uri: exportUri(picked[0]) };
 }
 

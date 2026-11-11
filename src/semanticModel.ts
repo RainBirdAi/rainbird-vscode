@@ -1,5 +1,5 @@
 /**
- * Model-level view of an RBLang document (concepts, relationships, instances,
+ * Model-level view of a Raelog document (concepts, relationships, instances,
  * facts, rules) and the semantic diff between two of them — the part of the
  * semantic diff that has no VS Code dependency, so the assistant's edit tool
  * and the unit tests can use it directly.

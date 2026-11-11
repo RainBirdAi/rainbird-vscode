@@ -1,7 +1,7 @@
 /**
  * Pure helpers behind the guided authoring flows (authoring.ts): where a new
  * element belongs in the document, how the file is indented, which variables a
- * rule already binds, and the RBLang text for each element kind. No vscode
+ * rule already binds, and the Raelog text for each element kind. No vscode
  * dependency, so it can be exercised in plain node.
  */
 import { MapIndex, TagOccurrence } from "./mapIndex";
@@ -136,7 +136,7 @@ export function relationshipAt(index: MapIndex, offset: number): string | undefi
 
 const VAR_RE = /%[A-Za-z][A-Za-z0-9_]*/g;
 
-/** Distinct %VARIABLES mentioned in a piece of RBLang, in order of first appearance. */
+/** Distinct %VARIABLES mentioned in a piece of Raelog, in order of first appearance. */
 export function variablesIn(text: string): string[] {
   return [...new Set(text.match(VAR_RE) ?? [])];
 }

@@ -1,8 +1,8 @@
 /**
- * VS Code adapter for the RBLang linter.
+ * VS Code adapter for the Raelog linter.
  *
  * The editor-agnostic core lives in lint.ts (so the AI assistant can lint
- * generated RBLang and the unit tests can run under plain node); this module
+ * generated Raelog and the unit tests can run under plain node); this module
  * wires it to a DiagnosticCollection and caches the latest issues per
  * document so the code-action provider can serve fixes without re-linting.
  */
@@ -20,11 +20,11 @@ export function getCachedIssues(uriKey: string): LintIssue[] | undefined {
 }
 
 export function registerDiagnostics(context: vscode.ExtensionContext): void {
-  const collection = vscode.languages.createDiagnosticCollection("rblang");
+  const collection = vscode.languages.createDiagnosticCollection("raelog");
   context.subscriptions.push(collection);
 
   const refresh = (doc: vscode.TextDocument) => {
-    if (doc.languageId !== "rblang") return;
+    if (doc.languageId !== "raelog") return;
     collection.set(doc.uri, validate(doc));
   };
 
@@ -50,7 +50,7 @@ export function validate(doc: vscode.TextDocument): vscode.Diagnostic[] {
   return issues.map((issue) => {
     const range = new vscode.Range(doc.positionAt(issue.start), doc.positionAt(issue.end));
     const d = new vscode.Diagnostic(range, issue.message, severities[issue.severity]);
-    d.source = "rblang";
+    d.source = "raelog";
     return d;
   });
 }

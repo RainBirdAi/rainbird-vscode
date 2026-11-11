@@ -540,7 +540,7 @@ export function impactScale(rule: EvidenceRule | undefined | null): ImpactScale 
  * rule's total weight (see impactScale), the impact the condition would have
  * had at certainty 100. Live: cap 75 and weights 100/100 give 37.5 each, and a
  * 90% fact then has impact 33.75. Weight 0 gives 0; a missing weight counts as
- * RBLang's default, 100. Pass `scale` when drawing several rows of one rule.
+ * Raelog's default, 100. Pass `scale` when drawing several rows of one rule.
  */
 export function maxImpact(
   rule: EvidenceRule | undefined | null,
@@ -642,7 +642,7 @@ function finiteNumber(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
-/** A condition's weight (salience); RBLang's default is 100. */
+/** A condition's weight (salience); Raelog's default is 100. */
 function weightOf(condition: EvidenceCondition): number {
   const weight = finiteNumber(condition.salience);
   return weight === undefined ? 100 : Math.max(0, weight);

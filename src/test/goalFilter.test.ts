@@ -11,8 +11,8 @@ import { canonicalGoal, GOAL_FILTER_SOURCE, GoalLike, GoalMatch, groupGoals, hig
 import { Goal, goalsFromMap } from "../goals";
 
 const examples = path.join(__dirname, "..", "..", "examples");
-const bigger = goalsFromMap(fs.readFileSync(path.join(examples, "bigger_map.rbl"), "utf8")).goals;
-const hello = goalsFromMap(fs.readFileSync(path.join(examples, "hello-world.rbl"), "utf8")).goals;
+const bigger = goalsFromMap(fs.readFileSync(path.join(examples, "bigger_map.raelog"), "utf8")).goals;
+const hello = goalsFromMap(fs.readFileSync(path.join(examples, "hello-world.raelog"), "utf8")).goals;
 
 const goal = (name: string, subject: string, object: string, rules = 0): Goal => ({
   name,
@@ -184,7 +184,7 @@ describe("goal filter: ranking similar names", () => {
   });
 });
 
-describe("goal filter: examples/bigger_map.rbl", () => {
+describe("goal filter: examples/bigger_map.raelog", () => {
   test("'penalty sub' lists the subtotal series in document order (one … six)", () => {
     assert.deepEqual(names(rankGoals(bigger, "penalty sub")), [
       "penalty subtotal one",

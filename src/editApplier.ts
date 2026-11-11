@@ -82,7 +82,7 @@ export function registerEditApplierProviders(context: vscode.ExtensionContext): 
   );
 }
 
-const baseName = (doc: vscode.TextDocument): string => doc.uri.path.split("/").pop() || "untitled.rbl";
+const baseName = (doc: vscode.TextDocument): string => doc.uri.path.split("/").pop() || "untitled.raelog";
 
 /** Replace the document's text with `newText` through one minimal-range WorkspaceEdit (one undo step). */
 export async function writeDocument(doc: vscode.TextDocument, newText: string): Promise<boolean> {

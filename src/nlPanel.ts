@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import { RainbirdClient } from "./api";
 import { getClient } from "./queryRunner";
-import { activeRblangUri, resolveKmIdFor } from "./platform";
+import { activeRaelogUri, resolveKmIdFor } from "./platform";
 
 export class NlPanel {
   private static current?: NlPanel;
@@ -27,7 +27,7 @@ export class NlPanel {
       return;
     }
     // Which file's map: read before the webview takes focus from the editor.
-    const fileUri = activeRblangUri();
+    const fileUri = activeRaelogUri();
     const panel = vscode.window.createWebviewPanel(
       "rainbirdNl",
       "Rae NL (beta)",

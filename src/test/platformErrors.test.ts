@@ -1,5 +1,5 @@
 /**
- * Unit tests for placing the platform's validation messages onto RBLang
+ * Unit tests for placing the platform's validation messages onto Raelog
  * elements (platformErrors.ts). The messages are the platform's real wording
  * as seen on rejected pushes; the map is the diagnostics tour fixture.
  */
@@ -9,7 +9,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { locatePlatformErrors, normaliseErrMessages } from "../platformErrors";
 
-const tour = fs.readFileSync(path.join(__dirname, "..", "..", "examples", "broken", "diagnostics-tour.rbl"), "utf8");
+const tour = fs.readFileSync(path.join(__dirname, "..", "..", "examples", "broken", "diagnostics-tour.raelog"), "utf8");
 const lineText = (text: string, line: number): string => text.split("\n")[line].trim();
 const linesFor = (message: string): string[] => locatePlatformErrors(tour, [message]).map((h) => lineText(tour, h.line));
 

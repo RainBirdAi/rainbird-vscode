@@ -117,7 +117,7 @@ These are the highest-leverage additions because they need no platform calls and
 
 **4.10 `.rbird` preview editor.** Open a `.rbird` directly: read-only view of its Raelog, README and layout summary, with an "Extract" button, and a layout sidecar that the graph view can use for Studio-faithful positions. PLANNED 🟢 M
 
-**4.11 Multi-file models.** Split a large model into `.rbl` parts assembled by a build manifest for push; workspace-wide symbols, references and diagnostics; resolution of `<import km versionNumber>` against sibling files. The 4,491-line sample model is the motivation. PLANNED 🟢 L *needs parser*
+**4.11 Multi-file models.** Split a large model into `.raelog` parts assembled by a build manifest for push; workspace-wide symbols, references and diagnostics; resolution of `<import km versionNumber>` against sibling files. The 4,491-line sample model is the motivation. PLANNED 🟢 L *needs parser*
 
 **4.12 Workspace symbols.** Cmd+T search across every model in the workspace, matching Studio's Navigator. NEW 🟢 S
 
@@ -191,7 +191,7 @@ These are the highest-leverage additions because they need no platform calls and
 
 **9.3 Web build and Open VSX.** Language features on vscode.dev and github.dev for PR review (API calls blocked until CORS, ask #7); Open VSX publishing for Cursor and VSCodium users. PLANNED 🟢 M / S
 
-**9.4 Open Model by Knowledge Map ID.** A guided pull by kmID that ends in a bound, editable `.rbl` (feedback 2026-10: a tester expected Connect to list their models). One kmID prompt (example, clipboard offer, ID extracted from a pasted URL) and one kmID order (file binding, then setting, then prompt) for opening, binding, pulling, the platform diffs, Ask in Natural Language, the query panel and the Quick Pick runner (**Run Query (Quick Pick)…**), **Bind Open File to a Knowledge Map ID…**, and a Models view that explains the missing list. SHIPPED in 0.0.14 ✅
+**9.4 Open Model by Knowledge Map ID.** A guided pull by kmID that ends in a bound, editable `.raelog` (feedback 2026-10: a tester expected Connect to list their models). One kmID prompt (example, clipboard offer, ID extracted from a pasted URL) and one kmID order (file binding, then setting, then prompt) for opening, binding, pulling, the platform diffs, Ask in Natural Language, the query panel and the Quick Pick runner (**Run Query (Quick Pick)…**), **Bind Open File to a Knowledge Map ID…**, and a Models view that explains the missing list. SHIPPED in 0.0.14 ✅
 
 ## 10. What stays blocked, and why
 

@@ -336,7 +336,7 @@ export interface QuestionRecord {
   results?: ResultItem[];
 }
 
-/** An RBLang document in a visible editor: where "Make … inject-only…" changes the map. */
+/** A Raelog document in a visible editor: where "Make … inject-only…" changes the map. */
 export interface OpenMap {
   /** The file name, for the confirmation and the note on the card. */
   name: string;
@@ -355,7 +355,7 @@ export interface QuestionFlowHost {
   setting(name: string): unknown;
   /** A titled block in the Rainbird output channel. */
   log(title: string, lines: string[]): void;
-  /** The RBLang documents in visible editors. */
+  /** The Raelog documents in visible editors. */
   openMaps(): OpenMap[];
   /** A modal warning with one action button; true when the user chose it. */
   confirm(message: string, action: string): Promise<boolean>;

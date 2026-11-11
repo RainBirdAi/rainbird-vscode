@@ -1,5 +1,5 @@
 /**
- * The RBLang / Rainbird knowledge reference the assistant carries in its
+ * The Raelog / Rainbird knowledge reference the assistant carries in its
  * system prompt. Assembled from hand-written topic modules plus tables
  * generated from the same schema the linter and completions use, so the
  * assistant can never learn an attribute the linter would reject.

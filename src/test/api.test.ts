@@ -10,7 +10,7 @@ import { ApiError, parseCreateMapResponse, RainbirdClient, unknownMapMessage } f
 
 describe("parseCreateMapResponse", () => {
   test("a 201 with an error field: the map exists AND carries a validation message", () => {
-    // Captured 2026-09-10 pushing examples/broken/diagnostics-tour.rbl.
+    // Captured 2026-09-10 pushing examples/broken/diagnostics-tour.raelog.
     const result = parseCreateMapResponse({
       kmID: "6428f29c-cd76-4537-bd18-7f467a6e3995",
       id: "36167",

@@ -1,5 +1,5 @@
 /**
- * Locate the platform's validation messages in the RBLang they reject.
+ * Locate the platform's validation messages in the Raelog they reject.
  *
  * A rejected POST /maps answers {"err": ["Relationship was born on expects a
  * date as its object", …]}: plain sentences with no positions. This module

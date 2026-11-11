@@ -175,8 +175,8 @@ describe("symbols: rename", () => {
     assert.equal(found.spans.length, 3); // rel, relinst type, condition rel
   });
 
-  test("renaming through hello-world.rbl leaves a map with no errors and no trace of the old names", () => {
-    const file = path.join(__dirname, "..", "..", "examples", "hello-world.rbl");
+  test("renaming through hello-world.raelog leaves a map with no errors and no trace of the old names", () => {
+    const file = path.join(__dirname, "..", "..", "examples", "hello-world.raelog");
     let text = fs.readFileSync(file, "utf8");
     text = applyEdits(text, renameEdits(text, inside(text, 'concept name="Person"'), "Human")!);
     text = applyEdits(text, renameEdits(text, inside(text, 'rel name="lives in"'), "resides in")!);

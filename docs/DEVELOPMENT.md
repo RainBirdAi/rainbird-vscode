@@ -12,13 +12,13 @@ npm test          # linter unit tests (node:test, no VS Code host needed)
 
 Open the repository in VS Code and press **F5** (Run Extension). In the Extension Development Host:
 
-1. Open `examples/hello-world.rbl`, a small model written in Raelog (previously called RBLang). Highlighting, completions and diagnostics work offline. Click the graph icon in the editor title to see the model as a live graph.
+1. Open `examples/hello-world.raelog`, a small model written in Raelog. Highlighting, completions and diagnostics work offline. Click the graph icon in the editor title to see the model as a live graph.
 2. **Rae: Connect**, pick an environment and paste an API key.
 3. Click the play button, or **Rae: Run Query…**, set the kmID when prompted, pick a goal, answer the question cards and expand the evidence tree.
 4. Open the **Rainbird** activity-bar icon, choose **AI Assistant** and paste an Anthropic API key when prompted (or **Rae: Set Anthropic API Key**). Try: *"Add a rule that people also speak the languages of countries they have lived in."* — the assistant reads the model, edits it through `edit_map`, and the chat shows a Changes card with Show diff / Undo. Requests use the Claude model `claude-opus-5` by default (`rainbird.ai.model`), `high` effort (`rainbird.ai.effort`), and apply edits directly (`rainbird.ai.applyEdits`; set `preview` to Accept/Reject a diff instead).
 5. **Rae: Push Model to Platform** uploads the buffer as a new model (create-only endpoint) and offers to query it immediately.
 
-Try breaking the example: rename a concept, misspell an attribute, set `cf="150"`, or use a custom variable in a rule header. For the full tour, open `examples/broken/diagnostics-tour.rbl`: every diagnostic the linter knows, each preceded by an `EXPECT` comment saying what should appear in the Problems panel. The unit tests check that file block by block.
+Try breaking the example: rename a concept, misspell an attribute, set `cf="150"`, or use a custom variable in a rule header. For the full tour, open `examples/broken/diagnostics-tour.raelog`: every diagnostic the linter knows, each preceded by an `EXPECT` comment saying what should appear in the Problems panel. The unit tests check that file block by block.
 
 ## Layout
 
@@ -63,6 +63,6 @@ npx @vscode/vsce@3 ls
 
 ## Provenance
 
-- The structural schema, snippet catalogue and completion behaviour are clean-room reimplementations from Rainbird's public reference docs for RBLang (now Raelog) and observed Studio behaviour. No Studio code is copied.
+- The structural schema, snippet catalogue and completion behaviour are clean-room reimplementations from Rainbird's public reference docs for Raelog and observed Studio behaviour. No Studio code is copied.
 - The example models are adapted from Rainbird's public documentation examples.
 - Several platform endpoints the extension uses (`POST /maps`, `GET /analysis/file`, `/nl/interact`, `/undo`) are not in the public API spec and were verified live. Their shapes may change.

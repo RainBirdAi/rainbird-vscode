@@ -11,7 +11,7 @@ import { buildIndex } from "../mapIndex";
 import { collectIssues } from "../lint";
 
 const examples = path.join(__dirname, "..", "..", "examples");
-const hello = fs.readFileSync(path.join(examples, "hello-world.rbl"), "utf8"); // tab-indented
+const hello = fs.readFileSync(path.join(examples, "hello-world.raelog"), "utf8"); // tab-indented
 const spaced = hello.replace(/^\t+/gm, (m) => "  ".repeat(m.length)); // 2-space variant
 
 const noErrors = (text: string) => assert.deepEqual(collectIssues(text).filter((i) => i.severity === "error").map((i) => i.message), []);
@@ -213,8 +213,8 @@ describe("mapEdits: helpers", () => {
 
   test("describeEdit reports operations, diagnostics delta, model changes and the changed region", () => {
     const out = applyOperations(hello, [{ op: "set_attribute", selector: { kind: "rule", name: "Speaks national language of home country" }, attr: "cf", value: "90" }]);
-    const text = describeEdit("hello-world.rbl", hello, out, collectIssues(hello), collectIssues(out.text));
-    assert.match(text, /^Applied 1 operation to hello-world.rbl \(now \d+ lines\)\./);
+    const text = describeEdit("hello-world.raelog", hello, out, collectIssues(hello), collectIssues(out.text));
+    assert.match(text, /^Applied 1 operation to hello-world.raelog \(now \d+ lines\)\./);
     assert.match(text, /Diagnostics: 0 errors, 0 warnings, 0 hints \(was 0 errors, 0 warnings, 0 hints\)\./);
     assert.match(text, /Model changes:\n  ~ Speaks national language of home country: cf 75 → 90/);
     assert.match(text, /Changed region \(L30–32\):\n30 \| /);

@@ -70,7 +70,7 @@ describe("knowledge reference", () => {
 
   test("every worked example passes the linter with no errors", () => {
     for (const example of KNOWLEDGE_EXAMPLES) {
-      const errors = collectIssues(example.rblang).filter((i) => i.severity === "error");
+      const errors = collectIssues(example.raelog).filter((i) => i.severity === "error");
       assert.deepEqual(
         errors.map((e) => `line ${e.line + 1}: ${e.message}`),
         [],
@@ -91,7 +91,7 @@ describe("knowledge reference", () => {
   });
 
   test("behaviour and explain prompts are non-empty and mention the tools they rely on", () => {
-    for (const tool of ["get_map_overview", "read_map", "get_diagnostics", "edit_map", "create_map", "lint_rblang", "run_query", "push_map"]) {
+    for (const tool of ["get_map_overview", "read_map", "get_diagnostics", "edit_map", "create_map", "lint_raelog", "run_query", "push_map"]) {
       assert.ok(BEHAVIOUR_PROMPT.includes(tool), `behaviour prompt should mention ${tool}`);
     }
     assert.ok(EXPLAIN_SYSTEM_PROMPT.length > 200);

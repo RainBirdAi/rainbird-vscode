@@ -1,5 +1,5 @@
 /**
- * Read-side tool bodies: a structured, token-cheap overview of an RBLang map
+ * Read-side tool bodies: a structured, token-cheap overview of a Raelog map
  * (what the assistant asks for before answering or editing) and numbered line
  * ranges. Pure functions over the document text; the vscode glue only supplies
  * file name and platform state.

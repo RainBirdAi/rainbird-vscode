@@ -1,6 +1,6 @@
 /**
  * "What have I changed since this file last matched the platform?" The
- * extension snapshots the exact RBLang it pushes, and the draft it pulls into
+ * extension snapshots the exact Raelog it pushes, and the draft it pulls into
  * a file (mapsTree.ts, per environment + kmID). This module turns the snapshot
  * of the map a file is bound to into (a) quick-diff gutter bars via an SCM
  * quick-diff provider and (b) an explicit side-by-side diff command. Both are
@@ -13,7 +13,7 @@ import { snapshotDocumentUri, snapshotUri } from "./mapsTree";
 import { fileKmId, fileKmVersion } from "./platform";
 
 async function snapshotFor(context: vscode.ExtensionContext, uri: vscode.Uri): Promise<vscode.Uri | undefined> {
-  if (!/\.(rbl|raelog|rblang)$/i.test(uri.path)) return undefined;
+  if (!/\.(raelog|rbl|rblang)$/i.test(uri.path)) return undefined;
   const kmId = fileKmId(context, uri);
   if (!kmId || fileKmVersion(context, uri) !== undefined) return undefined;
   try {
@@ -28,14 +28,14 @@ export function registerQuickDiff(context: vscode.ExtensionContext): void {
   // A minimal source control whose only job is the quick-diff provider: no
   // resource groups, no input box. Git (when present) keeps its own gutter
   // decorations; VS Code shows ours for files Git has no original for, and
-  // the explicit command below always works. Created when the first RBLang
+  // the explicit command below always works. Created when the first Raelog
   // document opens: the extension activates in every window
   // (onStartupFinished), where an empty "Rainbird platform" entry in Source
   // Control would be noise. VS Code re-diffs open editors when a quick-diff
   // provider appears, as it does when Git activates after editors restore.
   let scm: vscode.SourceControl | undefined;
   const ensureScm = (doc: vscode.TextDocument): void => {
-    if (scm || doc.languageId !== "rblang") return;
+    if (scm || doc.languageId !== "raelog") return;
     scm = vscode.scm.createSourceControl("rainbird", "Rainbird platform");
     scm.inputBox.visible = false;
     scm.count = 0;
@@ -47,12 +47,12 @@ export function registerQuickDiff(context: vscode.ExtensionContext): void {
   vscode.workspace.textDocuments.forEach(ensureScm);
 
   context.subscriptions.push(
-    // Also fires when a document's language changes, e.g. RBLang pasted into an untitled file.
+    // Also fires when a document's language changes, e.g. Raelog pasted into an untitled file.
     vscode.workspace.onDidOpenTextDocument(ensureScm),
     vscode.commands.registerCommand("rainbird.diffAgainstPushed", async () => {
       const editor = vscode.window.activeTextEditor;
-      if (!editor || editor.document.languageId !== "rblang") {
-        vscode.window.showInformationMessage("Open the Raelog (.rbl) file you want to compare first.");
+      if (!editor || editor.document.languageId !== "raelog") {
+        vscode.window.showInformationMessage("Open the Raelog (.raelog) file you want to compare first.");
         return;
       }
       const uri = editor.document.uri;
@@ -85,7 +85,7 @@ export function registerQuickDiff(context: vscode.ExtensionContext): void {
         if (action) await vscode.commands.executeCommand("rainbird.diffAgainstDraft");
         return;
       }
-      const name = uri.path.split("/").pop() ?? "model.rbl";
+      const name = uri.path.split("/").pop() ?? "model.raelog";
       await vscode.commands.executeCommand(
         "vscode.diff",
         snapshot,

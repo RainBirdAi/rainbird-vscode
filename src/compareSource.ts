@@ -3,21 +3,21 @@
  *
  * Each side of the comparison can come from the platform (draft, live, latest
  * or a numbered version via GET /analysis/file), from the open editor, or from
- * a Studio .rbird export / .rbl file. Both sources open side by side in the
+ * a Studio .rbird export / .raelog file. Both sources open side by side in the
  * diff editor (like git diff: added / removed / changed lines highlighted),
  * with the model-level semantic report — "rule X: cf 100 → 75, condition Y now
  * optional" — summarised in the notification and a click away.
  */
 import * as vscode from "vscode";
 import { getClientSilent } from "./queryRunner";
-import { EXPORT_SCHEME, exportUri, readRblang } from "./rbird";
+import { EXPORT_SCHEME, exportUri, readRaelog } from "./rbird";
 import { buildModel, diffReportDetailed, DiffSide as Side, showSideBySideDiff } from "./semanticDiff";
 import { pickPlatformRef, platformUri, resolveKmId } from "./platform";
 
-const EXPORT_FILTER = { "Studio export or Raelog": ["rbird", "rbl", "raelog", "rblang", "xml"] };
+const EXPORT_FILTER = { "Studio export or Raelog": ["raelog", "rbird", "rbl", "rblang", "xml"] };
 
 async function fileSide(file: vscode.Uri): Promise<Side> {
-  return { label: file.path.split("/").pop() ?? "export", text: await readRblang(file), uri: exportUri(file) };
+  return { label: file.path.split("/").pop() ?? "export", text: await readRaelog(file), uri: exportUri(file) };
 }
 
 async function pickFileSide(title: string): Promise<Side | undefined> {
@@ -32,7 +32,7 @@ type Choice = vscode.QuickPickItem & {
 export function registerCompareSource(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.workspace.registerTextDocumentContentProvider(EXPORT_SCHEME, {
-      provideTextDocumentContent: (uri) => readRblang(vscode.Uri.file(decodeURIComponent(uri.query))),
+      provideTextDocumentContent: (uri) => readRaelog(vscode.Uri.file(decodeURIComponent(uri.query))),
     }),
     vscode.commands.registerCommand("rainbird.compareDraft", (uri?: vscode.Uri) => compareDraft(context, uri))
   );
@@ -43,7 +43,7 @@ export async function compareDraft(context: vscode.ExtensionContext, clicked?: v
     const client = await getClientSilent(context);
     const editor = vscode.window.activeTextEditor;
     const editorSide: Side | undefined =
-      editor?.document.languageId === "rblang"
+      editor?.document.languageId === "raelog"
         ? { label: `${editor.document.uri.path.split("/").pop()} (open editor)`, text: editor.document.getText(), uri: editor.document.uri }
         : undefined;
     let kmId: string | undefined;
@@ -55,7 +55,7 @@ export async function compareDraft(context: vscode.ExtensionContext, clicked?: v
           const id = await needKm();
           if (!id || !client) return undefined;
           const file = await client.getFile(id);
-          return { label: `platform draft`, text: file.rblang, uri: platformUri(id, { kind: "draft" }) };
+          return { label: `platform draft`, text: file.raelog, uri: platformUri(id, { kind: "draft" }) };
         }
         case "platform-version": {
           const id = await needKm();
@@ -63,14 +63,14 @@ export async function compareDraft(context: vscode.ExtensionContext, clicked?: v
           const pick = await pickPlatformRef(client, id, role === "base" ? "Saved version to compare the draft against" : "Which version is the newer side?", role === "base" ? "latest" : "version");
           if (!pick) return undefined;
           const file = await client.getFile(id, pick.ref.kind === "version" ? pick.ref.version : undefined);
-          return { label: `platform ${pick.label}`, text: file.rblang, uri: platformUri(id, pick.ref) };
+          return { label: `platform ${pick.label}`, text: file.raelog, uri: platformUri(id, pick.ref) };
         }
         case "editor":
           return editorSide;
         case "clicked":
           return clicked ? fileSide(clicked) : undefined;
         case "file":
-          return pickFileSide(role === "draft" ? "The newer side — a Studio export or .rbl file" : "The base — a Studio export or .rbl file of the saved version");
+          return pickFileSide(role === "draft" ? "The newer side — a Studio export or .raelog file" : "The base — a Studio export or .raelog file of the saved version");
       }
     };
 
@@ -79,7 +79,7 @@ export async function compareDraft(context: vscode.ExtensionContext, clicked?: v
     if (clicked) newerChoices.push({ label: `$(file-zip) This export: ${clicked.path.split("/").pop()}`, source: "clicked" });
     if (client) newerChoices.push({ label: "$(cloud) Platform draft", description: "what Studio currently holds", source: "platform-draft" });
     if (editorSide) newerChoices.push({ label: `$(file) Open editor`, description: editorSide.label, source: "editor" });
-    newerChoices.push({ label: "$(folder-opened) A Studio export or .rbl file…", source: "file" });
+    newerChoices.push({ label: "$(folder-opened) A Studio export or .raelog file…", source: "file" });
     if (client) newerChoices.push({ label: "$(history) A platform version…", source: "platform-version" });
     if (!client) newerChoices[0].detail = "Run “Rae: Connect” to compare against the platform draft or its versions directly.";
     const newer = await vscode.window.showQuickPick(newerChoices, { title: "Compare — the newer side (your draft)" });
@@ -94,7 +94,7 @@ export async function compareDraft(context: vscode.ExtensionContext, clicked?: v
       if (newer.source !== "platform-draft") baseChoices.push({ label: "$(cloud) Platform draft", source: "platform-draft" });
     }
     if (editorSide && newer.source !== "editor") baseChoices.push({ label: "$(file) Open editor", description: editorSide.label, source: "editor" });
-    baseChoices.push({ label: "$(folder-opened) A Studio export or .rbl file…", source: "file" });
+    baseChoices.push({ label: "$(folder-opened) A Studio export or .raelog file…", source: "file" });
     const baseChoice = await vscode.window.showQuickPick(baseChoices, { title: `Compare "${draft.label}" against — the base (saved version)` });
     if (!baseChoice) return;
     const base = await resolve(baseChoice, "base");

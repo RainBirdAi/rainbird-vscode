@@ -75,7 +75,7 @@ export class AssistantSession {
 
   // ---------------------------------------------------------------- target
 
-  /** The document the tools operate on: the adopted target while it is open, else the active or visible RBLang editor. */
+  /** The document the tools operate on: the adopted target while it is open, else the active or visible Raelog editor. */
   target(): vscode.TextDocument | undefined {
     if (this.targetUri) {
       const open = vscode.workspace.textDocuments.find((d) => d.uri.toString() === this.targetUri!.toString());
@@ -84,8 +84,8 @@ export class AssistantSession {
       this.applierInstance = undefined;
     }
     const active = vscode.window.activeTextEditor;
-    if (active?.document.languageId === "rblang") return active.document;
-    return vscode.window.visibleTextEditors.find((e) => e.document.languageId === "rblang")?.document;
+    if (active?.document.languageId === "raelog") return active.document;
+    return vscode.window.visibleTextEditors.find((e) => e.document.languageId === "raelog")?.document;
   }
 
   /** Pin the target for the rest of the chat (after create_map, or when a turn starts). */
@@ -116,7 +116,7 @@ export class AssistantSession {
   fileName(): string | undefined {
     const doc = this.target();
     if (!doc) return undefined;
-    return doc.isUntitled ? "untitled.rbl" : doc.uri.path.split("/").pop();
+    return doc.isUntitled ? "untitled.raelog" : doc.uri.path.split("/").pop();
   }
 
   kmInfo(): { kmId?: string; source?: string } {
@@ -292,10 +292,10 @@ export class AssistantSession {
     return info;
   }
 
-  /** Lint every fenced rblang/xml block in the reply: whole documents fully, fragments in the map's context. */
+  /** Lint every fenced raelog/xml block in the reply: whole documents fully, fragments in the map's context. */
   private lintCodeBlocks(text: string): CodeBlockLint[] {
     const out: CodeBlockLint[] = [];
-    const re = /```(?:rblang|xml)?[ \t]*\n([\s\S]*?)```/g;
+    const re = /```(?:raelog|rblang|xml)?[ \t]*\n([\s\S]*?)```/g;
     const host = this.currentText();
     let m: RegExpExecArray | null;
     while ((m = re.exec(text)) !== null) {
