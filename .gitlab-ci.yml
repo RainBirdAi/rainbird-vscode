@@ -23,6 +23,18 @@
 # Release flow: bump `version` in package.json, add a dated CHANGELOG entry,
 # commit, `git tag vX.Y.Z`, `git push origin main vX.Y.Z`.
 
+# One pipeline per push. Without this, a push to a branch with an open merge
+# request starts two (a branch pipeline and a merge request pipeline), because
+# the jobs' rules accept both. Branches with an open MR get only the MR
+# pipeline; main, other branches and release tags keep their own pipelines.
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG
+
 stages:
   - test
   - package
