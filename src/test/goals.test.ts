@@ -18,7 +18,7 @@ const wrap = (body: string): string =>
 
 describe("goals: example maps", () => {
   test("hello-world: subject → object, plural, askable and rule / fact counts per relationship", () => {
-    const list = goalsFromMap(read("hello-world.rbl"));
+    const list = goalsFromMap(read("hello-world.raelog"));
     assert.deepEqual(list.goals, [
       { name: "speaks", subject: "Person", object: "Language", plural: true, askable: "all", rules: 1, facts: 0 },
       { name: "lives in", subject: "Person", object: "Country", plural: false, askable: "all", rules: 0, facts: 0 },
@@ -28,7 +28,7 @@ describe("goals: example maps", () => {
   });
 
   test("eligibility: derived relationships are askable none and inferred by rules", () => {
-    const list = goalsFromMap(read("eligibility.rbl"));
+    const list = goalsFromMap(read("eligibility.raelog"));
     assert.deepEqual(list.goals, [
       { name: "has date of birth", subject: "Applicant", object: "Date Of Birth", plural: false, askable: "all", rules: 0, facts: 0 },
       { name: "has age", subject: "Applicant", object: "Age", plural: false, askable: "none", rules: 1, facts: 0 },
@@ -38,7 +38,7 @@ describe("goals: example maps", () => {
   });
 
   test("bigger_map: every relationship, in document order, all askable none", () => {
-    const text = read("bigger_map.rbl");
+    const text = read("bigger_map.raelog");
     const { goals, askableMixed } = goalsFromMap(text);
     const declared = [...text.matchAll(/<rel name="([^"]+)"/g)].map((m) => m[1]);
     assert.equal(goals.length, 261);
@@ -66,7 +66,7 @@ describe("goals: example maps", () => {
   });
 
   test("goalsFromIndex gives the same list from an index the caller already built", () => {
-    const text = read("hello-world.rbl");
+    const text = read("hello-world.raelog");
     assert.deepEqual(goalsFromIndex(buildIndex(text)), goalsFromMap(text));
   });
 });

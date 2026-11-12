@@ -665,10 +665,10 @@ describe("transcript and rejections (GQ-2)", () => {
     assert.equal(p.$$(".qcard [data-skip]").length, 0, "the refused skip is not offered again");
     p.click("[data-injectonly]");
     assert.deepEqual(p.lastPosted("makeInjectOnly"), { type: "makeInjectOnly", relationship: "speaks" });
-    p.send({ type: "injectOnlyDone", relationship: "speaks", file: "hello-world.rbl" });
+    p.send({ type: "injectOnlyDone", relationship: "speaks", file: "hello-world.raelog" });
     const done = p.$("[data-injectonly]");
     assert.equal(done?.hasAttribute("disabled"), true);
-    assert.equal(done?.textContent, "askable=\"none\" is set on “speaks” in hello-world.rbl (not saved yet)");
+    assert.equal(done?.textContent, "askable=\"none\" is set on “speaks” in hello-world.raelog (not saved yet)");
     await p.close();
   });
 });
@@ -1010,8 +1010,8 @@ describe("host side: notes and messages", () => {
     assert.deepEqual(autoSkipItems(group, known)[0].values, ["English", "French"]);
     assert.equal(autoSkipItems(group, known)[0].reason, "known");
     assert.equal(
-      injectOnlyPrompt("speaks", "hello-world.rbl"),
-      "Set askable=\"none\" on “speaks” in hello-world.rbl? Do this only if every session injects these facts; otherwise rules that need them get no result. Push creates a new model (new kmID), or paste the change into Studio and re-publish."
+      injectOnlyPrompt("speaks", "hello-world.raelog"),
+      "Set askable=\"none\" on “speaks” in hello-world.raelog? Do this only if every session injects these facts; otherwise rules that need them get no result. Push creates a new model (new kmID), or paste the change into Studio and re-publish."
     );
     assert.deepEqual(jsonLines({ a: [1] }), ["{", '  "a": [', "    1", "  ]", "}"]);
   });
@@ -1056,7 +1056,7 @@ function later(): { promise: Promise<EngineResponse>; resolve(reply: EngineRespo
 
 const refused = (detail: string) => new ApiError("Rainbird API 400", 400, JSON.stringify({ err: [detail] }));
 const SKIP_REFUSED = "Please provide an expected boolean value for unanswered.";
-const HELLO = fs.readFileSync(path.join(__dirname, "..", "..", "examples", "hello-world.rbl"), "utf8");
+const HELLO = fs.readFileSync(path.join(__dirname, "..", "..", "examples", "hello-world.raelog"), "utf8");
 const SPEAKS_RESULT: ResultItem = { subject: "Fred", relationship: "speaks", object: "English", certainty: 100, factID: "WA:RF:1" };
 
 interface FakeMap {
@@ -1283,7 +1283,7 @@ describe("host: automatic “No more” and Answer instead (QuestionFlow, P-2)",
 describe("host: refusals, checks and logging (QuestionFlow)", () => {
   test("a refused automatic skip asks with the skip withdrawn; Make inject-only edits the open map after confirming", async () => {
     const r = rig(FRED_SPEAKS_ENGLISH);
-    r.maps.push({ name: "hello-world.rbl", text: HELLO, writes: [] });
+    r.maps.push({ name: "hello-world.raelog", text: HELLO, writes: [] });
     r.engine.replies.push(refused(SKIP_REFUSED));
     await r.flow.handleResponse({ kind: "question", question: speaks() });
     const asked = r.last("question") as { note: string; injectOnly: string[]; questions: { canSkip: boolean }[] };
@@ -1297,7 +1297,7 @@ describe("host: refusals, checks and logging (QuestionFlow)", () => {
     r.confirmWith = false;
     r.page.click("[data-injectonly]");
     await r.pump();
-    assert.deepEqual(r.confirms, [{ message: injectOnlyPrompt("speaks", "hello-world.rbl"), action: INJECT_ONLY_ACTION }]);
+    assert.deepEqual(r.confirms, [{ message: injectOnlyPrompt("speaks", "hello-world.raelog"), action: INJECT_ONLY_ACTION }]);
     assert.deepEqual(r.maps[0].writes, [], "cancelled: nothing changes");
 
     r.confirmWith = true;
@@ -1305,8 +1305,8 @@ describe("host: refusals, checks and logging (QuestionFlow)", () => {
     await r.pump();
     const speaksRel = '<rel name="speaks" subject="Person" object="Language" plural="true" askable="all">';
     assert.deepEqual(r.maps[0].writes, [HELLO.replace(speaksRel, speaksRel.replace('askable="all"', 'askable="none"'))], "one edit: askable on speaks only");
-    assert.deepEqual(r.last("injectOnlyDone"), { type: "injectOnlyDone", relationship: "speaks", file: "hello-world.rbl" });
-    assert.equal(r.page.text("[data-injectonly]"), "askable=\"none\" is set on “speaks” in hello-world.rbl (not saved yet)");
+    assert.deepEqual(r.last("injectOnlyDone"), { type: "injectOnlyDone", relationship: "speaks", file: "hello-world.raelog" });
+    assert.equal(r.page.text("[data-injectonly]"), "askable=\"none\" is set on “speaks” in hello-world.raelog (not saved yet)");
     await r.page.close();
   });
 
@@ -1314,9 +1314,9 @@ describe("host: refusals, checks and logging (QuestionFlow)", () => {
     const r = rig();
     await r.flow.makeInjectOnly("speaks");
     assert.deepEqual(r.notices, [{ kind: "warning", message: "Open the Raelog file that declares “speaks” beside the query panel, then try again." }]);
-    r.maps.push({ name: "hello-world.rbl", text: HELLO, writes: [], refuse: true });
+    r.maps.push({ name: "hello-world.raelog", text: HELLO, writes: [], refuse: true });
     await r.flow.makeInjectOnly("speaks");
-    assert.deepEqual(r.notices[1], { kind: "error", message: "VS Code could not change hello-world.rbl." });
+    assert.deepEqual(r.notices[1], { kind: "error", message: "VS Code could not change hello-world.raelog." });
     assert.equal(r.last("injectOnlyDone"), undefined);
     await r.page.close();
   });
@@ -1324,14 +1324,14 @@ describe("host: refusals, checks and logging (QuestionFlow)", () => {
   test("a refused automatic skip of a group names every question, and offers inject-only for the relationships an open map declares", async () => {
     const reads = speaks({ relationship: "reads", prompt: "Which books does Fred read?", knownAnswers: [{ subject: "Fred", relationship: "reads", object: "Dune", cf: 100 }] });
     const r = rig([...FRED_SPEAKS_ENGLISH, { subject: "Fred", relationship: "reads", object: "Dune", certainty: 100 }]);
-    r.maps.push({ name: "hello-world.rbl", text: HELLO, writes: [] });
+    r.maps.push({ name: "hello-world.raelog", text: HELLO, writes: [] });
     r.engine.replies.push(refused(SKIP_REFUSED));
     await r.flow.handleResponse({ kind: "question", question: speaks(), extraQuestions: [reads] });
     assert.equal(r.engine.calls.length, 1);
     const asked = r.last("question") as { note: string; injectOnly: string[]; questions: { canSkip: boolean }[] };
     assert.match(asked.note, /^These questions were going to be answered “No more” automatically\. The engine would not let them be skipped/);
     assert.match(asked.note, /If "speaks" and "reads" should only ever be fed by injected facts, set askable="none" on them/);
-    assert.deepEqual(asked.injectOnly, ["speaks"], "hello-world.rbl declares speaks only");
+    assert.deepEqual(asked.injectOnly, ["speaks"], "hello-world.raelog declares speaks only");
     assert.deepEqual(asked.questions.map((q) => q.canSkip), [false, false]);
     await r.page.close();
   });

@@ -1,6 +1,6 @@
 # Raelog in VS Code
 
-Raelog, previously called RBLang, is the language models are written in for Rae, the decision automation platform from Rainbird. Open `examples/hello-world.rbl` to see:
+Raelog is the language models are written in for Rae, the decision automation platform from Rainbird. Open `examples/hello-world.raelog` to see:
 
 - **Syntax highlighting** for Raelog elements, attributes, and the expression language inside `expression="…"` (functions, `%VARIABLES`, natural-language operators)
 - **Diagnostics** for unknown elements/attributes, missing required attributes, invalid enum values, and references to undeclared concepts or relationships
@@ -10,3 +10,5 @@ Raelog, previously called RBLang, is the language models are written in for Rae,
 - **Snippets** — try `rule`, `fact`, `rel-questions`, `condition-count`
 
 The example works offline and needs no account. It is not one of your Rae models, though: to query it, push it first (cloud icon in the editor title bar; every push creates a new model), or open one of your own models in the next steps.
+
+You can also open any `.raelog` model, such as the examples on [raelog.ai](https://raelog.ai).

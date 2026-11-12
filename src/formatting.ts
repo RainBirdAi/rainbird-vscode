@@ -1,5 +1,5 @@
 /**
- * Formatting providers for RBLang: *Format Document*, *Format Selection* and
+ * Formatting providers for Raelog: *Format Document*, *Format Selection* and
  * `editor.formatOnSave` all route through these. The work is done by the
  * editor-agnostic re-indenter in format.ts; this module only converts its
  * per-line results into VS Code text edits.
@@ -15,7 +15,7 @@ function toTextEdits(doc: vscode.TextDocument, edits: LineEdit[]): vscode.TextEd
 }
 
 export function registerFormatting(context: vscode.ExtensionContext): void {
-  const selector: vscode.DocumentSelector = { language: "rblang" };
+  const selector: vscode.DocumentSelector = { language: "raelog" };
 
   context.subscriptions.push(
     vscode.languages.registerDocumentFormattingEditProvider(selector, {

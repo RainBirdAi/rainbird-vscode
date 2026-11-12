@@ -30,7 +30,7 @@ function track(page: WebviewHarness): WebviewHarness {
   return page;
 }
 
-/** An explicit fixture (examples/bigger_map.rbl has no "has total income" or "Amount"). */
+/** An explicit fixture (examples/bigger_map.raelog has no "has total income" or "Amount"). */
 const GOALS = [
   { name: "has total income", subject: "Person", object: "Amount", plural: false, askable: "none", rules: 2, facts: 0, objectType: "number" },
   { name: "total penalty", subject: "Case", object: "Penalty", plural: false, askable: "none", rules: 1, facts: 0, objectType: "number" },
@@ -577,9 +577,9 @@ test("New query tells the extension, so ▶ does not ask about a query nobody se
 test("the Change… link beside the map badge posts changeKm", async () => {
   const page = track(loadWebview(render("test-nonce")));
   assert.equal(page.text("#changeKm"), "Choose model…", "before any map is known");
-  page.send({ type: "init", goals: GOALS, goalsFrom: "editor", kmId: "km-1", apiUrl: "https://api.rainbird.ai", useDraft: true, fileName: "hello-world.rbl" });
+  page.send({ type: "init", goals: GOALS, goalsFrom: "editor", kmId: "km-1", apiUrl: "https://api.rainbird.ai", useDraft: true, fileName: "hello-world.raelog" });
   assert.equal(page.text("#changeKm"), "Change…");
-  assert.equal(page.$("#changeKm")!.getAttribute("title"), "Bind hello-world.rbl to a different Knowledge Map ID");
+  assert.equal(page.$("#changeKm")!.getAttribute("title"), "Bind hello-world.raelog to a different Knowledge Map ID");
   assert.ok(page.$("#km")!.nextElementSibling === page.$("#changeKm"), "it sits right after the badge");
   page.click("#changeKm");
   assert.deepEqual(page.lastPosted("changeKm"), { type: "changeKm" });
@@ -697,7 +697,7 @@ test("unknownGoalNote: push or bind only when the panel queries a file, else Cha
   assert.equal(
     unknownGoalNote({ kmId: km, relationship: "Speaks", goalsFrom: "editor", file: true, target: { kind: "draft" } }),
     `The model (${km}) has no relationship named exactly "Speaks" — names are case-sensitive. ` +
-      "The goal list comes from your open .rbl file; check the model name in the header above. " +
+      "The goal list comes from your open .raelog file; check the model name in the header above. " +
       "If it's a different model, push the open file first (cloud icon), or point the file at the right model: " +
       "click “Change…” beside the model in the header, or run “Rae: Bind Open File to a Knowledge Map ID…”."
   );
@@ -724,14 +724,14 @@ test("unknownGoalNote: push or bind only when the panel queries a file, else Cha
 });
 
 test("noMapNote: what the panel still queries, and which file “Choose map…” / “Change…” asks about", () => {
-  assert.equal(noMapNote({}), "No model chosen. Click “Choose model…” at the top, or open the model's .rbl file and press ▶ in its title bar.");
-  assert.equal(noMapNote({ file: "scratch.rbl", retry: true }), "No model chosen for scratch.rbl. Click “Choose model…” at the top to pick one.");
+  assert.equal(noMapNote({}), "No model chosen. Click “Choose model…” at the top, or open the model's .raelog file and press ▶ in its title bar.");
+  assert.equal(noMapNote({ file: "scratch.raelog", retry: true }), "No model chosen for scratch.raelog. Click “Choose model…” at the top to pick one.");
   assert.equal(
-    noMapNote({ current: "km-1", file: "scratch.rbl", retry: true }),
-    "No model chosen for scratch.rbl, so the panel still queries km-1. Click “Change…” at the top to pick one for it."
+    noMapNote({ current: "km-1", file: "scratch.raelog", retry: true }),
+    "No model chosen for scratch.raelog, so the panel still queries km-1. Click “Change…” at the top to pick one for it."
   );
   assert.equal(
-    noMapNote({ current: "km-1", file: "scratch.rbl", retry: false }),
+    noMapNote({ current: "km-1", file: "scratch.raelog", retry: false }),
     "No model chosen, so the panel still queries km-1. Click “Change…” at the top to pick another.",
     "Change… binds the panel's own file instead"
   );

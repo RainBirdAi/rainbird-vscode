@@ -27,7 +27,7 @@ import { recordKnownMap, SNAPSHOT_SCHEME } from "./mapsTree";
 import { promotionDiff } from "./promotionDiff";
 import { parseFacts } from "./facts";
 import { render } from "./queryPanelHtml";
-import { activeRblangUri, fileKmId, PLATFORM_SCHEME, promptKmId, resolveKmIdFor } from "./platform";
+import { activeRaelogUri, fileKmId, PLATFORM_SCHEME, promptKmId, resolveKmIdFor } from "./platform";
 import { sameKmId } from "./kmId";
 import {
   lastGoalFor,
@@ -71,7 +71,7 @@ export class QueryPanel {
   private kmId?: string;
 
   // ── Setup region: map, goal, target, facts ──
-  /** The RBLang file the panel queries (title-bar ▶, else the file in use); undefined for a map chosen by ID alone. */
+  /** The Raelog file the panel queries (title-bar ▶, else the file in use); undefined for a map chosen by ID alone. */
   private targetUri?: vscode.Uri;
   /** The file of the last ▶ whose map prompt was cancelled: “Choose map…” asks for its map again instead of dropping it. */
   private pendingTarget?: vscode.Uri;
@@ -112,9 +112,9 @@ export class QueryPanel {
     // kmIdOverride (Maps view, Open Map's "Run query") wins over the file's own
     // map; goal (cursor or CodeLens) is preselected. The file to query is
     // captured before the panel takes focus: `target`, the editor whose
-    // title-bar ▶ was pressed, else the RBLang file in use — possibly a hidden
-    // tab, such as the .rbl behind the Welcome page's walkthrough.
-    const fileUri = target ?? activeRblangUri();
+    // title-bar ▶ was pressed, else the Raelog file in use — possibly a hidden
+    // tab, such as the .raelog behind the Welcome page's walkthrough.
+    const fileUri = target ?? activeRaelogUri();
     const current = QueryPanel.current;
     if (current) {
       current.panel.reveal();
@@ -219,7 +219,7 @@ export class QueryPanel {
 
   /**
    * Resolve the map and its goal list and show a fresh setup card. `target` is
-   * the RBLang file to query (default: the current one), kept only once its map
+   * the Raelog file to query (default: the current one), kept only once its map
    * is resolved; `goal` is preselected when the map declares it.
    */
   private async init(opts: { kmIdOverride?: string; target?: vscode.Uri; goal?: string } = {}): Promise<void> {
@@ -269,7 +269,7 @@ export class QueryPanel {
     let mapNote: string | undefined;
     if (!list.goals.length) {
       try {
-        list = panelGoals((await client.getFile(kmId)).rblang);
+        list = panelGoals((await client.getFile(kmId)).raelog);
         goalsFrom = list.goals.length ? "platform" : "none";
       } catch (error) {
         // Verified live: /analysis/file answers 404 for an unknown or malformed kmID, or one from another environment.
@@ -564,7 +564,7 @@ export class QueryPanel {
         ];
         return docs
           .filter((doc, i) => docs.findIndex((other) => other.uri.toString() === doc.uri.toString()) === i)
-          .filter((doc) => doc.languageId === "rblang" && doc.uri.scheme !== PLATFORM_SCHEME && doc.uri.scheme !== SNAPSHOT_SCHEME)
+          .filter((doc) => doc.languageId === "raelog" && doc.uri.scheme !== PLATFORM_SCHEME && doc.uri.scheme !== SNAPSHOT_SCHEME)
           .map(
             (doc): OpenMap => ({
               name: doc.uri.path.split("/").pop() || doc.uri.toString(),
@@ -654,7 +654,7 @@ export class QueryPanel {
   /**
    * Stream a plain-English narrative of why the engine decided this, from the evidence tree, with the
    * source of the panel's own map file. A map chosen by Knowledge Map ID has no file, and gets no source:
-   * another open .rbl would be a different map, whose rules the model would then cite.
+   * another open .raelog would be a different map, whose rules the model would then cite.
    */
   private async explain(factId: string): Promise<void> {
     if (!factId) return;

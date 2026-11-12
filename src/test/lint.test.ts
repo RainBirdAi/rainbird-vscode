@@ -1,6 +1,6 @@
 /**
  * Unit tests for the editor-agnostic linter core (lint.ts). Runs under plain
- * node (`npm test`): no VS Code host needed. Each case is a small RBLang
+ * node (`npm test`): no VS Code host needed. Each case is a small Raelog
  * snippet with the findings it must (or must not) produce; the example maps
  * in examples/ double as a regression corpus that must stay error-free.
  */
@@ -56,7 +56,7 @@ describe("clean maps", () => {
 
   test("the example maps stay free of errors", () => {
     const dir = path.join(__dirname, "..", "..", "examples");
-    const files = fs.readdirSync(dir).filter((f) => f.endsWith(".rbl"));
+    const files = fs.readdirSync(dir).filter((f) => f.endsWith(".raelog"));
     assert.ok(files.length > 0, "no example maps found");
     for (const file of files) {
       const issues = collectIssues(fs.readFileSync(path.join(dir, file), "utf8"));
@@ -404,10 +404,10 @@ describe("document structure", () => {
 
   test("LLM-style preface, postscript and code fences around the map are errors in a file", () => {
     assertHas(docErrors(`Hi, I am a helpful LLM\n${XML}${OPEN}</rbl:kb>\n`), /Unexpected text outside an element: "Hi, I am a helpful LLM"/);
-    assertHas(docErrors(`${XML}${OPEN}</rbl:kb>\nI am a LLM and I really like RBLang\n`), /Unexpected text outside an element: "I am a LLM and I really like RBLang"/);
-    const fenced = "Here is the RBLang:\n\n```xml\n" + XML + OPEN + "</rbl:kb>\n```\n\nI hope this helps!";
+    assertHas(docErrors(`${XML}${OPEN}</rbl:kb>\nI am a LLM and I really like Raelog\n`), /Unexpected text outside an element: "I am a LLM and I really like Raelog"/);
+    const fenced = "Here is the Raelog:\n\n```xml\n" + XML + OPEN + "</rbl:kb>\n```\n\nI hope this helps!";
     const e = docErrors(fenced);
-    assertHas(e, /Unexpected text outside an element: "Here is the RBLang: ```xml"/);
+    assertHas(e, /Unexpected text outside an element: "Here is the Raelog: ```xml"/);
     assertHas(e, /Unexpected text outside an element: "``` I hope this helps!"/);
   });
 
@@ -533,8 +533,8 @@ describe("unused relationships", () => {
   });
 });
 
-describe("examples/broken/diagnostics-tour.rbl", () => {
-  const file = path.join(__dirname, "..", "..", "examples", "broken", "diagnostics-tour.rbl");
+describe("examples/broken/diagnostics-tour.raelog", () => {
+  const file = path.join(__dirname, "..", "..", "examples", "broken", "diagnostics-tour.raelog");
   const text = fs.readFileSync(file, "utf8");
   const lines = text.split("\n");
   const issues = collectIssues(text);

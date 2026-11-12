@@ -1,13 +1,13 @@
 /**
- * The platform as a source of RBLang, and which map a file belongs to.
+ * The platform as a source of Raelog, and which map a file belongs to.
  *
- * GET /analysis/file/{kmID}[?version=N] returns a map's RBLang (draft by
+ * GET /analysis/file/{kmID}[?version=N] returns a map's Raelog (draft by
  * default, or any saved version). It is verified live but not in the public
  * API reference, and the API has no way to list an account's maps, so every
  * route starts from a Knowledge Map ID. Built on it: open a map by its ID into
- * an editable .rbl bound to that map, pull the draft or a version as a
- * read-only virtual document (rainbird-platform:/{kmID}/draft.rbl or
- * /v{N}.rbl) so it can be diffed and browsed without pretending to be a local
+ * an editable .raelog bound to that map, pull the draft or a version as a
+ * read-only virtual document (rainbird-platform:/{kmID}/draft.raelog or
+ * /v{N}.raelog) so it can be diffed and browsed without pretending to be a local
  * file, and diff the open file against what the platform draft holds.
  *
  * Which map: one precedence everywhere — an explicit override, then the
@@ -15,7 +15,7 @@
  * setting (the workspace default), then a prompt. The binding lives in
  * workspaceState "rainbird.pushedKm.<document uri>" (named after its first
  * writer, push) and is written by Open Map by Knowledge Map ID, Pull → Save
- * as .rbl, push and the Bind command. A file saved from a saved version also
+ * as .raelog, push and the Bind command. A file saved from a saved version also
  * gets "rainbird.pulledVersion.<document uri>", so quick diff does not compare
  * it with the map's snapshot, which records the draft.
  */
@@ -33,11 +33,11 @@ export type SourceRef = { kind: "draft" } | { kind: "version"; version: number }
 
 export function platformUri(kmId: string, ref: SourceRef): vscode.Uri {
   const name = ref.kind === "draft" ? "draft" : `v${ref.version}`;
-  return vscode.Uri.from({ scheme: PLATFORM_SCHEME, path: `/${kmId}/${name}.rbl` });
+  return vscode.Uri.from({ scheme: PLATFORM_SCHEME, path: `/${kmId}/${name}.raelog` });
 }
 
 function parsePlatformUri(uri: vscode.Uri): { kmId: string; ref: SourceRef } | undefined {
-  const m = /^\/([^/]+)\/(draft|v(\d+))\.rbl$/.exec(uri.path);
+  const m = /^\/([^/]+)\/(draft|v(\d+))\.raelog$/.exec(uri.path);
   if (!m) return undefined;
   return { kmId: m[1], ref: m[2] === "draft" ? { kind: "draft" } : { kind: "version", version: Number(m[3]) } };
 }
@@ -107,22 +107,22 @@ export function fileKmVersion(context: vscode.ExtensionContext, uri: vscode.Uri)
 /** Platform drafts, versions and snapshots carry their kmID in the URI: the document is that map. */
 function embeddedKmId(uri: vscode.Uri): string | undefined {
   if (uri.scheme === PLATFORM_SCHEME) return parsePlatformUri(uri)?.kmId;
-  if (uri.scheme === SNAPSHOT_SCHEME) return /^\/([^/]+)\.rbl$/.exec(uri.path)?.[1];
+  if (uri.scheme === SNAPSHOT_SCHEME) return /^\/([^/]+)\.raelog$/.exec(uri.path)?.[1];
   return undefined;
 }
 
-/** The RBLang document last active in a text editor (tracked from registerPlatformSource). */
-let lastRblangUri: vscode.Uri | undefined;
+/** The Raelog document last active in a text editor (tracked from registerPlatformSource). */
+let lastRaelogUri: vscode.Uri | undefined;
 
-function noteRblangEditor(editor: vscode.TextEditor | undefined): void {
-  if (editor?.document.languageId === "rblang") lastRblangUri = editor.document.uri;
+function noteRaelogEditor(editor: vscode.TextEditor | undefined): void {
+  if (editor?.document.languageId === "raelog") lastRaelogUri = editor.document.uri;
 }
 
-/** Whether a document is still open in a tab, on its own or as the edited side of a diff, and still RBLang. */
-function isOpenRblangTab(uri: vscode.Uri): boolean {
+/** Whether a document is still open in a tab, on its own or as the edited side of a diff, and still Raelog. */
+function isOpenRaelogTab(uri: vscode.Uri): boolean {
   const key = uri.toString();
   const doc = vscode.workspace.textDocuments.find((d) => d.uri.toString() === key);
-  if (doc && doc.languageId !== "rblang") return false;
+  if (doc && doc.languageId !== "raelog") return false;
   return vscode.window.tabGroups.all.some((group) =>
     group.tabs.some(
       (tab) =>
@@ -133,19 +133,19 @@ function isOpenRblangTab(uri: vscode.Uri): boolean {
 }
 
 /**
- * The RBLang file the user is working on: the active editor; else the only
- * visible RBLang editor (focus may be in a webview such as the query panel);
- * else the RBLang editor that was active last, while its tab is open — it may
+ * The Raelog file the user is working on: the active editor; else the only
+ * visible Raelog editor (focus may be in a webview such as the query panel);
+ * else the Raelog editor that was active last, while its tab is open — it may
  * be hidden behind the tab a command was started from, such as the Welcome
  * page's walkthrough. Read its text with openTextDocument(uri), not from
  * visibleTextEditors. Undefined when there is none.
  */
-export function activeRblangUri(): vscode.Uri | undefined {
+export function activeRaelogUri(): vscode.Uri | undefined {
   const active = vscode.window.activeTextEditor;
-  if (active?.document.languageId === "rblang") return active.document.uri;
-  const visible = vscode.window.visibleTextEditors.filter((e) => e.document.languageId === "rblang");
+  if (active?.document.languageId === "raelog") return active.document.uri;
+  const visible = vscode.window.visibleTextEditors.filter((e) => e.document.languageId === "raelog");
   if (new Set(visible.map((e) => e.document.uri.toString())).size === 1) return visible[0].document.uri;
-  return lastRblangUri && isOpenRblangTab(lastRblangUri) ? lastRblangUri : undefined;
+  return lastRaelogUri && isOpenRaelogTab(lastRaelogUri) ? lastRaelogUri : undefined;
 }
 
 /**
@@ -215,7 +215,7 @@ export async function promptKmId(
       kmId: clipboard,
     });
   }
-  rows.push({ label: "$(edit) Enter a Knowledge Map ID…", description: "from the model's Publish page in Studio", alwaysShow: true, enter: true });
+  rows.push({ label: "$(edit) Enter a Knowledge Map ID…", description: "from Connect → API in Rae, or the Publish page in Studio", alwaysShow: true, enter: true });
   if (known.length) {
     rows.push({ label: "Models", kind: vscode.QuickPickItemKind.Separator });
     rows.push(...known.map((map) => knownMapRow(map, opts.current)));
@@ -294,7 +294,7 @@ async function inputKmId(title: string, value: string | undefined, keys: Promise
     title,
     prompt: "Knowledge Map ID (kmID)",
     placeHolder:
-      "e.g. 504436fb-7fbb-44ea-b36c-bfd977aea8c8 — from the model's Publish page in Studio (or View Knowledge Map ID in the model's menu)",
+      "e.g. 504436fb-7fbb-44ea-b36c-bfd977aea8c8 — the kmID from the project's Connect → API tab in Rae, or the model's Publish page in Studio",
     value,
     ignoreFocusOut: true,
     // Warnings and infos only: Enter always accepts what was typed.
@@ -311,13 +311,13 @@ async function inputKmId(title: string, value: string | undefined, keys: Promise
       // The Publish page shows the API key next to the kmID, and both are GUIDs.
       if ((await keys).some((key) => sameKmId(key, id))) {
         return {
-          message: "That is the API key (or evidence key) stored for this environment, not a Knowledge Map ID. Copy the Knowledge Map ID from the model's Publish page in Studio.",
+          message: "That is the API key (or evidence key) stored for this environment, not a Knowledge Map ID. Copy the kmID from the project's Connect → API tab in Rae, or the Knowledge Map ID from the model's Publish page in Studio.",
           severity: vscode.InputBoxValidationSeverity.Warning,
         };
       }
       if (!extractKmId(trimmed, { allowOther: false })) {
         return {
-          message: `${id} is marked as a session ID or a key in the pasted text, not a Knowledge Map ID. The Knowledge Map ID is on the model's Publish page in Studio.`,
+          message: `${id} is marked as a session ID or a key in the pasted text, not a Knowledge Map ID. The kmID is on the project's Connect → API tab in Rae, or the model's Publish page in Studio.`,
           severity: vscode.InputBoxValidationSeverity.Warning,
         };
       }
@@ -410,9 +410,9 @@ export function resolveKmId(context: vscode.ExtensionContext): Promise<string | 
 
 /** Command "Rae: Bind Open File to a Knowledge Map ID…": say which platform map a file is a copy of. */
 export async function bindKmId(context: vscode.ExtensionContext, uri?: vscode.Uri): Promise<void> {
-  const target = uri ?? activeRblangUri();
+  const target = uri ?? activeRaelogUri();
   if (!target) {
-    vscode.window.showInformationMessage("Open (or click into) the Raelog (.rbl) file you want to bind to a Knowledge Map ID first.");
+    vscode.window.showInformationMessage("Open (or click into) the Raelog (.raelog) file you want to bind to a Knowledge Map ID first.");
     return;
   }
   const embedded = embeddedKmId(target);
@@ -424,7 +424,7 @@ export async function bindKmId(context: vscode.ExtensionContext, uri?: vscode.Ur
   }
   if (target.scheme === "untitled") {
     // The binding is keyed by the document URI, which changes when the file is first saved.
-    vscode.window.showInformationMessage("Save the file with a .rbl name first (File > Save As…), then bind it.");
+    vscode.window.showInformationMessage("Save the file with a .raelog name first (File > Save As…), then bind it.");
     return;
   }
   const name = fileName(target);
@@ -434,7 +434,7 @@ export async function bindKmId(context: vscode.ExtensionContext, uri?: vscode.Ur
   void recordKnownMap(context, {
     kmId,
     source: "manual",
-    fallbackName: name.replace(/\.(rbl|raelog|rblang)$/i, ""),
+    fallbackName: name.replace(/\.(raelog|rbl|rblang)$/i, ""),
     ...(target.scheme === "file" ? { file: target.fsPath } : {}),
   });
   vscode.window.setStatusBarMessage(`Bound ${name} to ${kmId}: Run Query, the diffs and the assistant now use this model for it.`, 6000);
@@ -450,15 +450,15 @@ const RECENT_MS = 15_000;
 const platformChanges = new vscode.EventEmitter<vscode.Uri>();
 
 /**
- * GET a map's RBLang (draft or version). Throws ApiError with the status on
+ * GET a map's Raelog (draft or version). Throws ApiError with the status on
  * HTTP failures (401 rejected key, 403 no access, 404 unknown map or version).
  * The text is kept for a few seconds for the matching platform document, and
  * an already open tab of it is refreshed.
  */
 export async function fetchPlatformText(client: RainbirdClient, kmId: string, ref: SourceRef): Promise<string> {
   const file = await client.getFile(kmId, ref.kind === "version" ? ref.version : undefined);
-  rememberPlatformText(platformUri(kmId, ref), file.rblang);
-  return file.rblang;
+  rememberPlatformText(platformUri(kmId, ref), file.raelog);
+  return file.raelog;
 }
 
 /** Offer downloaded text to the platform document at `uri`: the next open reads it, and an open tab refreshes. */
@@ -520,17 +520,17 @@ function defaultSaveFolder(): vscode.Uri {
   return vscode.Uri.file(os.homedir());
 }
 
-export interface SaveRblangOptions {
+export interface SaveRaelogOptions {
   kmId: string;
-  /** The RBLang exactly as the platform returned it. */
-  rblang: string;
+  /** The Raelog exactly as the platform returned it. */
+  raelog: string;
   /** What was pulled: names the default file, and only a draft becomes the map's snapshot. */
   ref: "draft" | number;
 }
 
 /**
- * Save platform RBLang as an editable .rbl (Save As dialog, default
- * model-<kmid8>-draft.rbl or -v<N>.rbl in the workspace folder), bind the new
+ * Save platform Raelog as an editable .raelog (Save As dialog, default
+ * model-<kmid8>-draft.raelog or -v<N>.raelog in the workspace folder), bind the new
  * file to the map and record it in Maps as "pulled". A draft is also written
  * as the map's snapshot, so gutter bars and "Diff Against Last Pulled or
  * Pushed Snapshot" show what changed since the pull. A version is not, because
@@ -539,26 +539,26 @@ export interface SaveRblangOptions {
  * than bars against the draft. Does not open the file. Resolves the saved
  * URI, or undefined when cancelled.
  */
-export async function saveRblangAs(context: vscode.ExtensionContext, opts: SaveRblangOptions): Promise<vscode.Uri | undefined> {
+export async function saveRaelogAs(context: vscode.ExtensionContext, opts: SaveRaelogOptions): Promise<vscode.Uri | undefined> {
   const target = await vscode.window.showSaveDialog({
     title:
       opts.ref === "draft"
-        ? `Save the draft of ${opts.kmId} as an editable .rbl`
-        : `Save version ${opts.ref} of ${opts.kmId} as an editable .rbl`,
+        ? `Save the draft of ${opts.kmId} as an editable .raelog`
+        : `Save version ${opts.ref} of ${opts.kmId} as an editable .raelog`,
     saveLabel: "Save model",
-    filters: { Raelog: ["rbl", "raelog"] },
+    filters: { Raelog: ["raelog"] },
     defaultUri: vscode.Uri.joinPath(defaultSaveFolder(), defaultFileName(opts.kmId, opts.ref)),
   });
   if (!target) return undefined;
-  await vscode.workspace.fs.writeFile(target, Buffer.from(opts.rblang, "utf8"));
+  await vscode.workspace.fs.writeFile(target, Buffer.from(opts.raelog, "utf8"));
   await bindFileKmId(context, target, opts.kmId, { version: opts.ref === "draft" ? null : opts.ref });
   // Awaited so the snapshot (the quick-diff base) is on disk before the file opens.
   await recordKnownMap(context, {
     kmId: opts.kmId,
     source: "pulled",
-    fallbackName: fileName(target).replace(/\.(rbl|raelog|rblang)$/i, ""),
+    fallbackName: fileName(target).replace(/\.(raelog|rbl|rblang)$/i, ""),
     ...(target.scheme === "file" ? { file: target.fsPath } : {}),
-    ...(opts.ref === "draft" ? { rblang: opts.rblang } : {}),
+    ...(opts.ref === "draft" ? { raelog: opts.raelog } : {}),
   });
   return target;
 }
@@ -575,9 +575,9 @@ export async function openMapByKmId(context: vscode.ExtensionContext, kmId?: str
   const id = given ? extractKmId(given) ?? given : await promptKmId(context, { title: "Open Model by Knowledge Map ID" });
   if (!id) return;
 
-  let rblang: string;
+  let raelog: string;
   try {
-    rblang = await vscode.window.withProgress(
+    raelog = await vscode.window.withProgress(
       { location: vscode.ProgressLocation.Notification, title: `Rae: downloading the draft of ${id}…` },
       () => fetchPlatformText(client, id, { kind: "draft" })
     );
@@ -588,7 +588,7 @@ export async function openMapByKmId(context: vscode.ExtensionContext, kmId?: str
 
   let target: vscode.Uri | undefined;
   try {
-    target = await saveRblangAs(context, { kmId: id, rblang, ref: "draft" });
+    target = await saveRaelogAs(context, { kmId: id, raelog, ref: "draft" });
   } catch (error) {
     vscode.window.showErrorMessage(`Could not save the model: ${(error as Error).message}`);
     return;
@@ -597,7 +597,7 @@ export async function openMapByKmId(context: vscode.ExtensionContext, kmId?: str
     // Escape in the Save dialog still shows the map, so the command is not a dead end.
     // The download is offered again: the dialog may have outlasted the cache.
     const draft = platformUri(id, { kind: "draft" });
-    rememberPlatformText(draft, rblang);
+    rememberPlatformText(draft, raelog);
     try {
       await showPlatformDocument(draft, { preview: false });
     } catch (error) {
@@ -688,9 +688,9 @@ export async function pickPlatformRef(
 }
 
 export function registerPlatformSource(context: vscode.ExtensionContext): void {
-  noteRblangEditor(vscode.window.activeTextEditor);
+  noteRaelogEditor(vscode.window.activeTextEditor);
   context.subscriptions.push(
-    vscode.window.onDidChangeActiveTextEditor(noteRblangEditor),
+    vscode.window.onDidChangeActiveTextEditor(noteRaelogEditor),
     platformChanges,
     vscode.workspace.registerTextDocumentContentProvider(PLATFORM_SCHEME, {
       onDidChange: platformChanges.event,
@@ -703,7 +703,7 @@ export function registerPlatformSource(context: vscode.ExtensionContext): void {
         const client = await getClientSilent(context);
         if (!client) throw new Error("Not connected — run “Rae: Connect” first.");
         const file = await client.getFile(parsed.kmId, parsed.ref.kind === "version" ? parsed.ref.version : undefined);
-        return file.rblang;
+        return file.raelog;
       },
     }),
     vscode.commands.registerCommand("rainbird.pullMap", () => pullMap(context)),
@@ -723,9 +723,9 @@ export function registerPlatformSource(context: vscode.ExtensionContext): void {
  * snapshot, so gutter bars start again from it. Platform tabs simply refresh.
  */
 async function reloadFromPlatform(context: vscode.ExtensionContext, uri?: vscode.Uri): Promise<void> {
-  const target = uri ?? activeRblangUri();
+  const target = uri ?? activeRaelogUri();
   if (!target) {
-    vscode.window.showInformationMessage("Open the .rbl file you want to reload from Studio first.");
+    vscode.window.showInformationMessage("Open the .raelog file you want to reload from Studio first.");
     return;
   }
   const client = await getClient(context);
@@ -745,7 +745,7 @@ async function reloadFromPlatform(context: vscode.ExtensionContext, uri?: vscode
     return;
   }
   if (target.scheme === SNAPSHOT_SCHEME) {
-    vscode.window.showInformationMessage("This tab is the snapshot of what was last pulled or pushed. Reload the .rbl file bound to the model instead.");
+    vscode.window.showInformationMessage("This tab is the snapshot of what was last pulled or pushed. Reload the .raelog file bound to the model instead.");
     return;
   }
 
@@ -768,9 +768,9 @@ async function reloadFromPlatform(context: vscode.ExtensionContext, uri?: vscode
     return;
   }
 
-  let rblang: string;
+  let raelog: string;
   try {
-    rblang = await vscode.window.withProgress(
+    raelog = await vscode.window.withProgress(
       { location: vscode.ProgressLocation.Notification, title: `Rae: downloading the draft of ${kmId}…` },
       () => fetchPlatformText(client, kmId, { kind: "draft" })
     );
@@ -780,9 +780,9 @@ async function reloadFromPlatform(context: vscode.ExtensionContext, uri?: vscode
   }
 
   const record = () =>
-    recordKnownMap(context, { kmId, source: "pulled", rblang, ...(doc.uri.scheme === "file" ? { file: doc.uri.fsPath } : {}) });
+    recordKnownMap(context, { kmId, source: "pulled", raelog, ...(doc.uri.scheme === "file" ? { file: doc.uri.fsPath } : {}) });
   const local = doc.getText();
-  if (local === rblang) {
+  if (local === raelog) {
     await record();
     vscode.window.showInformationMessage(`${name} already matches the Studio draft of ${kmId}.`);
     return;
@@ -812,7 +812,7 @@ async function reloadFromPlatform(context: vscode.ExtensionContext, uri?: vscode
   }
 
   const edit = new vscode.WorkspaceEdit();
-  edit.replace(doc.uri, new vscode.Range(doc.positionAt(0), doc.positionAt(local.length)), rblang);
+  edit.replace(doc.uri, new vscode.Range(doc.positionAt(0), doc.positionAt(local.length)), raelog);
   if (!(await vscode.workspace.applyEdit(edit))) {
     vscode.window.showErrorMessage(`Could not update ${name}.`);
     return;
@@ -822,7 +822,7 @@ async function reloadFromPlatform(context: vscode.ExtensionContext, uri?: vscode
   vscode.window.showInformationMessage(`Reloaded ${name} from the Studio draft of ${kmId}.`);
 }
 
-/** Open a map's RBLang from the platform (draft or a version) as a read-only document, with Save As. */
+/** Open a map's Raelog from the platform (draft or a version) as a read-only document, with Save As. */
 async function pullMap(context: vscode.ExtensionContext): Promise<void> {
   const client = await getClient(context);
   if (!client) return;
@@ -837,18 +837,18 @@ async function pullMap(context: vscode.ExtensionContext): Promise<void> {
     if (!pick) return;
     const pulled = pick.ref;
     ref = pulled;
-    const rblang = await vscode.window.withProgress(
+    const raelog = await vscode.window.withProgress(
       { location: vscode.ProgressLocation.Notification, title: `Rae: downloading the ${pick.label} of ${id}…` },
       () => fetchPlatformText(client, id, pulled)
     );
     await showPlatformDocument(platformUri(id, pulled), { preview: false });
     const action = await vscode.window.showInformationMessage(
       `Read-only Raelog of the platform ${pick.label} for ${id}. Save a local copy to edit it.`,
-      "Save as .rbl…"
+      "Save as .raelog…"
     );
     if (action) {
       // Save what was downloaded rather than the document text, which a refreshing tab may not have yet.
-      const target = await saveRblangAs(context, { kmId: id, rblang, ref: pulled.kind === "draft" ? "draft" : pulled.version });
+      const target = await saveRaelogAs(context, { kmId: id, raelog, ref: pulled.kind === "draft" ? "draft" : pulled.version });
       if (target) {
         await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(target), { preview: false });
         vscode.window.setStatusBarMessage(
@@ -865,11 +865,11 @@ async function pullMap(context: vscode.ExtensionContext): Promise<void> {
   }
 }
 
-/** Compare the open .rbl with what the platform draft actually holds — the honest "am I in sync?" check. */
+/** Compare the open .raelog with what the platform draft actually holds — the honest "am I in sync?" check. */
 async function diffAgainstDraft(context: vscode.ExtensionContext): Promise<void> {
   const editor = vscode.window.activeTextEditor;
-  if (!editor || editor.document.languageId !== "rblang") {
-    vscode.window.showInformationMessage("Open the Raelog (.rbl) file you want to compare first.");
+  if (!editor || editor.document.languageId !== "raelog") {
+    vscode.window.showInformationMessage("Open the Raelog (.raelog) file you want to compare first.");
     return;
   }
   const client = await getClient(context);
@@ -877,24 +877,24 @@ async function diffAgainstDraft(context: vscode.ExtensionContext): Promise<void>
   const kmId = await resolveKmId(context);
   if (!kmId) return;
   try {
-    const rblang = await vscode.window.withProgress(
+    const raelog = await vscode.window.withProgress(
       { location: vscode.ProgressLocation.Notification, title: "Rae: fetching the platform draft…" },
       () => fetchPlatformText(client, kmId, { kind: "draft" })
     );
     const local = editor.document.getText();
     const name = editor.document.uri.path.split("/").pop() ?? "local";
-    if (rblang.trim() === local.trim()) {
+    if (raelog.trim() === local.trim()) {
       vscode.window.showInformationMessage(`${name} matches the platform draft of ${kmId} exactly.`);
       return;
     }
     const baseLabel = `platform draft (${kmId})`;
-    const report = diffReportDetailed(buildModel(rblang), buildModel(local), baseLabel, name);
+    const report = diffReportDetailed(buildModel(raelog), buildModel(local), baseLabel, name);
     report.markdown = report.markdown.replace(
       /^# Semantic diff — .*$/m,
       `# Local file vs platform draft — ${name} vs ${kmId}\n\n_Changes are read from the platform draft to your local file: ＋ means your file has it and the draft does not._`
     );
     await showSideBySideDiff(
-      { label: baseLabel, text: rblang, uri: platformUri(kmId, { kind: "draft" }) },
+      { label: baseLabel, text: raelog, uri: platformUri(kmId, { kind: "draft" }) },
       { label: name, text: local, uri: editor.document.uri },
       report
     );

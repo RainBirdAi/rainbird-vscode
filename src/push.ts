@@ -1,5 +1,5 @@
 /**
- * Push the open RBLang file to the Rainbird platform via POST /maps.
+ * Push the open Raelog file to the Rainbird platform via POST /maps.
  *
  * Honest create-only semantics: the endpoint is undocumented (verified from
  * Rainbird's own tooling) and every push creates a NEW map with a new kmID —
@@ -18,14 +18,14 @@ import { clearPlatformErrors, showPlatformErrors, showPlatformOutput } from "./p
 
 export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
   const editor = vscode.window.activeTextEditor;
-  if (!editor || editor.document.languageId !== "rblang") {
-    vscode.window.showInformationMessage("Open the Raelog (.rbl) file you want to push first.");
+  if (!editor || editor.document.languageId !== "raelog") {
+    vscode.window.showInformationMessage("Open the Raelog (.raelog) file you want to push first.");
     return;
   }
   const doc = editor.document;
-  const rblang = doc.getText();
+  const raelog = doc.getText();
 
-  const errors = collectIssues(rblang).filter((i) => i.severity === "error");
+  const errors = collectIssues(raelog).filter((i) => i.severity === "error");
   if (errors.length > 0) {
     const proceed = await vscode.window.showWarningMessage(
       `This model has ${errors.length} lint error${errors.length > 1 ? "s" : ""} — the platform will likely reject it. Push anyway?`,
@@ -38,7 +38,7 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
   const client = await getClient(context);
   if (!client) return;
 
-  const fileName = doc.uri.path.split("/").pop()?.replace(/\.(rbl|raelog|rblang)$/, "") ?? "model";
+  const fileName = doc.uri.path.split("/").pop()?.replace(/\.(raelog|rbl|rblang)$/, "") ?? "model";
   const stamp = new Date().toISOString().slice(0, 16).replace("T", " ").replace(":", "");
   const name = await vscode.window.showInputBox({
     prompt: "Name for the new model on the platform (every push creates a new model)",
@@ -58,7 +58,7 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
     clearPlatformErrors(doc.uri);
     const { kmId, raw, validation } = await vscode.window.withProgress(
       { location: vscode.ProgressLocation.Notification, title: `Pushing "${name}" to Rae…` },
-      () => client.createMap(rblang, name, description)
+      () => client.createMap(raelog, name, description)
     );
 
     if (!kmId) {
@@ -79,7 +79,7 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
       kmId,
       name,
       source: "pushed",
-      rblang,
+      raelog,
       ...(doc.uri.scheme === "file" ? { file: doc.uri.fsPath } : {}),
     });
 

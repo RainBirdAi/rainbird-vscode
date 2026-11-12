@@ -1,5 +1,5 @@
 /**
- * The assistant's edit engine: element-level operations on an RBLang document
+ * The assistant's edit engine: element-level operations on a Raelog document
  * (insert / replace / delete an element, set an attribute, replace exact text)
  * resolved through selectors that survive line drift, applied atomically, and
  * described back to the model with the diagnostics delta, the model-level diff

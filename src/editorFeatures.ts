@@ -1,5 +1,5 @@
 /**
- * Editor surface for RBLang: quick-fix code actions (served from the lint
+ * Editor surface for Raelog: quick-fix code actions (served from the lint
  * engine's own fix data), the document outline (breadcrumbs, Cmd+Shift+O,
  * sticky scroll), and structure-based folding. The outline/folding computations
  * are pure functions over the tag index so they can be tested headlessly.
@@ -181,7 +181,7 @@ const SYMBOL_KINDS: Record<string, vscode.SymbolKind> = {
 };
 
 export function registerEditorFeatures(context: vscode.ExtensionContext): void {
-  const selector: vscode.DocumentSelector = { language: "rblang" };
+  const selector: vscode.DocumentSelector = { language: "raelog" };
 
   context.subscriptions.push(
     vscode.languages.registerCodeActionsProvider(
@@ -191,7 +191,7 @@ export function registerEditorFeatures(context: vscode.ExtensionContext): void {
           const issues = getCachedIssues(doc.uri.toString()) ?? collectIssues(doc.getText());
           const actions: vscode.CodeAction[] = [];
           for (const diagnostic of ctx.diagnostics) {
-            if (diagnostic.source !== "rblang") continue;
+            if (diagnostic.source !== "raelog") continue;
             const startOffset = doc.offsetAt(diagnostic.range.start);
             const issue = issues.find((i) => i.start === startOffset && i.message === diagnostic.message);
             for (const fix of issue?.fixes ?? []) {
@@ -246,7 +246,7 @@ export function registerEditorFeatures(context: vscode.ExtensionContext): void {
 export function registerInlayHints(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.languages.registerInlayHintsProvider(
-      { language: "rblang" },
+      { language: "raelog" },
       {
         provideInlayHints(doc, range) {
           const index = buildIndex(doc.getText());

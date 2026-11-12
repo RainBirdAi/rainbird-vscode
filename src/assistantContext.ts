@@ -13,7 +13,7 @@ import type { LintIssue } from "./lint";
 export const INLINE_LIMIT = 8000;
 
 export interface ContextInfo {
-  /** Undefined when no RBLang editor is open. */
+  /** Undefined when no Raelog editor is open. */
   fileName?: string;
   text?: string;
   cursorLine?: number;
@@ -48,9 +48,9 @@ export function buildContextHeader(info: ContextInfo): ContextHeader {
   let inlined = false;
 
   if (info.fileName === undefined || info.text === undefined) {
-    lines.push("file: none open (use create_map to start one, or ask the user to open a .rbl file)");
+    lines.push("file: none open (use create_map to start one, or ask the user to open a .raelog file)");
   } else {
-    lines.push(`file: ${info.fileName} · ${countLines(info.text)} lines · ${kb(info.text.length)} · rblang`);
+    lines.push(`file: ${info.fileName} · ${countLines(info.text)} lines · ${kb(info.text.length)} · raelog`);
     const status = info.firstTurn
       ? "first turn"
       : info.lastSeenHash === hash

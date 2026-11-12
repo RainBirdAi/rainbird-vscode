@@ -1,10 +1,10 @@
 /**
  * Guided authoring: add a concept, relationship, instance, fact, rule or
- * condition without knowing RBLang. Every flow is a short series of quick
+ * condition without knowing Raelog. Every flow is a short series of quick
  * picks whose choices come from what the map already declares (so a subject is
  * always a real string concept, a fact's instances really exist), inserts the
  * element in the docs' recommended section of the file, and leaves the cursor
- * on the RBLang it produced — so authors see and learn the language rather
+ * on the Raelog it produced — so authors see and learn the language rather
  * than being shielded from it. Reached from the Map Explorer's ＋ buttons, the
  * editor's ＋ Insert… button, the right-click menu and CodeLenses on
  * relationships (＋ fact, ＋ rule) and rules (＋ condition).
@@ -45,8 +45,8 @@ async function pick<T>(items: Item<T>[], title: string, placeHolder?: string): P
 }
 
 /**
- * The RBLang editor a flow works on: the given document, else the active or
- * any visible .rbl editor. Only a real Uri selects a document: menu commands
+ * The Raelog editor a flow works on: the given document, else the active or
+ * any visible .raelog editor. Only a real Uri selects a document: menu commands
  * receive whatever VS Code hands them (a tree item, a CodeLens argument), and
  * passing a plain object to openTextDocument would create a new untitled file.
  */
@@ -57,10 +57,10 @@ async function targetEditor(uri?: vscode.Uri): Promise<vscode.TextEditor | undef
     return vscode.window.showTextDocument(await vscode.workspace.openTextDocument(uri), { preserveFocus: true });
   }
   const active = vscode.window.activeTextEditor;
-  if (active?.document.languageId === "rblang") return active;
-  const visible = vscode.window.visibleTextEditors.find((e) => e.document.languageId === "rblang");
+  if (active?.document.languageId === "raelog") return active;
+  const visible = vscode.window.visibleTextEditors.find((e) => e.document.languageId === "raelog");
   if (visible) return visible;
-  vscode.window.showInformationMessage("Open the Raelog (.rbl) file you want to edit first.");
+  vscode.window.showInformationMessage("Open the Raelog (.raelog) file you want to edit first.");
   return undefined;
 }
 
@@ -550,7 +550,7 @@ class AuthoringCodeLensProvider implements vscode.CodeLensProvider {
   constructor(context: vscode.ExtensionContext) {
     context.subscriptions.push(
       vscode.workspace.onDidChangeTextDocument((e) => {
-        if (e.document.languageId !== "rblang") return;
+        if (e.document.languageId !== "raelog") return;
         clearTimeout(this.debounce);
         this.debounce = setTimeout(() => this.emitter.fire(), 500);
       })
@@ -589,7 +589,7 @@ function uriOf(arg: unknown): vscode.Uri | undefined {
 
 export function registerAuthoring(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
-    vscode.languages.registerCodeLensProvider({ language: "rblang" }, new AuthoringCodeLensProvider(context)),
+    vscode.languages.registerCodeLensProvider({ language: "raelog" }, new AuthoringCodeLensProvider(context)),
     vscode.commands.registerCommand("rainbird.insertElement", () => insertMenu()),
     vscode.commands.registerCommand("rainbird.addConcept", (arg?: unknown) => addConcept(uriOf(arg))),
     vscode.commands.registerCommand("rainbird.addRelationship", (arg?: unknown) => addRelationship(uriOf(arg))),

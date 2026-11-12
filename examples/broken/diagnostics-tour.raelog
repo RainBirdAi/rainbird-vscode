@@ -10,7 +10,7 @@
 	The linter's unit tests (npm test) load this file and check every EXPECT
 	and OK block, so it is also a fixture: applying the quick fixes edits this
 	file and makes those tests fail until it is restored (once committed:
-	git restore examples/broken/diagnostics-tour.rbl). Break it further all you
+	git restore examples/broken/diagnostics-tour.raelog). Break it further all you
 	like; just restore it before running the tests.
 
 	Kept out on purpose: raw < or > inside attribute values (use "is greater

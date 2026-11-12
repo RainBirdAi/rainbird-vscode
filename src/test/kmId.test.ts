@@ -139,13 +139,13 @@ describe("extractKmId", () => {
 
 describe("defaultFileName", () => {
   test("names a draft and a version by the first block of the kmID", () => {
-    assert.equal(defaultFileName(MAP, "draft"), "model-504436fb-draft.rbl");
-    assert.equal(defaultFileName(MAP, 3), "model-504436fb-v3.rbl");
-    assert.equal(defaultFileName(MAP.toUpperCase(), "draft"), "model-504436fb-draft.rbl");
+    assert.equal(defaultFileName(MAP, "draft"), "model-504436fb-draft.raelog");
+    assert.equal(defaultFileName(MAP, 3), "model-504436fb-v3.raelog");
+    assert.equal(defaultFileName(MAP.toUpperCase(), "draft"), "model-504436fb-draft.raelog");
   });
 
   test("an ID that is not a GUID still gives a safe file name", () => {
-    assert.equal(defaultFileName("ab/c:d", "draft"), "model-ab_c_d-draft.rbl");
-    assert.equal(defaultFileName("  ", 1), "model-unknown-v1.rbl");
+    assert.equal(defaultFileName("ab/c:d", "draft"), "model-ab_c_d-draft.raelog");
+    assert.equal(defaultFileName("  ", 1), "model-unknown-v1.raelog");
   });
 });

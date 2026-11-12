@@ -1,5 +1,5 @@
 /**
- * Editor-agnostic symbol resolution for RBLang: where a concept, relationship
+ * Editor-agnostic symbol resolution for Raelog: where a concept, relationship
  * or instance is declared and every place it is referred to. Drives
  * go-to-definition, find-references, F2 rename and live linked editing in
  * languageFeatures.ts, and the symbol hover in completions.ts. Kept free of

@@ -206,7 +206,7 @@ test("New query while a start is pending shows one fresh setup card", () => {
 
 test("init.mapNote shows under the card's prompt until the next init, through New query and Run another query", () => {
   const note =
-    "No model with Knowledge Map ID <b>bad</b> is visible to this API key on https://api.rainbird.ai. Check the ID on the model's Publish page in Studio, and that the key belongs to the same environment. Click “Change…” at the top to query another model.";
+    "No model with Knowledge Map ID <b>bad</b> is visible to this API key on https://api.rainbird.ai. Check the ID (the kmID on the project's Connect → API tab in Rae, or the model's Publish page in Studio), and that the key belongs to the same environment. Click “Change…” at the top to query another model.";
   const page = loadPanel({ kmId: "<b>bad</b>", goals: [], goalsFrom: "none", mapNote: note });
   assert.equal(page.text(".mapNote"), note);
   assert.ok(page.$(".mapNote")?.classList.contains("err"), "shown as an error");

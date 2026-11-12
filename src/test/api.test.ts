@@ -10,7 +10,7 @@ import { ApiError, parseCreateMapResponse, RainbirdClient, unknownMapMessage } f
 
 describe("parseCreateMapResponse", () => {
   test("a 201 with an error field: the map exists AND carries a validation message", () => {
-    // Captured 2026-09-10 pushing examples/broken/diagnostics-tour.rbl.
+    // Captured 2026-09-10 pushing examples/broken/diagnostics-tour.raelog.
     const result = parseCreateMapResponse({
       kmID: "6428f29c-cd76-4537-bd18-7f467a6e3995",
       id: "36167",
@@ -159,7 +159,7 @@ describe("RainbirdClient.start", () => {
     assert.deepEqual(urls, [`https://api.example/start/${kmId}?useDraft=true`]);
     assert.equal(
       unknownMapMessage(kmId, "https://api.example"),
-      `No model with Knowledge Map ID ${kmId} is visible to this API key on https://api.example. Check the ID on the model's Publish page in Studio, and that the key belongs to the same environment.`
+      `No model with Knowledge Map ID ${kmId} is visible to this API key on https://api.example. Check the ID (the kmID on the project's Connect → API tab in Rae, or the model's Publish page in Studio), and that the key belongs to the same environment.`
     );
   });
 

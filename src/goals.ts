@@ -1,9 +1,9 @@
 /**
- * The goal relationships a query can target, read from a map's RBLang: one
+ * The goal relationships a query can target, read from a map's Raelog: one
  * entry per declared relationship, carrying what the goal pickers show beside
  * its name (subject → object, plural, askable, rule and fact counts).
  *
- * Covers both goal sources: the open .rbl editor and the RBLang the platform
+ * Covers both goal sources: the open .raelog editor and the Raelog the platform
  * returns for a Studio-authored map (GET /analysis/file/{kmID}). No vscode
  * dependency, so it runs under plain node in the tests.
  */
@@ -37,12 +37,12 @@ export interface GoalList {
   /**
    * True when the map has both askable relationships and askable="none" ones.
    * Only then does a "not askable" tag tell the author anything: in a headless
-   * map (examples/bigger_map.rbl is 100% askable="none") it would sit on every row.
+   * map (examples/bigger_map.raelog is 100% askable="none") it would sit on every row.
    */
   askableMixed: boolean;
 }
 
-/** The goal list of a map, from its RBLang text. */
+/** The goal list of a map, from its Raelog text. */
 export function goalsFromMap(text: string): GoalList {
   return goalsFromIndex(buildIndex(text));
 }

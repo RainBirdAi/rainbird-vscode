@@ -1,5 +1,5 @@
 /**
- * Indent-only formatter for RBLang, editor-agnostic so the unit tests run
+ * Indent-only formatter for Raelog, editor-agnostic so the unit tests run
  * under plain node. formatting.ts wraps it as a VS Code formatting provider,
  * which is what `editor.formatOnSave` and *Format Document* call.
  *

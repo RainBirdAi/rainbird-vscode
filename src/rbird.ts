@@ -1,6 +1,6 @@
 /**
  * .rbird interop: Studio's export format is gzip-compressed JSON whose
- * unicronData.rblang array holds the map's RBLang source lines. This command
+ * unicronData.rblang array holds the model's Raelog source lines. This command
  * extracts that source next to the export so it can be diffed, reviewed and
  * versioned — the "your logic in git" wedge.
  */
@@ -14,12 +14,12 @@ interface RbirdFile {
   studioData?: unknown;
 }
 
-/** RBLang source from a .rbird buffer (gzip or plain JSON), or undefined when the export has none. */
+/** Raelog source from a .rbird buffer (gzip or plain JSON), or undefined when the export has none. */
 export function decodeRbird(raw: Buffer): string | undefined {
   const json = raw[0] === 0x1f && raw[1] === 0x8b ? gunzipSync(raw) : raw;
   const parsed = JSON.parse(json.toString("utf8")) as RbirdFile;
-  const rblang = parsed.unicronData?.rblang;
-  return rblang && rblang.length ? rblang.join("\n") : undefined;
+  const raelog = parsed.unicronData?.rblang;
+  return raelog && raelog.length ? raelog.join("\n") : undefined;
 }
 
 /**
@@ -29,17 +29,17 @@ export function decodeRbird(raw: Buffer): string | undefined {
 export const EXPORT_SCHEME = "rainbird-export";
 
 export function exportUri(file: vscode.Uri): vscode.Uri {
-  const name = (file.path.split("/").pop() ?? "export").replace(/\.rbird$/i, ".rbl");
+  const name = (file.path.split("/").pop() ?? "export").replace(/\.rbird$/i, ".raelog");
   return vscode.Uri.from({ scheme: EXPORT_SCHEME, path: `/${name}`, query: encodeURIComponent(file.fsPath) });
 }
 
-/** Read RBLang from a .rbird export or a plain .rbl/.xml file — the two shapes a Studio round-trip produces. */
-export async function readRblang(uri: vscode.Uri): Promise<string> {
+/** Read Raelog from a .rbird export or a plain .raelog/.xml file — the two shapes a Studio round-trip produces. */
+export async function readRaelog(uri: vscode.Uri): Promise<string> {
   const raw = Buffer.from(await vscode.workspace.fs.readFile(uri));
   if (/\.rbird$/i.test(uri.path) || (raw[0] === 0x1f && raw[1] === 0x8b)) {
-    const rblang = decodeRbird(raw);
-    if (!rblang) throw new Error(`${uri.path.split("/").pop()} contains no Raelog source.`);
-    return rblang;
+    const raelog = decodeRbird(raw);
+    if (!raelog) throw new Error(`${uri.path.split("/").pop()} contains no Raelog source.`);
+    return raelog;
   }
   return raw.toString("utf8");
 }
@@ -56,14 +56,14 @@ export async function extractRbird(uri?: vscode.Uri): Promise<void> {
   if (!target) return;
 
   try {
-    const rblang = decodeRbird(Buffer.from(await vscode.workspace.fs.readFile(target)));
-    if (!rblang) {
+    const raelog = decodeRbird(Buffer.from(await vscode.workspace.fs.readFile(target)));
+    if (!raelog) {
       vscode.window.showErrorMessage("No Raelog source found in this .rbird file.");
       return;
     }
 
-    const output = vscode.Uri.file(target.fsPath.replace(/\.rbird$/i, ".rbl"));
-    await vscode.workspace.fs.writeFile(output, Buffer.from(rblang, "utf8"));
+    const output = vscode.Uri.file(target.fsPath.replace(/\.rbird$/i, ".raelog"));
+    await vscode.workspace.fs.writeFile(output, Buffer.from(raelog, "utf8"));
     const doc = await vscode.workspace.openTextDocument(output);
     await vscode.window.showTextDocument(doc);
     // An export carries no Knowledge Map ID (studioData holds layout, errors and

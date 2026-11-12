@@ -129,7 +129,7 @@ export async function saveSessionAsTest(record: SessionRecord): Promise<void> {
 }
 
 /** Files that mark a folder as a Rainbird project. */
-export const RAINBIRD_FILES_GLOB = "**/*.{rbl,raelog,rblang,rbird,rbtest.json}";
+export const RAINBIRD_FILES_GLOB = "**/*.{raelog,rbl,rblang,rbird,rbtest.json}";
 
 let startTests: (() => void) | undefined;
 
@@ -141,7 +141,7 @@ export function ensureTestsStarted(): void {
 export function registerTests(context: vscode.ExtensionContext): void {
   // The extension also starts with VS Code, so create the Testing controller (and its
   // workspace-wide search and watcher) only where Rainbird is in use: the folder holds
-  // maps or saved tests, an RBLang document opens, or a session is saved as a test.
+  // maps or saved tests, a Raelog document opens, or a session is saved as a test.
   let controllerCreated = false;
   const start = (): void => {
     if (controllerCreated) return;
@@ -234,10 +234,10 @@ export function registerTests(context: vscode.ExtensionContext): void {
     },
     () => undefined
   );
-  if (vscode.workspace.textDocuments.some((d) => d.languageId === "rblang")) start();
+  if (vscode.workspace.textDocuments.some((d) => d.languageId === "raelog")) start();
   context.subscriptions.push(
     vscode.workspace.onDidOpenTextDocument((d) => {
-      if (d.languageId === "rblang") start();
+      if (d.languageId === "raelog") start();
     })
   );
 }

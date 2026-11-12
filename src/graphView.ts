@@ -1,5 +1,5 @@
 /**
- * Knowledge-map graph view: renders the open RBLang file as an interactive
+ * Knowledge-map graph view: renders the open Raelog file as an interactive
  * force-directed graph — concepts as typed nodes, relationships as labelled
  * edges (with rule/fact counts), instances orbiting their concepts. Clicking
  * anything jumps to its source line; the graph re-renders live as you type.
@@ -42,16 +42,16 @@ export class GraphView {
 
   static open(_context?: vscode.ExtensionContext): void {
     const editor =
-      vscode.window.activeTextEditor?.document.languageId === "rblang"
+      vscode.window.activeTextEditor?.document.languageId === "raelog"
         ? vscode.window.activeTextEditor
-        : vscode.window.visibleTextEditors.find((e) => e.document.languageId === "rblang");
+        : vscode.window.visibleTextEditors.find((e) => e.document.languageId === "raelog");
     if (GraphView.current) {
       GraphView.current.panel.reveal(vscode.ViewColumn.Beside, true);
       if (editor) GraphView.current.track(editor.document);
       return;
     }
     if (!editor) {
-      vscode.window.showInformationMessage("Open a Raelog (.rbl) file to visualise it in the Graph View.");
+      vscode.window.showInformationMessage("Open a Raelog (.raelog) file to visualise it in the Graph View.");
       return;
     }
     const panel = vscode.window.createWebviewPanel("rainbirdGraph", "Graph View", vscode.ViewColumn.Beside, {
@@ -65,7 +65,7 @@ export class GraphView {
   /** Highlight the inference path of a decision (opens the graph if needed). */
   static showOverlay(overlay: EvidenceOverlay): void {
     if (!GraphView.current) GraphView.open();
-    if (!GraphView.current) return; // no rblang editor visible — open() already told the user
+    if (!GraphView.current) return; // no raelog editor visible — open() already told the user
     GraphView.current.panel.reveal(vscode.ViewColumn.Beside, true);
     GraphView.current.post({ type: "overlay", overlay });
   }
@@ -82,7 +82,7 @@ export class GraphView {
         if (e.document === this.doc) this.scheduleUpdate();
       }),
       vscode.window.onDidChangeActiveTextEditor((editor) => {
-        if (editor?.document.languageId === "rblang" && editor.document !== this.doc) {
+        if (editor?.document.languageId === "raelog" && editor.document !== this.doc) {
           this.track(editor.document);
         }
       })

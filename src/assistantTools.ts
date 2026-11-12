@@ -26,7 +26,7 @@ import { answerQuestions, pendingQuestionMessage, queryToolReply, QuestionSessio
 import { describeEvidence } from "./evidenceRender";
 import type { ExpandedEvidence } from "./evidenceModel";
 
-const NO_MAP = "No Raelog file is open. Ask the user to open a .rbl file, or use create_map to start one.";
+const NO_MAP = "No Raelog file is open. Ask the user to open a .raelog file, or use create_map to start one.";
 const NOT_CONNECTED = "Not connected to Rainbird — ask the user to run “Rae: Connect” (environment + API key) first.";
 
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
@@ -126,17 +126,13 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
 
     tool(
       "create_map",
-      "Create a new Raelog document from a complete model and make it the assistant's target. With file_name (e.g. eligibility.rbl, or eligibility.raelog; any other extension becomes .rbl) the file is created in the workspace folder; without it an untitled document opens. Fails if a non-empty model is already open — edit that one, or pass file_name to create a second file.",
+      "Create a new Raelog document from a complete model and make it the assistant's target. With file_name (e.g. eligibility.raelog; any other extension is replaced by .raelog) the file is created in the workspace folder; without it an untitled document opens. Fails if a non-empty model is already open — edit that one, or pass file_name to create a second file.",
       async (input) => {
         const xml = String(input.xml ?? "");
         const existing = session.target();
         const requested = input.file_name ? String(input.file_name) : undefined;
-        // A .raelog name is kept as asked; anything else is saved as .rbl, the default extension.
-        const fileName = requested
-          ? /\.raelog$/i.test(requested)
-            ? requested
-            : requested.replace(/\.(rblang|xml)?$/, "").replace(/\.rbl$/, "") + ".rbl"
-          : undefined;
+        // Any other extension (legacy .rbl or .rblang, .xml) is replaced by .raelog.
+        const fileName = requested ? requested.replace(/\.(raelog|rbl|rblang|xml)$/i, "") + ".raelog" : undefined;
         if (existing && existing.getText().trim() && !fileName) {
           throw new Error(`${session.fileName()} is already open and not empty. Use edit_map to change it, or pass file_name to create a separate file.`);
         }
@@ -162,7 +158,7 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
           edit.insert(doc.uri, new vscode.Position(0, 0), xml);
           await vscode.workspace.applyEdit(edit);
         } else {
-          doc = await vscode.workspace.openTextDocument({ language: "rblang", content: xml });
+          doc = await vscode.workspace.openTextDocument({ language: "raelog", content: xml });
         }
         await vscode.window.showTextDocument(doc, { preview: false, preserveFocus: true });
         session.adoptTarget(doc);
@@ -174,11 +170,11 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
     ),
 
     tool(
-      "lint_rblang",
+      "lint_raelog",
       "Check Raelog before proposing it. mode 'map' lints a complete document; mode 'snippet' lints one or more elements in the context of the open model (so relationships and concepts declared there resolve) and reports only findings inside the snippet, with snippet-relative line numbers.",
       async (input) => {
-        const rblang = String(input.rblang ?? "");
-        const issues = input.mode === "snippet" ? lintSnippet(rblang, session.currentText()) : collectIssues(rblang);
+        const raelog = String(input.raelog ?? "");
+        const issues = input.mode === "snippet" ? lintSnippet(raelog, session.currentText()) : collectIssues(raelog);
         if (!issues.length) return "No issues — passes the linter.";
         return formatDiagnostics(issues);
       },
@@ -243,29 +239,29 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
 
     tool(
       "push_map",
-      "Upload Raelog to the platform as a NEW model (create-only — a fresh kmID every time; the user cleans up old scratch models in Studio). Omit `rblang` to push the open model as it stands. Requires the user's approval. Name/description must be plain text: letters, numbers and spaces. Returns the new kmID, which run_query uses automatically for this file from then on.",
+      "Upload Raelog to the platform as a NEW model (create-only — a fresh kmID every time; the user cleans up old scratch models in Studio). Omit `raelog` to push the open model as it stands. Requires the user's approval. Name/description must be plain text: letters, numbers and spaces. Returns the new kmID, which run_query uses automatically for this file from then on.",
       async (input) => {
         const client = await getClientSilent(context);
         if (!client) return NOT_CONNECTED;
         const doc = session.target();
-        const rblang = input.rblang ? String(input.rblang) : doc?.getText();
-        if (!rblang) throw new Error(NO_MAP);
+        const raelog = input.raelog ? String(input.raelog) : doc?.getText();
+        if (!raelog) throw new Error(NO_MAP);
         const name = String(input.name);
         let created: CreateMapResult;
         try {
-          created = await client.createMap(rblang, name, String(input.description));
+          created = await client.createMap(raelog, name, String(input.description));
         } catch (error) {
           const validation = error instanceof ApiError ? error.errMessages() : undefined;
           if (!validation?.length) throw error;
-          if (doc && doc.getText() === rblang) showPlatformErrors(doc, validation, `Assistant push of "${name}" rejected by Rae`);
+          if (doc && doc.getText() === raelog) showPlatformErrors(doc, validation, `Assistant push of "${name}" rejected by Rae`);
           return `The platform rejected the model with ${plural(validation.length, "validation error")}:\n${validation.map((m) => `- ${m}`).join("\n")}\nFix the Raelog and push again.`;
         }
         const { kmId, raw, validation } = created;
         if (!kmId) return `Uploaded, but no kmID found in the response: ${JSON.stringify(raw).slice(0, 400)}`;
-        recordKnownMap(context, { kmId, name, source: "pushed", rblang, ...(doc?.uri.scheme === "file" ? { file: doc.uri.fsPath } : {}) });
-        if (doc && doc.getText() === rblang) await context.workspaceState.update(`rainbird.pushedKm.${doc.uri.toString()}`, kmId);
+        recordKnownMap(context, { kmId, name, source: "pushed", raelog, ...(doc?.uri.scheme === "file" ? { file: doc.uri.fsPath } : {}) });
+        if (doc && doc.getText() === raelog) await context.workspaceState.update(`rainbird.pushedKm.${doc.uri.toString()}`, kmId);
         if (validation.length) {
-          if (doc && doc.getText() === rblang) showPlatformErrors(doc, validation, `Assistant push of "${name}" (kmID ${kmId}) accepted with validation errors`);
+          if (doc && doc.getText() === raelog) showPlatformErrors(doc, validation, `Assistant push of "${name}" (kmID ${kmId}) accepted with validation errors`);
           return `Created model "${name}" with kmID ${kmId}, but the platform reported a validation error (it reports one per push):\n${validation.map((m) => `- ${m}`).join("\n")}\nThe draft was stored as-is; fix the Raelog before relying on it.`;
         }
         return `Created model "${name}" with kmID ${kmId}. run_query will use it for this file.`;

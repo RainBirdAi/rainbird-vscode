@@ -1,5 +1,5 @@
 /**
- * Map Explorer: a sidebar tree of the active RBLang document's concepts,
+ * Map Explorer: a sidebar tree of the active Raelog document's concepts,
  * relationships, rules, facts and instances. Clicking an item reveals its
  * source; each category header has a ＋ button that starts the guided flow
  * for adding one (authoring.ts).
@@ -45,7 +45,7 @@ export class MapTreeProvider implements vscode.TreeDataProvider<Item> {
   constructor(context: vscode.ExtensionContext) {
     context.subscriptions.push(
       vscode.window.onDidChangeActiveTextEditor((editor) => {
-        if (editor?.document.languageId === "rblang") {
+        if (editor?.document.languageId === "raelog") {
           this.doc = editor.document;
           this.emitter.fire();
         }
@@ -58,7 +58,7 @@ export class MapTreeProvider implements vscode.TreeDataProvider<Item> {
       })
     );
     const active = vscode.window.activeTextEditor;
-    if (active?.document.languageId === "rblang") this.doc = active.document;
+    if (active?.document.languageId === "raelog") this.doc = active.document;
   }
 
   getTreeItem(item: Item): vscode.TreeItem {

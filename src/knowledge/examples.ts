@@ -1,6 +1,6 @@
 /**
  * Knowledge reference, part 7: worked examples. Every example is complete,
- * valid RBLang; the unit tests lint each one and fail on any error, so the
+ * valid Raelog; the unit tests lint each one and fail on any error, so the
  * reference can never teach the model something the linter rejects.
  */
 
@@ -8,7 +8,7 @@ export interface KnowledgeExample {
   title: string;
   /** What the example demonstrates, one or two sentences. */
   teaches: string;
-  rblang: string;
+  raelog: string;
 }
 
 const HELLO_WORLD = `<?xml version="1.0" encoding="utf-8"?>
@@ -234,38 +234,38 @@ export const KNOWLEDGE_EXAMPLES: KnowledgeExample[] = [
   {
     title: "Hello World — chaining two relationships",
     teaches: "Three concepts, askable relationships with all three question forms, facts, and one rule that binds an intermediate variable (%COUNTRY) to chain 'lives in' into 'national language'. cf 75 marks the rule as a heuristic.",
-    rblang: HELLO_WORLD,
+    raelog: HELLO_WORLD,
   },
   {
     title: "Eligibility — derived value and mutually-exclusive outcome",
     teaches: "A derived number (age) computed with value=\"%O\" from a date, an askable=\"none\" relationship for it, and one rule per outcome instance of a mutually-exclusive concept, each with evidence text.",
-    rblang: ELIGIBILITY,
+    raelog: ELIGIBILITY,
   },
   {
     title: "Risk scoring — weights, optional conditions and a certainty floor",
     teaches: "A mandatory knock-in condition plus optional weighted evidence; weight=\"0\" on binding conditions so only the tests carry salience; cf 90 as ceiling and minimum-rule-certainty 40 as cut-off; allowUnknown and question grouping.",
-    rblang: RISK_SCORING,
+    raelog: RISK_SCORING,
   },
   {
     title: "Datasource — facts fetched from a REST API",
     teaches: "A GET datasource on the subject concept (Vehicle) with {{%S}} and an <input>-bound variable in the path, headers, and actions mapping response paths onto relationships whose subject is Vehicle. Note &amp; in the path attribute.",
-    rblang: DATASOURCE,
+    raelog: DATASOURCE,
   },
   {
     title: "Top-down-strict — gating an intrusive question behind cheap tests",
     teaches: "behaviour=\"top-down-strict\" so the free-text question is only asked after the type and amount checks pass; regexCount for text classification; a second rule covering the other outcome.",
-    rblang: TOP_DOWN,
+    raelog: TOP_DOWN,
   },
   {
     title: "Aggregation — list functions over a plural relationship",
     teaches: "countRelationshipInstances and sumObjects bound to variables, a guard against division by zero, round(), and the absence idiom (count is equal to 0) with a truth-typed object.",
-    rblang: AGGREGATION,
+    raelog: AGGREGATION,
   },
 ];
 
 export function buildExamplesSection(): string {
   const blocks = KNOWLEDGE_EXAMPLES.map(
-    (e) => `### ${e.title}\n\n${e.teaches}\n\n\`\`\`rblang\n${e.rblang}\n\`\`\``
+    (e) => `### ${e.title}\n\n${e.teaches}\n\n\`\`\`raelog\n${e.raelog}\n\`\`\``
   );
   return `## 19. Worked examples\n\nEach example is complete and passes the linter.\n\n${blocks.join("\n\n")}`;
 }

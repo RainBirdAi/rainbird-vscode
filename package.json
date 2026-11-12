@@ -14,7 +14,7 @@
   "bugs": {
     "url": "https://github.com/RainBirdAi/rainbird-vscode/issues"
   },
-  "homepage": "https://github.com/RainBirdAi/rainbird-vscode#readme",
+  "homepage": "https://raelog.ai",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -29,37 +29,36 @@
     "rainbird",
     "rae",
     "raelog",
-    "rblang",
     "decision automation",
     "reasoning"
   ],
   "main": "./out/extension.js",
   "activationEvents": [
-    "onLanguage:rblang",
+    "onLanguage:raelog",
     "onLanguage:xml",
-    "workspaceContains:**/*.rbl",
     "workspaceContains:**/*.raelog",
+    "workspaceContains:**/*.rbl",
+    "workspaceContains:**/*.rblang",
     "workspaceContains:**/*.rbird",
     "onStartupFinished"
   ],
   "contributes": {
     "languages": [
       {
-        "id": "rblang",
+        "id": "raelog",
         "aliases": [
           "Raelog",
-          "RBLang",
-          "rblang"
+          "raelog"
         ],
         "extensions": [
+          ".raelog",
           ".rbl",
-          ".rblang",
-          ".raelog"
+          ".rblang"
         ],
         "configuration": "./language-configuration.json",
         "icon": {
-          "light": "./media/rblang-light.svg",
-          "dark": "./media/rblang-dark.svg"
+          "light": "./media/raelog-light.svg",
+          "dark": "./media/raelog-dark.svg"
         }
       },
       {
@@ -71,22 +70,22 @@
           ".rbird"
         ],
         "icon": {
-          "light": "./media/rblang-light.svg",
-          "dark": "./media/rblang-dark.svg"
+          "light": "./media/raelog-light.svg",
+          "dark": "./media/raelog-dark.svg"
         }
       }
     ],
     "grammars": [
       {
-        "language": "rblang",
-        "scopeName": "text.xml.rblang",
-        "path": "./syntaxes/rblang.tmLanguage.json"
+        "language": "raelog",
+        "scopeName": "text.xml.raelog",
+        "path": "./syntaxes/raelog.tmLanguage.json"
       }
     ],
     "snippets": [
       {
-        "language": "rblang",
-        "path": "./snippets/rblang.json"
+        "language": "raelog",
+        "path": "./snippets/raelog.json"
       }
     ],
     "commands": [
@@ -297,11 +296,11 @@
     "viewsWelcome": [
       {
         "view": "rainbird.mapExplorer",
-        "contents": "Open a Raelog (.rbl) file to explore its concepts, relationships and rules. No file yet? Open one of your models by its Knowledge Map ID, try the example, or start one.\n[Open a model by Knowledge Map ID…](command:rainbird.openMapByKmId)\n[Open example](command:rainbird.openExample)\n[Insert into the open file…](command:rainbird.insertElement)\n[Getting started](command:rainbird.getStarted)"
+        "contents": "Open a Raelog (.raelog) file to explore its concepts, relationships and rules. No file yet? Open one of your models by its Knowledge Map ID, try the example, or start one.\n[Open a model by Knowledge Map ID…](command:rainbird.openMapByKmId)\n[Open example](command:rainbird.openExample)\n[Insert into the open file…](command:rainbird.insertElement)\n[Getting started](command:rainbird.getStarted)"
       },
       {
         "view": "rainbird.platformMaps",
-        "contents": "Models you open, push or query from VS Code appear here. Rainbird's API has no endpoint that lists your models, so start from a model's Knowledge Map ID (on its Publish page in Rainbird Studio).\n[Open Model by Knowledge Map ID…](command:rainbird.openMapByKmId)\n[Add a kmID without opening it](command:rainbird.mapsAdd)"
+        "contents": "Models you open, push or query from VS Code appear here. Rainbird's API has no endpoint that lists your models, so start from a model's Knowledge Map ID (on the project's Connect → API tab in Rae, or the model's Publish page in Rainbird Studio).\n[Open Model by Knowledge Map ID…](command:rainbird.openMapByKmId)\n[Add a kmID without opening it](command:rainbird.mapsAdd)"
       }
     ],
     "menus": {
@@ -334,76 +333,76 @@
       "editor/title/run": [
         {
           "command": "rainbird.openQueryPanel",
-          "when": "editorLangId == rblang",
+          "when": "editorLangId == raelog",
           "group": "navigation"
         }
       ],
       "editor/title": [
         {
           "command": "rainbird.insertElement",
-          "when": "editorLangId == rblang",
+          "when": "editorLangId == raelog",
           "group": "navigation@0"
         },
         {
           "command": "rainbird.openGraphView",
-          "when": "editorLangId == rblang",
+          "when": "editorLangId == raelog",
           "group": "navigation@1"
         },
         {
           "command": "rainbird.pushMap",
-          "when": "editorLangId == rblang",
+          "when": "editorLangId == raelog",
           "group": "navigation@2"
         }
       ],
       "editor/context": [
         {
           "command": "rainbird.insertElement",
-          "when": "editorLangId == rblang",
+          "when": "editorLangId == raelog",
           "group": "rainbird@0"
         },
         {
           "command": "rainbird.explainSelection",
-          "when": "editorLangId == rblang",
+          "when": "editorLangId == raelog",
           "group": "rainbird@1"
         },
         {
           "command": "rainbird.semanticDiff",
-          "when": "editorLangId == rblang",
+          "when": "editorLangId == raelog",
           "group": "rainbird@2"
         },
         {
           "command": "rainbird.openNlPanel",
-          "when": "editorLangId == rblang",
+          "when": "editorLangId == raelog",
           "group": "rainbird@3"
         },
         {
           "command": "rainbird.promotionDiff",
-          "when": "editorLangId == rblang",
+          "when": "editorLangId == raelog",
           "group": "rainbird@4"
         },
         {
           "command": "rainbird.diffAgainstPushed",
-          "when": "editorLangId == rblang",
+          "when": "editorLangId == raelog",
           "group": "rainbird@5"
         },
         {
           "command": "rainbird.compareDraft",
-          "when": "editorLangId == rblang",
+          "when": "editorLangId == raelog",
           "group": "rainbird@6"
         },
         {
           "command": "rainbird.diffAgainstDraft",
-          "when": "editorLangId == rblang",
+          "when": "editorLangId == raelog",
           "group": "rainbird@7"
         },
         {
           "command": "rainbird.bindKmId",
-          "when": "editorLangId == rblang",
+          "when": "editorLangId == raelog",
           "group": "rainbird@8"
         },
         {
           "command": "rainbird.reloadFromPlatform",
-          "when": "editorLangId == rblang",
+          "when": "editorLangId == raelog",
           "group": "rainbird@9"
         }
       ],
@@ -535,7 +534,7 @@
         "rainbird.knowledgeMapId": {
           "type": "string",
           "default": "",
-          "description": "Default Knowledge Map ID (kmID) for this workspace or folder, used for files that have no model of their own and for queries with no file open. Files opened by Knowledge Map ID, pulled, pushed or bound with “Rae: Bind Open File to a Knowledge Map ID…” keep their own model, which wins over this setting. The ID is on the model's Publish page in Rainbird Studio, or under View Knowledge Map ID in the model's menu.",
+          "description": "Default Knowledge Map ID (kmID) for this workspace or folder, used for files that have no model of their own and for queries with no file open. Files opened by Knowledge Map ID, pulled, pushed or bound with “Rae: Bind Open File to a Knowledge Map ID…” keep their own model, which wins over this setting. In Rae, copy it from the project's Connect → API tab; in Rainbird Studio, it is on the model's Publish page, or under View Knowledge Map ID in the model's menu.",
           "scope": "resource"
         },
         "rainbird.useDraft": {
@@ -631,7 +630,7 @@
       }
     },
     "configurationDefaults": {
-      "[rblang]": {
+      "[raelog]": {
         "editor.tabSize": 2,
         "editor.insertSpaces": true,
         "editor.linkedEditing": true
@@ -646,7 +645,7 @@
           {
             "id": "rainbird.openExample",
             "title": "Open an example model",
-            "description": "Open a sample .rbl file to see Raelog language support in action. It works offline, but it is not on your Rainbird account: push it (cloud icon) or open one of your own models before querying.\n[Open example](command:rainbird.openExample)",
+            "description": "Open a sample .raelog file to see Raelog language support in action. It works offline, but it is not on your Rainbird account: push it (cloud icon) or open one of your own models before querying.\n[Open example](command:rainbird.openExample)",
             "media": {
               "markdown": "media/walkthrough/example.md"
             }
@@ -665,7 +664,7 @@
           {
             "id": "rainbird.openMapStep",
             "title": "Open your own model",
-            "description": "Paste a model's Knowledge Map ID, from its Publish page in Rainbird Studio. The extension downloads the model's draft, saves it as a .rbl file and remembers which model it is.\n[Open Model by Knowledge Map ID…](command:rainbird.openMapByKmId)",
+            "description": "Paste a model's kmID, from the project's Connect → API tab in Rae or the model's Publish page in Rainbird Studio. The extension downloads the model's draft, saves it as a .raelog file and remembers which model it is.\n[Open Model by Knowledge Map ID…](command:rainbird.openMapByKmId)",
             "media": {
               "markdown": "media/walkthrough/open-map.md"
             },
@@ -676,7 +675,7 @@
           {
             "id": "rainbird.queryStep",
             "title": "Run your first query",
-            "description": "Start from the .rbl you opened (▶ in its title bar), so the extension knows which model to query. Pick a goal relationship, answer the questions the engine asks, and get a result with certainty and evidence.\n[Run Query](command:rainbird.openQueryPanel)",
+            "description": "Start from the .raelog you opened (▶ in its title bar), so the extension knows which model to query. Pick a goal relationship, answer the questions the engine asks, and get a result with certainty and evidence.\n[Run Query](command:rainbird.openQueryPanel)",
             "media": {
               "markdown": "media/walkthrough/query.md"
             },

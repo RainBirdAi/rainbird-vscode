@@ -155,7 +155,7 @@ function goalSegments(text: string, ranges: [number, number][]): HighlightSegmen
  * else matched and the query is a single word of at least 3 characters.
  * Letters merely scattered through a name are not a match: on a big map they
  * turn a name the map does not declare ("lives in", "has age" or "Amount" in
- * examples/bigger_map.rbl) into a list of unrelated relationships, the first
+ * examples/bigger_map.raelog) into a list of unrelated relationships, the first
  * of which a combobox would pick on Enter. So a typo or an undeclared name
  * matches nothing, and the panel can offer to send it as typed.
  */
@@ -251,7 +251,7 @@ export function highlightMatch(text: string, query: string, matched?: GoalMatchK
 /**
  * Goals split into those a rule infers (rules > 0) and the rest, each in
  * document order. Call it on ALL goals, before any display cap: in
- * examples/bigger_map.rbl 119 of the 147 rule-bearing relationships come after
+ * examples/bigger_map.raelog 119 of the 147 rule-bearing relationships come after
  * the 100th.
  */
 export function groupGoals<T extends { rules?: number }>(goals: readonly T[]): { inferred: T[]; other: T[] } {

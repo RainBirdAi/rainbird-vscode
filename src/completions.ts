@@ -1,5 +1,5 @@
 /**
- * Context-aware completions for RBLang, modelled on Studio's code-panel
+ * Context-aware completions for Raelog, modelled on Studio's code-panel
  * completer: element completions based on the enclosing element, attribute
  * completions filtered by what's already present, enum value completions,
  * map-local name completions (concepts / relationships / instances), and
@@ -16,11 +16,11 @@ import { symbolAt } from "./symbols";
 export function registerCompletions(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.languages.registerCompletionItemProvider(
-      "rblang",
+      "raelog",
       { provideCompletionItems: provide },
       "<", " ", "\"", "%", "("
     ),
-    vscode.languages.registerHoverProvider("rblang", { provideHover })
+    vscode.languages.registerHoverProvider("raelog", { provideHover })
   );
 }
 

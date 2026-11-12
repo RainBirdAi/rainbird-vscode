@@ -1,5 +1,5 @@
 /**
- * Symbol-level language features for RBLang: go-to-definition, find-references,
+ * Symbol-level language features for Raelog: go-to-definition, find-references,
  * F2 rename and live linked editing for concepts / relationships / instances
  * (single-file scope in the prototype), plus a CodeLens on every relationship:
  * run it as a query, see its rule/fact counts.
@@ -11,7 +11,7 @@
  * mention as you type. It is offered from the declaration only: typing in a
  * reference (rel subject="Person") is usually meant to point it at another
  * symbol, not to rename this one. VS Code has editor.linkedEditing off by
- * default; package.json turns it on for the rblang language.
+ * default; package.json turns it on for the raelog language.
  */
 import * as vscode from "vscode";
 import { buildIndex, relinstCounts } from "./mapIndex";
@@ -22,7 +22,7 @@ function toRange(doc: vscode.TextDocument, span: Span): vscode.Range {
 }
 
 export function registerLanguageFeatures(context: vscode.ExtensionContext): void {
-  const selector: vscode.DocumentSelector = { language: "rblang" };
+  const selector: vscode.DocumentSelector = { language: "raelog" };
 
   context.subscriptions.push(
     vscode.languages.registerDefinitionProvider(selector, {
@@ -81,7 +81,7 @@ class RelCodeLensProvider implements vscode.CodeLensProvider {
   constructor(context: vscode.ExtensionContext) {
     context.subscriptions.push(
       vscode.workspace.onDidChangeTextDocument((e) => {
-        if (e.document.languageId !== "rblang") return;
+        if (e.document.languageId !== "raelog") return;
         clearTimeout(this.debounce);
         this.debounce = setTimeout(() => this.emitter.fire(), 500);
       })

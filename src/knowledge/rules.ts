@@ -1,6 +1,6 @@
 /**
  * Knowledge reference, part 3: rules, conditions, variables and the expression
- * language. Clean-room prose derived from Rainbird's public RBLang reference
+ * language. Clean-room prose derived from Rainbird's public Raelog reference
  * and rules documentation.
  */
 
@@ -8,7 +8,7 @@ export const RULES_SECTION = `## 7. Rules
 
 A rule is a \`<relinst>\` **with** \`<condition>\` children. The header describes the fact the rule can create; the conditions describe when.
 
-\`\`\`rblang
+\`\`\`raelog
 <relinst type="speaks" cf="75" name="Speaks national language of home country"
          alt="{{%S}} lives in {{%COUNTRY}}, whose national language is {{%O}}">
   <condition rel="lives in" subject="%S" object="%COUNTRY" weight="100" behaviour="mandatory"/>

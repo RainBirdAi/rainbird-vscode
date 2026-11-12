@@ -57,7 +57,7 @@ describe("canAddHere", () => {
     assert.equal(canAddHere(question({ canAdd: false })), false);
   });
 
-  test("the RBLang string form is read for the side being asked", () => {
+  test("the Raelog string form is read for the side being asked", () => {
     const sfo = (canAdd: string) => canAddHere(question({ canAdd }));
     const sfs = (canAdd: string) => canAddHere(question({ canAdd, type: "Second Form Subject" }));
     assert.equal(sfo("all"), true);

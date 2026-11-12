@@ -6,12 +6,12 @@ import { buildOverview, readRange, formatDiagnostics, lineAt, countLines } from 
 import { collectIssues } from "../lint";
 
 const examples = path.join(__dirname, "..", "..", "examples");
-const hello = fs.readFileSync(path.join(examples, "hello-world.rbl"), "utf8");
+const hello = fs.readFileSync(path.join(examples, "hello-world.raelog"), "utf8");
 
 describe("map overview", () => {
   test("lists concepts with instances, relationships with counts and rules with line ranges", () => {
-    const text = buildOverview(hello, { fileName: "hello-world.rbl", apiUrl: "https://api.rainbird.ai" });
-    assert.match(text, /^File hello-world.rbl · \d+ lines · 0 errors/);
+    const text = buildOverview(hello, { fileName: "hello-world.raelog", apiUrl: "https://api.rainbird.ai" });
+    assert.match(text, /^File hello-world.raelog · \d+ lines · 0 errors/);
     assert.match(text, /kmID not set · connected to https:\/\/api.rainbird.ai/);
     assert.match(text, /Concepts \(3\)/);
     assert.match(text, /Person \[string\] L6 · instances: Julio/);
@@ -26,7 +26,7 @@ describe("map overview", () => {
   });
 
   test("reports a missing root and errors", () => {
-    const text = buildOverview("<concept name=\"X\" type=\"string\"/>", { fileName: "x.rbl" });
+    const text = buildOverview("<concept name=\"X\" type=\"string\"/>", { fileName: "x.raelog" });
     assert.match(text, /No <rbl:kb> root/);
     assert.match(text, /Errors \(\d+/);
   });

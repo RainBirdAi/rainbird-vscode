@@ -48,7 +48,7 @@ const snapshotChanges = new vscode.EventEmitter<vscode.Uri>();
 
 /** The read-only document for a map's snapshot; its path carries the kmID (lower case for a GUID). */
 export function snapshotDocumentUri(kmId: string): vscode.Uri {
-  return vscode.Uri.from({ scheme: SNAPSHOT_SCHEME, path: `/${normaliseKmId(kmId)}.rbl` });
+  return vscode.Uri.from({ scheme: SNAPSHOT_SCHEME, path: `/${normaliseKmId(kmId)}.raelog` });
 }
 
 function environmentDir(): string {
@@ -57,13 +57,13 @@ function environmentDir(): string {
 }
 
 /**
- * Where the exact RBLang last pushed, or last pulled as a draft into a file, is
+ * Where the exact Raelog last pushed, or last pulled as a draft into a file, is
  * snapshotted, per environment + kmID. Keyed by kmID alone, which is why
  * saved versions are never snapshotted. One file name per map whatever the
  * caller's spelling of the ID (case-sensitive file systems would split it).
  */
 export function snapshotUri(context: vscode.ExtensionContext, kmId: string): vscode.Uri {
-  return vscode.Uri.joinPath(context.globalStorageUri, "map-snapshots", environmentDir(), `${normaliseKmId(kmId)}.rbl`);
+  return vscode.Uri.joinPath(context.globalStorageUri, "map-snapshots", environmentDir(), `${normaliseKmId(kmId)}.raelog`);
 }
 
 /** The maps known on the current environment, most recently used first (the Maps view's registry). */
@@ -72,7 +72,7 @@ export function knownMaps(context: vscode.ExtensionContext): KnownMap[] {
 }
 
 /**
- * Remember a map in the registry (moving it to the top) and, when `rblang` is
+ * Remember a map in the registry (moving it to the top) and, when `raelog` is
  * given, snapshot it as what the platform holds. `fallbackName` (a file name)
  * only fills a missing name, so a name given at push or Add Map time survives
  * a later pull or bind. kmIDs match case-insensitively: an existing entry
@@ -82,9 +82,9 @@ export function knownMaps(context: vscode.ExtensionContext): KnownMap[] {
  */
 export function recordKnownMap(
   context: vscode.ExtensionContext,
-  entry: Omit<KnownMap, "addedAt"> & { rblang?: string; fallbackName?: string }
+  entry: Omit<KnownMap, "addedAt"> & { raelog?: string; fallbackName?: string }
 ): Promise<void> {
-  const { rblang, fallbackName, ...rest } = entry;
+  const { raelog, fallbackName, ...rest } = entry;
   rest.kmId = normaliseKmId(rest.kmId);
   const key = registryKey();
   const maps = context.globalState.get<KnownMap[]>(key, []);
@@ -106,10 +106,10 @@ export function recordKnownMap(
 
   // Snapshot exactly what was pushed or pulled: it is the offline record of
   // what the platform holds and the base for quick-diff gutter bars.
-  if (!rblang) return Promise.resolve();
+  if (!raelog) return Promise.resolve();
   const dir = vscode.Uri.joinPath(context.globalStorageUri, "map-snapshots", environmentDir());
   return Promise.resolve(vscode.workspace.fs.createDirectory(dir))
-    .then(() => vscode.workspace.fs.writeFile(snapshotUri(context, rest.kmId), Buffer.from(rblang, "utf8")))
+    .then(() => vscode.workspace.fs.writeFile(snapshotUri(context, rest.kmId), Buffer.from(raelog, "utf8")))
     .then(
       () => snapshotChanges.fire(snapshotDocumentUri(rest.kmId)),
       (error) => console.warn("Rae: could not write model snapshot:", error)
@@ -135,7 +135,7 @@ export class PlatformMapsProvider implements vscode.TreeDataProvider<Node> {
       vscode.workspace.registerTextDocumentContentProvider(SNAPSHOT_SCHEME, {
         onDidChange: snapshotChanges.event,
         provideTextDocumentContent: async (uri) => {
-          const kmId = uri.path.replace(/^\//, "").replace(/\.rbl$/, "");
+          const kmId = uri.path.replace(/^\//, "").replace(/\.raelog$/, "");
           const raw = await vscode.workspace.fs.readFile(snapshotUri(context, kmId));
           return Buffer.from(raw).toString("utf8");
         },
@@ -208,7 +208,7 @@ export class PlatformMapsProvider implements vscode.TreeDataProvider<Node> {
         label: "Models you have opened, pushed or queried from VS Code",
         detail:
           "Rainbird's API has no endpoint that lists an account's models, so this view cannot browse Studio. Start from a Knowledge Map ID " +
-          "(on the model's Publish page in Studio): Open Model by Knowledge Map ID… (cloud icon above) or Add Model by kmID… (+). " +
+          "(on the project's Connect → API tab in Rae, or the model's Publish page in Studio): Open Model by Knowledge Map ID… (cloud icon above) or Add Model by kmID… (+). " +
           "If the platform adds a list endpoint, this view will use it.",
       });
     }
@@ -250,11 +250,11 @@ export class PlatformMapsProvider implements vscode.TreeDataProvider<Node> {
   }
 
   /**
-   * Click action: open the map's RBLang. Best available source wins: the
+   * Click action: open the map's Raelog. Best available source wins: the
    * platform draft (GET /analysis/file) → the workspace file bound to it →
    * the snapshot of the last pull or push → an honest explanation.
    */
-  async openRblang(node?: Node): Promise<void> {
+  async openRaelog(node?: Node): Promise<void> {
     if (!node || node.kind !== "map") return;
     const map = node.map;
 

@@ -1,19 +1,19 @@
 /**
- * Structural + referential diagnostics for RBLang documents — the editor-agnostic core.
+ * Structural + referential diagnostics for Raelog documents — the editor-agnostic core.
  *
  * Mirrors what Studio's validator and rblint check, reimplemented from the
- * documented RBLang reference: lexical problems (malformed or duplicate
+ * documented Raelog reference: lexical problems (malformed or duplicate
  * attributes, unbalanced quotes, stray text), unknown elements/attributes,
  * missing or empty required attributes, invalid enum values, references to
  * undeclared concepts and relationships, and a set of semantic footguns
  * (non-string subjects, cf out of range, minimum-rule-certainty above cf,
  * datasource inputs of the wrong concept, relationships nothing refers to, ...).
  *
- * No VS Code import here: `collectIssues` runs on assistant-generated RBLang
+ * No VS Code import here: `collectIssues` runs on assistant-generated Raelog
  * before it is offered and under plain node in the unit tests. diagnostics.ts
  * adapts it to the editor.
  */
-import { SCHEMA, EXPRESSION_FUNCTIONS, LEGACY_VALUES, RBLANG_NAMESPACE } from "./schema";
+import { SCHEMA, EXPRESSION_FUNCTIONS, LEGACY_VALUES, RAELOG_NAMESPACE } from "./schema";
 import {
   buildIndex,
   maskNonMarkup,
@@ -45,7 +45,7 @@ export interface LintIssue {
 /** Attributes that may legitimately be empty. Every other empty value is an error, as in Studio ("Please specify …"). */
 const EMPTY_ALLOWED: Record<string, string[]> = { datasource: ["path"] };
 
-/** Lint arbitrary RBLang text (used on assistant-generated code before it is offered). */
+/** Lint arbitrary Raelog text (used on assistant-generated code before it is offered). */
 export function collectIssues(text: string): LintIssue[] {
   const index = buildIndex(text);
   const issues: LintIssue[] = [];
@@ -259,7 +259,7 @@ function checkRoot(text: string, index: MapIndex, addAt: AddAt): void {
   if (roots.length === 0) {
     const start = text.search(/\S/);
     const eol = text.indexOf("\n", start);
-    addAt(start, eol === -1 ? text.length : eol, `Missing root element: the model must be wrapped in <rbl:kb xmlns:rbl="${RBLANG_NAMESPACE}"> … </rbl:kb>`);
+    addAt(start, eol === -1 ? text.length : eol, `Missing root element: the model must be wrapped in <rbl:kb xmlns:rbl="${RAELOG_NAMESPACE}"> … </rbl:kb>`);
   }
   for (const extra of roots.slice(1)) addAt(extra.start, extra.end, "Only one <rbl:kb> root is allowed per model");
 }

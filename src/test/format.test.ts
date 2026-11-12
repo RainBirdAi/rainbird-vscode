@@ -1,5 +1,5 @@
 /**
- * Unit tests for the RBLang indent-only formatter (format.ts).
+ * Unit tests for the Raelog indent-only formatter (format.ts).
  */
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
@@ -11,7 +11,7 @@ const examples = path.join(__dirname, "..", "..", "examples");
 const spaces2 = { tabSize: 2, insertSpaces: true };
 const tabs = { tabSize: 4, insertSpaces: false };
 
-describe("RBLang formatter", () => {
+describe("Raelog formatter", () => {
   test("re-indents from the element nesting", () => {
     const input = ['<?xml version="1.0" encoding="utf-8"?>', '<rbl:kb xmlns:rbl="http://rbl.io/schema/RBLang">', '<concept name="person" type="string"/>', '<rel name="speaks" subject="person" object="language">', '<firstForm>Does %S speak %O?</firstForm>', "</rel>", "</rbl:kb>", ""].join("\n");
     const expected = ['<?xml version="1.0" encoding="utf-8"?>', '<rbl:kb xmlns:rbl="http://rbl.io/schema/RBLang">', '  <concept name="person" type="string"/>', '  <rel name="speaks" subject="person" object="language">', "    <firstForm>Does %S speak %O?</firstForm>", "  </rel>", "</rbl:kb>", ""].join("\n");
@@ -78,7 +78,7 @@ describe("RBLang formatter", () => {
   });
 
   test("formatting is idempotent over the example maps", () => {
-    for (const file of fs.readdirSync(examples).filter((f) => f.endsWith(".rbl"))) {
+    for (const file of fs.readdirSync(examples).filter((f) => f.endsWith(".raelog"))) {
       const text = fs.readFileSync(path.join(examples, file), "utf8");
       const once = formatText(text, spaces2);
       assert.equal(formatText(once, spaces2), once, file);
@@ -88,7 +88,7 @@ describe("RBLang formatter", () => {
   });
 
   test("an already two-space-indented example needs no edits", () => {
-    const text = fs.readFileSync(path.join(examples, "504436fb-v1.rbl"), "utf8");
+    const text = fs.readFileSync(path.join(examples, "504436fb-v1.raelog"), "utf8");
     assert.deepEqual(formatLines(text, spaces2), []);
   });
 });

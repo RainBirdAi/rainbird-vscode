@@ -24,8 +24,8 @@ const offsetOf = (text: string, snippet: string, delta = 0): number => {
   return at + delta;
 };
 
-describe("relationshipAt: examples/hello-world.rbl", () => {
-  const hello = read("hello-world.rbl");
+describe("relationshipAt: examples/hello-world.raelog", () => {
+  const hello = read("hello-world.raelog");
   const index = buildIndex(hello);
   const at = (snippet: string, delta = 0): string | undefined => relationshipAt(index, offsetOf(hello, snippet, delta));
 
@@ -85,7 +85,7 @@ describe("relationshipAt: examples/hello-world.rbl", () => {
 
 describe("relationshipAt: other maps", () => {
   test("eligibility: every condition belongs to its rule, relationship and expression conditions alike", () => {
-    const text = read("eligibility.rbl");
+    const text = read("eligibility.raelog");
     const index = buildIndex(text);
     const at = (snippet: string, delta = 0): string | undefined => relationshipAt(index, offsetOf(text, snippet, delta));
     assert.equal(at('<condition rel="has date of birth"', 12), "has age", "a relationship condition: the rule's, not its own");

@@ -1,14 +1,14 @@
 /**
- * Knowledge reference, part 2: the RBLang language — document structure,
+ * Knowledge reference, part 2: the Raelog language — document structure,
  * concepts, relationships, instances, facts, naming and limits. Clean-room
- * prose derived from Rainbird's public RBLang reference.
+ * prose derived from Rainbird's public Raelog reference.
  */
 
 export const STRUCTURE_SECTION = `## 2. Raelog document structure
 
-Raelog (previously called RBLang) is the XML dialect models are written in. Every document is:
+Raelog is the XML dialect models are written in. Every document is:
 
-\`\`\`rblang
+\`\`\`raelog
 <?xml version="1.0" encoding="utf-8"?>
 <rbl:kb xmlns:rbl="http://rbl.io/schema/RBLang">
   <!-- content -->
@@ -20,7 +20,7 @@ Raelog (previously called RBLang) is the XML dialect models are written in. Ever
 - Attribute values use double quotes. Inside them, escape \`&\` as \`&amp;\`, \`"\` as \`&quot;\` and \`<\` as \`&lt;\` (relevant in expressions such as \`%AGE &lt; 18\`; prefer the natural-language operators to avoid the issue). Apostrophes are fine in names and text.
 - XML comments \`<!-- … -->\` are allowed anywhere and are ignored by the engine. CDATA is used for datasource request bodies and markdown metadata.
 - Indentation is free-form; keep the file's existing style (this extension's formatter re-indents by nesting depth using the file's indent unit).
-- File extensions: .rbl (preferred), .raelog or .rblang. Studio exports are .rbird.
+- File extension: .raelog (older files may end in .rbl). Studio exports are .rbird.
 
 Recommended authoring order — concepts → relationships → instances of string concepts → facts → rules. It is not enforced by the engine but avoids forward-reference mistakes, matches Studio's output and is what the linter's quick-insert commands assume.`;
 
@@ -77,7 +77,7 @@ export const FACTS_SECTION = `## 6. Facts
 
 A fact is a \`<relinst>\` with **no** \`<condition>\` children:
 
-\`\`\`rblang
+\`\`\`raelog
 <relinst type="national language" subject="France" object="French" cf="100"/>
 <relinst type="has age" subject="Julio" object="41"/>
 <relinst type="was born on" subject="Julio" object="1984-03-15"/>

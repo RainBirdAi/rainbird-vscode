@@ -21,7 +21,7 @@ export interface Question {
   allowUnknown: boolean;
   /**
    * Whether the user may type a value that is not offered. A boolean on the
-   * wire (OpenAPI, and `true` live); the RBLang string form (all | subject |
+   * wire (OpenAPI, and `true` live); the Raelog string form (all | subject |
    * object | subject,object | none) is tolerated — read it with canAddHere().
    */
   canAdd: boolean | string;
@@ -219,11 +219,11 @@ export interface EvidenceNode {
   rule?: EvidenceRule;
 }
 
-/** A map as served by GET /analysis/file: RBLang plus Studio's structured model. */
+/** A model as served by GET /analysis/file: its Raelog (the API's `rblang` field) plus Studio's structured model. */
 export interface MapFile {
   concepts: unknown[];
   rels: unknown[];
-  rblang: string;
+  raelog: string;
 }
 
 /** HTTP failure with the status and raw body preserved so callers can branch on error *shape*. */
@@ -255,7 +255,7 @@ export class ApiError extends Error {
  * runners and Open Map / Pull, so the copy lives in one place.
  */
 export function unknownMapMessage(kmId: string, apiUrl: string): string {
-  return `No model with Knowledge Map ID ${kmId} is visible to this API key on ${apiUrl}. Check the ID on the model's Publish page in Studio, and that the key belongs to the same environment.`;
+  return `No model with Knowledge Map ID ${kmId} is visible to this API key on ${apiUrl}. Check the ID (the kmID on the project's Connect → API tab in Rae, or the model's Publish page in Studio), and that the key belongs to the same environment.`;
 }
 
 export interface CreateMapResult {
@@ -427,17 +427,17 @@ export class RainbirdClient {
    * map with a new kmID. Contract: X-API-Key + Version: v1, body
    * {rblang, name, description}.
    */
-  async createMap(rblang: string, name: string, description: string): Promise<CreateMapResult> {
+  async createMap(raelog: string, name: string, description: string): Promise<CreateMapResult> {
     const raw = await this.request<Record<string, unknown>>(`/maps`, {
       method: "POST",
       headers: { "X-API-Key": this.apiKey, Version: "v1" },
-      body: JSON.stringify({ rblang, name, description }),
+      body: JSON.stringify({ rblang: raelog, name, description }), // the API's field is still named rblang
     });
     return parseCreateMapResponse(raw);
   }
 
   /**
-   * GET /analysis/file/{kmID}[?version=N] — the map's RBLang source plus
+   * GET /analysis/file/{kmID}[?version=N] — the model's Raelog source plus
    * Studio's structured model arrays (concepts, rels). Without `version` it
    * returns the draft. Verified live 2026-09-03; not in the public OpenAPI
    * spec, so treat the shape defensively.
@@ -453,7 +453,7 @@ export class RainbirdClient {
     return {
       concepts: Array.isArray(raw.concepts) ? raw.concepts : [],
       rels: Array.isArray(raw.rels) ? raw.rels : [],
-      rblang: raw.rblang,
+      raelog: raw.rblang,
     };
   }
 

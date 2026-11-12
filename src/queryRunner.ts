@@ -14,7 +14,7 @@ import { Answer, Question, RainbirdClient, ResultItem } from "./api";
 import { buildIndex } from "./mapIndex";
 import { showEvidenceTree } from "./evidenceView";
 // platform.ts imports getClient from here: the cycle is safe while every use on either side stays inside a function.
-import { activeRblangUri, resolveKmIdFor } from "./platform";
+import { activeRaelogUri, resolveKmIdFor } from "./platform";
 import { Goal, goalsFromIndex, goalsFromMap } from "./goals";
 import { canonicalGoal } from "./goalFilter";
 import { relationshipAt } from "./authoringModel";
@@ -37,7 +37,7 @@ export async function connect(context: vscode.ExtensionContext): Promise<Rainbir
   await config.update("apiUrl", apiUrl, vscode.ConfigurationTarget.Global);
 
   const apiKey = await vscode.window.showInputBox({
-    prompt: "Rainbird API key (from your Account or the model's Publish page)",
+    prompt: "Platform API key, the one Rae uses (from your account page in Rainbird Studio, or any model's Publish page there)",
     password: true,
     ignoreFocusOut: true,
   });
@@ -101,7 +101,7 @@ export async function runQuery(context: vscode.ExtensionContext): Promise<void> 
   let relationship: string | undefined;
   // The text of the map the goal came from: the goal's object type formats the results (a date reads 1981-10-01).
   let mapText: string | undefined;
-  const rbl = editor?.document.languageId === "rblang" ? editor : undefined;
+  const rbl = editor?.document.languageId === "raelog" ? editor : undefined;
   const index = rbl ? buildIndex(rbl.document.getText()) : undefined;
   const goals = index ? goalsFromIndex(index).goals : [];
   if (rbl && index && goals.length) {
@@ -129,7 +129,7 @@ export async function runQuery(context: vscode.ExtensionContext): Promise<void> 
     if (!typed) return;
     // Names are case-sensitive (a mismatch is a bare 400): with a map open, send its declared spelling.
     let declared: Goal[] = [];
-    const open = activeRblangUri();
+    const open = activeRaelogUri();
     if (open) {
       try {
         mapText = (await vscode.workspace.openTextDocument(open)).getText();

@@ -100,16 +100,16 @@ export const TOOL_SCHEMAS: Record<string, JsonSchema> = {
   create_map: obj(
     {
       xml: str("Complete Raelog document"),
-      file_name: str("File name such as eligibility.rbl to create in the workspace; omit for an untitled document"),
+      file_name: str("File name such as eligibility.raelog to create in the workspace; omit for an untitled document"),
     },
     ["xml"]
   ),
-  lint_rblang: obj(
+  lint_raelog: obj(
     {
-      rblang: str("Raelog to check"),
+      raelog: str("Raelog to check"),
       mode: { type: "string", enum: ["map", "snippet"], description: "map: a complete document (a whole model). snippet: one or more elements checked in the context of the open model." },
     },
-    ["rblang", "mode"]
+    ["raelog", "mode"]
   ),
   run_query: obj(
     {
@@ -130,7 +130,7 @@ export const TOOL_SCHEMAS: Record<string, JsonSchema> = {
   ),
   push_map: obj(
     {
-      rblang: str("Raelog to push. Omit to push the open model as it currently stands."),
+      raelog: str("Raelog to push. Omit to push the open model as it currently stands."),
       name: str("Plain-text model name (letters, numbers, spaces)"),
       description: str("Plain-text description"),
     },
@@ -165,7 +165,7 @@ export const TOOL_SCHEMAS: Record<string, JsonSchema> = {
  * additionalProperties:false and every property either required or simple.
  * edit_map / run_query / push_map have union-shaped items and stay client-validated.
  */
-export const STRICT_TOOLS = new Set(["get_map_overview", "read_map", "get_diagnostics", "lint_rblang", "create_map", "get_evidence", "semantic_diff", "run_tests"]);
+export const STRICT_TOOLS = new Set(["get_map_overview", "read_map", "get_diagnostics", "lint_raelog", "create_map", "get_evidence", "semantic_diff", "run_tests"]);
 
 const typeOf = (v: unknown): string => (v === null ? "null" : Array.isArray(v) ? "array" : typeof v);
 
