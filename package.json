@@ -2,7 +2,7 @@
   "name": "rainbird",
   "displayName": "Rae by Rainbird",
   "description": "Raelog language support, model authoring, query running and evidence trees for Rae, the decision automation platform from Rainbird.",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "preview": true,
   "publisher": "RainbirdTechnologies",
   "license": "MIT",
