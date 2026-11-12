@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.0.16 — 2026-11-12
 
 - **Raelog only.** The language id is now `raelog` (was `rblang`), so the language picker, the Problems panel and language-specific settings all say Raelog. On first start the extension moves your `[rblang]` settings (for example `editor.formatOnSave`) to `[raelog]`, and points any `files.associations` that named `rblang` at `raelog`; a message says when it did. New files, whether opened by Knowledge Map ID, extracted from a `.rbird` export or created by the AI assistant, are saved as `.raelog`. Existing `.rbl` and `.rblang` files still open with full support, and saved snapshots of the last pulled or pushed draft are renamed so diffs against them keep working. The bundled examples are `.raelog` files, and the assistant's lint tool is `lint_raelog`.
 - **Where to find things in Rae.** Wherever the extension tells you where a model's ID or your API key is, it now points to Rae first. The kmID is on the project's **Connect → API** tab in Rae (each version of a project has its own), and the API key is the Platform API key Rae uses, on your account page in Rainbird Studio. **Rae: Add a Model's MCP Endpoint…** asks for the URL from the project's **Connect → MCP** tab instead of the old "Test over MCP" page. Studio's Publish page is still mentioned for models you manage in Studio.
