@@ -127,3 +127,18 @@ describe("package.json: files", () => {
     for (const file of opened) assert.ok(fs.existsSync(path.join(root, "examples", file)), `examples/${file}`);
   });
 });
+
+describe(".vscodeignore", () => {
+  // 0.0.16 shipped CI's npm cache (.npm/, 9 MB of the 11.8 MB VSIX): the package job runs in the
+  // same checkout as `npm ci --cache .npm`, and vsce packages whatever it does not ignore.
+  test("keeps what CI writes into the checkout out of the package", () => {
+    const ci = fs.readFileSync(path.join(root, ".gitlab-ci.yml"), "utf8");
+    const ignored = new Set(fs.readFileSync(path.join(root, ".vscodeignore"), "utf8").split(/\r?\n/).map((line) => line.trim()));
+    // Cached directories (`paths: [.npm/]`) and files a script writes with `> name`.
+    const cached = matches(ci, /paths:\s*\[([^\]]*)\]/g).flatMap((list) => list.split(",").map((p) => p.trim().replace(/^["']|["']$/g, "")));
+    const written = matches(ci, />[ \t]*([\w.-]+)[ \t]*$/gm);
+    assert.ok(cached.length > 0 && written.length > 0, "no cache paths or written files found in .gitlab-ci.yml; did the patterns stop matching?");
+    const needed = [...cached.map((dir) => `${dir.replace(/\/?$/, "/")}**`), ...written];
+    assert.deepEqual([...new Set(needed)].filter((line) => !ignored.has(line)), [], "add these lines to .vscodeignore");
+  });
+});

@@ -67,7 +67,7 @@ To check what will ship before tagging:
 npx @vscode/vsce@3 ls
 ```
 
-`.vscodeignore` keeps `src/`, tests, source maps, `docs/`, the CI config and any local `.env` files out of the package. `README.md`, `CHANGELOG.md` and `LICENSE` do ship and appear on the extension's Marketplace page, so keep internal material out of them.
+`.vscodeignore` keeps `src/`, tests, source maps, `docs/`, the CI config and any local `.env` files out of the package, and also what CI writes into the checkout before packaging (the `.npm/` cache, `release-notes.md`); a test in `src/test/manifest.test.ts` fails when a CI cache path or written file is missing from it. `README.md`, `CHANGELOG.md` and `LICENSE` do ship and appear on the extension's Marketplace page, so keep internal material out of them.
 
 ## Provenance
 
