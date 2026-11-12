@@ -21,6 +21,7 @@
  */
 import * as os from "os";
 import * as vscode from "vscode";
+import { RAELOG_EXTENSION, stripRaelogExtension } from "./fileTypes";
 import { ApiError, RainbirdClient, unknownMapMessage } from "./api";
 import { defaultFileName, extractKmId, normaliseKmId, sameKmId } from "./kmId";
 import { KNOWN_MAP_SOURCE_LABELS, KnownMap, SNAPSHOT_SCHEME, knownMaps, recordKnownMap, snapshotUri } from "./mapsTree";
@@ -434,7 +435,7 @@ export async function bindKmId(context: vscode.ExtensionContext, uri?: vscode.Ur
   void recordKnownMap(context, {
     kmId,
     source: "manual",
-    fallbackName: name.replace(/\.(raelog|rbl|rblang)$/i, ""),
+    fallbackName: stripRaelogExtension(name),
     ...(target.scheme === "file" ? { file: target.fsPath } : {}),
   });
   vscode.window.setStatusBarMessage(`Bound ${name} to ${kmId}: Run Query, the diffs and the assistant now use this model for it.`, 6000);
@@ -546,7 +547,7 @@ export async function saveRaelogAs(context: vscode.ExtensionContext, opts: SaveR
         ? `Save the draft of ${opts.kmId} as an editable .raelog`
         : `Save version ${opts.ref} of ${opts.kmId} as an editable .raelog`,
     saveLabel: "Save model",
-    filters: { Raelog: ["raelog"] },
+    filters: { Raelog: [RAELOG_EXTENSION.slice(1)] },
     defaultUri: vscode.Uri.joinPath(defaultSaveFolder(), defaultFileName(opts.kmId, opts.ref)),
   });
   if (!target) return undefined;
@@ -556,7 +557,7 @@ export async function saveRaelogAs(context: vscode.ExtensionContext, opts: SaveR
   await recordKnownMap(context, {
     kmId: opts.kmId,
     source: "pulled",
-    fallbackName: fileName(target).replace(/\.(raelog|rbl|rblang)$/i, ""),
+    fallbackName: stripRaelogExtension(fileName(target)),
     ...(target.scheme === "file" ? { file: target.fsPath } : {}),
     ...(opts.ref === "draft" ? { raelog: opts.raelog } : {}),
   });

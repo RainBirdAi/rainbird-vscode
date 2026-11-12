@@ -6,6 +6,7 @@
  * test. `replay` is the shared engine the promotion diff reuses.
  */
 import * as vscode from "vscode";
+import { WORKSPACE_FILES_GLOB } from "./fileTypes";
 import { Answer, Fact, Question, RainbirdClient, ResultItem, StartTarget, describeTarget, startOptions } from "./api";
 import { getClientSilent } from "./queryRunner";
 import { ApiError } from "./api";
@@ -129,7 +130,7 @@ export async function saveSessionAsTest(record: SessionRecord): Promise<void> {
 }
 
 /** Files that mark a folder as a Rainbird project. */
-export const RAINBIRD_FILES_GLOB = "**/*.{raelog,rbl,rblang,rbird,rbtest.json}";
+export const RAINBIRD_FILES_GLOB = WORKSPACE_FILES_GLOB;
 
 let startTests: (() => void) | undefined;
 

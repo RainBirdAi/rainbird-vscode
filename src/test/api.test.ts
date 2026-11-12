@@ -199,3 +199,35 @@ describe("RainbirdClient.start", () => {
     );
   });
 });
+
+// The extension calls its own text "raelog", but the platform's field is still named rblang. These pin
+// the wire format so a future rename of ours cannot change what the platform receives or reads.
+describe("API contract: the platform's field is named rblang", () => {
+  const client = new RainbirdClient("https://api.example", "key");
+
+  test("POST /maps sends the Raelog as rblang, with name and description", async () => {
+    const requests = await withFetch(200, { kmID: "504436fb-7fbb-44ea-b36c-bfd977aea8c8" }, async () => {
+      const result = await client.createMap("<rbl:kb/>", "Eligibility", "scratch");
+      assert.equal(result.kmId, "504436fb-7fbb-44ea-b36c-bfd977aea8c8");
+    });
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].url, "https://api.example/maps");
+    assert.deepEqual(requests[0].body, { rblang: "<rbl:kb/>", name: "Eligibility", description: "scratch" });
+  });
+
+  test("GET /analysis/file reads rblang as the model's Raelog", async () => {
+    let file: { raelog: string; concepts: unknown[]; rels: unknown[] } | undefined;
+    const requests = await withFetch(200, { rblang: "<rbl:kb/>", concepts: [{ name: "Person" }], rels: [] }, async () => {
+      file = await client.getFile("km-1", 3);
+    });
+    assert.equal(requests[0].url, "https://api.example/analysis/file/km-1?version=3");
+    assert.equal(file?.raelog, "<rbl:kb/>");
+    assert.deepEqual(file?.concepts, [{ name: "Person" }]);
+  });
+
+  test("a response without rblang is refused, naming the field", async () => {
+    await withFetch(200, { raelog: "<rbl:kb/>" }, async () => {
+      await assert.rejects(client.getFile("km-1"), /no rblang field/);
+    });
+  });
+});

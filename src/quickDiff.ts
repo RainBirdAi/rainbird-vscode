@@ -9,11 +9,12 @@
  * records the draft, so its bars would show version-vs-draft differences.
  */
 import * as vscode from "vscode";
+import { isRaelogFileName } from "./fileTypes";
 import { snapshotDocumentUri, snapshotUri } from "./mapsTree";
 import { fileKmId, fileKmVersion } from "./platform";
 
 async function snapshotFor(context: vscode.ExtensionContext, uri: vscode.Uri): Promise<vscode.Uri | undefined> {
-  if (!/\.(raelog|rbl|rblang)$/i.test(uri.path)) return undefined;
+  if (!isRaelogFileName(uri.path)) return undefined;
   const kmId = fileKmId(context, uri);
   if (!kmId || fileKmVersion(context, uri) !== undefined) return undefined;
   try {

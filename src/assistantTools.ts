@@ -6,6 +6,7 @@
  * bodies delegate to the pure modules so the logic stays unit-testable.
  */
 import * as vscode from "vscode";
+import { raelogFileName } from "./fileTypes";
 import type { ToolSpec } from "./anthropic";
 import { TOOL_SCHEMAS, STRICT_TOOLS, toApiSchema } from "./toolSchemas";
 import type { AssistantSession } from "./assistantSession";
@@ -131,8 +132,7 @@ export function buildTools(session: AssistantSession): ToolSpec[] {
         const xml = String(input.xml ?? "");
         const existing = session.target();
         const requested = input.file_name ? String(input.file_name) : undefined;
-        // Any other extension (legacy .rbl or .rblang, .xml) is replaced by .raelog.
-        const fileName = requested ? requested.replace(/\.(raelog|rbl|rblang|xml)$/i, "") + ".raelog" : undefined;
+        const fileName = requested ? raelogFileName(requested) : undefined;
         if (existing && existing.getText().trim() && !fileName) {
           throw new Error(`${session.fileName()} is already open and not empty. Use edit_map to change it, or pass file_name to create a separate file.`);
         }

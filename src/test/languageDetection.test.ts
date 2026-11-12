@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { looksLikeRaelog } from "../detect";
+import { exampleModels } from "./exampleModels";
 
 const examples = path.join(__dirname, "..", "..", "examples");
 
@@ -44,12 +45,7 @@ describe("Raelog detection in foreign-typed documents", () => {
   });
 
   test("every example map is recognised", () => {
-    const walk = (dir: string): string[] =>
-      fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
-        e.isDirectory() ? walk(path.join(dir, e.name)) : e.name.endsWith(".raelog") ? [path.join(dir, e.name)] : []
-      );
-    const files = walk(examples);
-    assert.ok(files.length > 0);
+    const files = exampleModels({ recursive: true });
     for (const f of files) assert.ok(looksLikeRaelog(fs.readFileSync(f, "utf8")), f);
   });
 });

@@ -13,3 +13,8 @@ docs/**
 .gitignore
 .gitlab-ci.yml
 scripts/**
+out/integration/**
+.vscode-test/**
+.npm/**
+release-notes.md
+release.env

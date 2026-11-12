@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { collectIssues, literalMatchesType, LintFix, LintIssue } from "../lint";
+import { exampleModels } from "./exampleModels";
 
 const wrap = (body: string): string =>
   `<?xml version="1.0" encoding="UTF-8"?>\n<rbl:kb xmlns:rbl="http://rbl.io/schema/RBLang">\n${body}\n</rbl:kb>\n`;
@@ -55,11 +56,8 @@ describe("clean maps", () => {
   });
 
   test("the example maps stay free of errors", () => {
-    const dir = path.join(__dirname, "..", "..", "examples");
-    const files = fs.readdirSync(dir).filter((f) => f.endsWith(".raelog"));
-    assert.ok(files.length > 0, "no example maps found");
-    for (const file of files) {
-      const issues = collectIssues(fs.readFileSync(path.join(dir, file), "utf8"));
+    for (const file of exampleModels()) {
+      const issues = collectIssues(fs.readFileSync(file, "utf8"));
       assert.deepEqual(ofSeverity(issues, "error"), [], `${file} has errors`);
     }
   });

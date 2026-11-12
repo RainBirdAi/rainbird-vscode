@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { formatText, formatLines } from "../format";
+import { exampleModels } from "./exampleModels";
 
 const examples = path.join(__dirname, "..", "..", "examples");
 const spaces2 = { tabSize: 2, insertSpaces: true };
@@ -78,8 +79,8 @@ describe("Raelog formatter", () => {
   });
 
   test("formatting is idempotent over the example maps", () => {
-    for (const file of fs.readdirSync(examples).filter((f) => f.endsWith(".raelog"))) {
-      const text = fs.readFileSync(path.join(examples, file), "utf8");
+    for (const file of exampleModels()) {
+      const text = fs.readFileSync(file, "utf8");
       const once = formatText(text, spaces2);
       assert.equal(formatText(once, spaces2), once, file);
       const onceTabs = formatText(text, tabs);
