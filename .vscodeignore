@@ -12,3 +12,4 @@ examples/.vscode/**
 docs/**
 .gitignore
 .gitlab-ci.yml
+scripts/**

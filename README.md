@@ -1,7 +1,5 @@
 # Rae by Rainbird
 
-[![Pipeline status](https://gitlab.com/rainbird-ai/labs/rainbird-vscode/badges/main/pipeline.svg)](https://gitlab.com/rainbird-ai/labs/rainbird-vscode/-/pipelines)
-
 Author, check, query and ship models for Rae, the decision automation platform from Rainbird, without leaving your editor.
 
 > Commands, file formats and some platform endpoints this extension relies on may change between releases. Please report problems and ideas on [GitHub Issues](https://github.com/RainBirdAi/rainbird-vscode/issues).
