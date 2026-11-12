@@ -13,3 +13,5 @@ docs/**
 .gitignore
 .gitlab-ci.yml
 scripts/**
+out/integration/**
+.vscode-test/**

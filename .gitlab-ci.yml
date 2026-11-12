@@ -1,6 +1,8 @@
 # Release pipeline for the Rainbird VS Code extension.
 #
-# - Every push and merge request: install, compile and run the tests.
+# - Every push and merge request: install, compile and run the unit tests
+#   (`test`) and the integration tests in a real VS Code (`integration`).
+#   The package job on a tag waits for both.
 # - Every tag `vX.Y.Z`: check the tag matches package.json, package the VSIX,
 #   store it in the project's generic package registry, and create a GitLab
 #   Release whose notes are the matching section of CHANGELOG.md.
@@ -50,6 +52,30 @@ test:
   stage: test
   script:
     - npm test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+    - *release-tag
+
+# The extension in a real VS Code (src/integration/): it activates, its files
+# open as Raelog with diagnostics, symbols, completions, hovers and formatting,
+# every contributed command is registered, and settings saved under the old
+# "rblang" id are migrated. Linux needs a virtual display; Debian bookworm is
+# pinned because newer releases renamed libasound2. VS Code is cached.
+integration:
+  stage: test
+  image: node:22-bookworm
+  timeout: 20m
+  cache:
+    - key:
+        files: [package-lock.json]
+      paths: [.npm/]
+    - key: vscode-test
+      paths: [.vscode-test/]
+  script:
+    - apt-get update -qq
+    - apt-get install -y -qq xvfb xauth libasound2 libgbm1 libgtk-3-0 libnss3 libxss1 libsecret-1-0 > /dev/null
+    - xvfb-run -a npm run test:integration
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH

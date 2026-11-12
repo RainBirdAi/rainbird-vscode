@@ -8,6 +8,7 @@
  * can be chained straight into the query panel.
  */
 import * as vscode from "vscode";
+import { stripRaelogExtension } from "./fileTypes";
 import { getClient } from "./queryRunner";
 import { collectIssues } from "./diagnostics";
 import { QueryPanel } from "./queryPanel";
@@ -38,7 +39,8 @@ export async function pushMap(context: vscode.ExtensionContext): Promise<void> {
   const client = await getClient(context);
   if (!client) return;
 
-  const fileName = doc.uri.path.split("/").pop()?.replace(/\.(raelog|rbl|rblang)$/, "") ?? "model";
+  const base = doc.uri.path.split("/").pop();
+  const fileName = base ? stripRaelogExtension(base) : "model";
   const stamp = new Date().toISOString().slice(0, 16).replace("T", " ").replace(":", "");
   const name = await vscode.window.showInputBox({
     prompt: "Name for the new model on the platform (every push creates a new model)",

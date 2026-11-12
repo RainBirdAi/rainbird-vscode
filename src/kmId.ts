@@ -18,6 +18,8 @@
  */
 
 /** A whole string that is one GUID (8-4-4-4-12 hexadecimal digits), either case. */
+import { RAELOG_EXTENSION } from "./fileTypes";
+
 export const KM_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Every GUID in a text that is not glued to more hexadecimal digits. */
@@ -121,5 +123,5 @@ export function extractKmId(text: string, opts: ExtractKmIdOptions = {}): string
  */
 export function defaultFileName(kmId: string, ref: "draft" | number): string {
   const stem = normaliseKmId(kmId).slice(0, 8).replace(/[^0-9A-Za-z_-]/g, "_") || "unknown";
-  return `model-${stem}-${ref === "draft" ? "draft" : `v${ref}`}.raelog`;
+  return `model-${stem}-${ref === "draft" ? "draft" : `v${ref}`}${RAELOG_EXTENSION}`;
 }

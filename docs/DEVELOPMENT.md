@@ -7,8 +7,14 @@ The extension lives at the repository root. This folder holds the proposal, feat
 ```bash
 npm install
 npm run compile
-npm test          # linter unit tests (node:test, no VS Code host needed)
+npm test                   # unit tests (node:test, no VS Code needed); clears out/ first
+npm run test:integration   # the extension in a real VS Code, downloaded into .vscode-test/
 ```
+
+Both run in the GitLab pipeline on every push and merge request (jobs `test` and `integration`), and a release tag is only packaged when both pass.
+
+- **Unit tests** (`src/test/`) cover the VS Code-free modules, plus `manifest.test.ts`, which checks `package.json` against the code: one language id everywhere, every contributed command registered, every referenced file present. The tests that run over `examples/` fail if the bundled examples are missing, so they cannot pass by finding nothing.
+- **Integration tests** (`src/integration/`) launch VS Code twice with a throwaway profile and workspace (`fixture.ts`). Inside VS Code (`suite.ts`) they check activation, language registration, that legacy `.rbl`/`.rblang` and associated files open as Raelog, diagnostics, document symbols, completions, hovers, formatting, that every contributed command is registered, and the migration of settings saved under the old `rblang` id. Afterwards `runTest.ts` checks the settings files and snapshots left on disk, and that the second launch changed nothing. They are safe to run from VS Code's own terminal (the variables that would make the test VS Code misbehave are removed). On Linux they need a display: CI uses `xvfb-run`.
 
 Open the repository in VS Code and press **F5** (Run Extension). In the Extension Development Host:
 
@@ -29,6 +35,8 @@ Try breaking the example: rename a concept, misspell an attribute, set `cf="150"
 | `src/agentLoop.ts`, `toolSchemas.ts`, `mapOverview.ts`, `assistantContext.ts`, `mapEdits.ts`, `semanticModel.ts` | VS Code-free assistant core: request shaping and tool loop, tool input validation, model overview, context header, the edit engine, the semantic model. Unit-tested. |
 | `src/anthropic.ts`, `assistantSession.ts`, `assistantTools.ts`, `editApplier.ts`, `assistantView.ts`, `media/assistant/` | VS Code glue for the assistant: key + settings, per-chat state and turn orchestration, tool bodies, immediate/preview edit application, the webview provider and its script/styles. |
 | `src/test/` | `node:test` suites run by `npm test`. |
+| `src/integration/` | Integration tests in a real VS Code, run by `npm run test:integration`. |
+| `src/fileTypes.ts`, `src/languageMigration.ts` | Raelog file extensions and names, and the rules for moving settings from the old `rblang` id; VS Code-free and unit-tested. `src/migrate.ts` applies the migration at activation. |
 | `syntaxes/`, `snippets/`, `language-configuration.json` | Raelog grammar, snippet catalogue and bracket/comment rules. |
 | `examples/` | Sample models used by the walkthrough and as the linter's error-free regression corpus. |
 | `media/` | Icons and walkthrough pages. |

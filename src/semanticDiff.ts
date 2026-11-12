@@ -7,6 +7,7 @@
  * notification and available as a markdown report an SME can read in a PR.
  */
 import * as vscode from "vscode";
+import { RAELOG_FILTER_EXTENSIONS } from "./fileTypes";
 import { buildModel, diffReportDetailed, Report } from "./semanticModel";
 import { exportUri, readRaelog } from "./rbird";
 
@@ -78,7 +79,7 @@ async function baseContent(doc: vscode.TextDocument): Promise<DiffSide | undefin
   if (fromGit) return fromGit;
   const picked = await vscode.window.showOpenDialog({
     title: "No git history for this file — pick the base version to compare against (.raelog or a Studio .rbird export)",
-    filters: { "Raelog or Studio export": ["raelog", "rbl", "rblang", "xml", "rbird"] },
+    filters: { "Raelog or Studio export": [...RAELOG_FILTER_EXTENSIONS, "xml", "rbird"] },
     canSelectMany: false,
   });
   if (!picked?.[0]) return undefined;

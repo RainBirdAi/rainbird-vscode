@@ -9,12 +9,13 @@
  * optional" — summarised in the notification and a click away.
  */
 import * as vscode from "vscode";
+import { RAELOG_FILTER_EXTENSIONS } from "./fileTypes";
 import { getClientSilent } from "./queryRunner";
 import { EXPORT_SCHEME, exportUri, readRaelog } from "./rbird";
 import { buildModel, diffReportDetailed, DiffSide as Side, showSideBySideDiff } from "./semanticDiff";
 import { pickPlatformRef, platformUri, resolveKmId } from "./platform";
 
-const EXPORT_FILTER = { "Studio export or Raelog": ["raelog", "rbird", "rbl", "rblang", "xml"] };
+const EXPORT_FILTER = { "Studio export or Raelog": [...RAELOG_FILTER_EXTENSIONS, "rbird", "xml"] };
 
 async function fileSide(file: vscode.Uri): Promise<Side> {
   return { label: file.path.split("/").pop() ?? "export", text: await readRaelog(file), uri: exportUri(file) };

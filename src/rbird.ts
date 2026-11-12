@@ -5,6 +5,7 @@
  * versioned — the "your logic in git" wedge.
  */
 import * as vscode from "vscode";
+import { RAELOG_EXTENSION } from "./fileTypes";
 import { gunzipSync } from "zlib";
 
 interface RbirdFile {
@@ -29,7 +30,7 @@ export function decodeRbird(raw: Buffer): string | undefined {
 export const EXPORT_SCHEME = "rainbird-export";
 
 export function exportUri(file: vscode.Uri): vscode.Uri {
-  const name = (file.path.split("/").pop() ?? "export").replace(/\.rbird$/i, ".raelog");
+  const name = (file.path.split("/").pop() ?? "export").replace(/\.rbird$/i, RAELOG_EXTENSION);
   return vscode.Uri.from({ scheme: EXPORT_SCHEME, path: `/${name}`, query: encodeURIComponent(file.fsPath) });
 }
 
@@ -62,7 +63,7 @@ export async function extractRbird(uri?: vscode.Uri): Promise<void> {
       return;
     }
 
-    const output = vscode.Uri.file(target.fsPath.replace(/\.rbird$/i, ".raelog"));
+    const output = vscode.Uri.file(target.fsPath.replace(/\.rbird$/i, RAELOG_EXTENSION));
     await vscode.workspace.fs.writeFile(output, Buffer.from(raelog, "utf8"));
     const doc = await vscode.workspace.openTextDocument(output);
     await vscode.window.showTextDocument(doc);

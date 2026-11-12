@@ -688,14 +688,17 @@
     ]
   },
   "scripts": {
+    "clean": "node -e \"require('fs').rmSync('out', { recursive: true, force: true })\"",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "vscode:prepublish": "npm run compile",
-    "test": "npm run compile && node --test \"out/test/**/*.test.js\""
+    "vscode:prepublish": "npm run clean && npm run compile",
+    "test": "npm run clean && npm run compile && node --test \"out/test/**/*.test.js\"",
+    "test:integration": "npm run clean && npm run compile && node out/integration/runTest.js"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.90.0",
+    "@vscode/test-electron": "^2.5.2",
     "happy-dom": "^20.14.5",
     "typescript": "^5.4.0",
     "vscode-oniguruma": "^2.0.1",
